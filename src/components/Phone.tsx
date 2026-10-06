@@ -386,53 +386,61 @@ function DockLink({
 function NotThatCrazy({ onClose }: { onClose: () => void }) {
   return (
     <motion.div
-      className="absolute inset-0 z-40 flex items-center justify-center bg-black/25"
+      className="absolute inset-0 z-40 flex items-center justify-center bg-black/20"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.2 }}
       onClick={onClose}
     >
+      {/* iOS 26 alert: left-aligned text, pill buttons, Liquid Glass panel. */}
       <motion.div
         role="alertdialog"
         aria-labelledby="not-that-crazy-title"
         aria-describedby="not-that-crazy-body"
-        initial={{ scale: 1.15, opacity: 0 }}
+        initial={{ scale: 1.1, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.95, opacity: 0 }}
-        transition={{ type: "spring", stiffness: 420, damping: 30 }}
+        exit={{ scale: 0.97, opacity: 0, transition: { duration: 0.15 } }}
+        transition={{ type: "spring", stiffness: 380, damping: 28 }}
         onClick={(e) => e.stopPropagation()}
-        className="w-[300px]"
+        className="relative w-[306px]"
       >
+        {/* Shadow as its own layer: a filter on an ancestor would stop the glass blurring what's behind. */}
+        <div className="absolute inset-x-[10px] bottom-[-14px] top-[18px] rounded-[40px] bg-black/25 blur-2xl" />
         <Squircle
-          radius={34}
+          radius={36}
           smoothing={0.6}
           rim
-          glass="bg-white/75 backdrop-blur-2xl backdrop-saturate-150"
-          className="relative text-center text-neutral-900"
+          glass="bg-[rgba(250,250,252,0.82)] backdrop-blur-[30px] backdrop-saturate-[1.8]"
+          className="relative text-left text-black"
         >
-          <div className="relative px-[20px] pb-[16px] pt-[22px]">
-            <p id="not-that-crazy-title" className="text-[17px] font-semibold leading-[22px]">
+          <div className="relative px-[22px] pb-[18px] pt-[22px]">
+            <p id="not-that-crazy-title" className="text-[17px] font-semibold leading-[22px] tracking-[-0.4px]">
               I'm not that crazy
             </p>
-            <p id="not-that-crazy-body" className="mt-[6px] text-[15px] leading-[20px] text-neutral-900/80">
+            <p
+              id="not-that-crazy-body"
+              className="mt-[4px] text-[15px] leading-[20px] tracking-[-0.2px] text-[rgba(60,60,67,0.85)]"
+            >
               My number stays off the internet. Send me an email and I'll get back to you.
             </p>
-            <div className="mt-[18px] flex gap-[10px]">
-              <button
+            <div className="mt-[20px] flex gap-[12px]">
+              <motion.button
                 type="button"
+                whileTap={{ scale: 0.96 }}
                 onClick={onClose}
-                className="h-[48px] flex-1 cursor-pointer rounded-full bg-black/10 text-[17px] font-medium"
+                className="h-[48px] flex-1 cursor-pointer rounded-full bg-[rgba(120,120,128,0.16)] text-[17px] font-medium tracking-[-0.4px] text-black"
               >
                 OK
-              </button>
-              <a
+              </motion.button>
+              <motion.a
                 href="mailto:hey@jonwill.ing"
+                whileTap={{ scale: 0.96 }}
                 onClick={onClose}
-                className="flex h-[48px] flex-1 items-center justify-center rounded-full bg-[#0a84ff] text-[17px] font-semibold text-white"
+                className="flex h-[48px] flex-1 items-center justify-center rounded-full bg-[#0088ff] text-[17px] font-semibold tracking-[-0.4px] text-white"
               >
                 Email me
-              </a>
+              </motion.a>
             </div>
           </div>
         </Squircle>
