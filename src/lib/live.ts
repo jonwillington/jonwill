@@ -20,6 +20,7 @@ export type Live = {
     total: number;
     pick: { name: string; area: string | null; image: string | null; url: string } | null;
   } | null;
+  network: Record<string, { shops: number; roasters: number }>;
   generatedAt: string;
 };
 

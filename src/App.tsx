@@ -144,7 +144,7 @@ export function App() {
             className="size-full overflow-y-auto px-5 pb-16 pt-14 text-foreground"
             style={{ background: dark ? mix(entry.accent, "#0e0e10", 0.82) : entry.accent }}
           >
-            <DetailContent entry={entry} onClose={close} />
+            <DetailContent entry={entry} live={live} onClose={close} />
           </div>
         )}
       />
@@ -207,7 +207,7 @@ export function App() {
               transition={{ type: "spring", stiffness: 220, damping: 26 }}
               className="w-[min(440px,40vw)]"
             >
-              <DetailContent entry={open} onClose={close} />
+              <DetailContent entry={open} live={live} onClose={close} />
             </motion.aside>
           )}
         </AnimatePresence>

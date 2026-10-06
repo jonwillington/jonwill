@@ -45,8 +45,19 @@ export type Live = {
     total: number;
     pick: { name: string; area: string | null; image: string | null; url: string } | null;
   } | null;
+  /** Shop and roaster counts for each city in the coffee map network, keyed by city id. */
+  network: Record<string, { shops: number; roasters: number }>;
   generatedAt: string;
 };
+
+// The coffee map network (filter-city-web/cities): Istanbul, London, Bangkok, Chiang Mai, San Francisco.
+const NETWORK_CITIES = [
+  "a3ueoba5n0xy0sru1hpw1xr3",
+  "yb04fbpj59rrsos7asq4fzxq",
+  "tw0yqn6e8vujnxeb4yje6nwz",
+  "x0m7lj2wwjcyxlhtckysd641",
+  "j562b54i8pp6y1l03wpaxol1",
+];
 
 const ISTANBUL_CITY = "a3ueoba5n0xy0sru1hpw1xr3";
 const CACHE_SECONDS = 300;
@@ -57,8 +68,21 @@ export const onRequestGet: PagesFunction = async (context) => {
   const hit = await cache.match(key);
   if (hit) return hit;
 
-  const [ddbx, istanbrew] = await Promise.all([latestDealing().catch(() => null), openShops().catch(() => null)]);
-  const body: Live = { ddbx, istanbrew, generatedAt: new Date().toISOString() };
+  const catalogs = new Map(
+    await Promise.all(NETWORK_CITIES.map(async (id) => [id, await catalog(id).catch(() => null)] as const)),
+  );
+  const [ddbx] = await Promise.all([latestDealing().catch(() => null)]);
+  const istanbul = catalogs.get(ISTANBUL_CITY);
+  const body: Live = {
+    ddbx,
+    istanbrew: istanbul ? openShops(istanbul) : null,
+    network: Object.fromEntries(
+      [...catalogs].flatMap(([id, c]) =>
+        c ? [[id, { shops: c.shops.length, roasters: c.brands.filter((b) => b.roastsOwnBeans).length }]] : [],
+      ),
+    ),
+    generatedAt: new Date().toISOString(),
+  };
 
   const res = new Response(JSON.stringify(body), {
     headers: {
@@ -94,14 +118,16 @@ async function latestDealing(): Promise<Live["ddbx"]> {
   };
 }
 
-/** How many verified shops are open right now, and the best-rated one to show. */
-async function openShops(): Promise<Live["istanbrew"]> {
-  const res = await fetch(`https://api.filter.coffee/v3/cities/${ISTANBUL_CITY}/catalog`, {
-    cf: { cacheTtl: CACHE_SECONDS },
-  });
+type Catalog = { shops: Shop[]; brands: { roastsOwnBeans: boolean | null }[] };
+
+async function catalog(cityId: string): Promise<Catalog | null> {
+  const res = await fetch(`https://api.filter.coffee/v3/cities/${cityId}/catalog`, { cf: { cacheTtl: CACHE_SECONDS } });
   if (!res.ok) return null;
-  const { data } = (await res.json()) as { data: { shops: Shop[] } };
-  const shops = data.shops.filter((s) => s.qualityTier === "verified");
+  return ((await res.json()) as { data: Catalog }).data;
+}
+
+/** How many of the shops the site lists are open right now, and a well-rated one to show. */
+function openShops({ shops }: Catalog): Live["istanbrew"] {
   const now = istanbulClock();
   const open = shops.filter((s) => isOpen(s, now));
 

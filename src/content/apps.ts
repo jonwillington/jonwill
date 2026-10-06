@@ -7,6 +7,22 @@ export type AppLink = {
   href: string;
 };
 
+/** One cell of a market × platform grid: a link, or a status with no link yet. */
+export type MarketCell = { label: string; href?: string };
+
+export type Market = {
+  /** ISO 3166 code; drawn as a flag. */
+  code: "gb" | "us" | "se" | "nl";
+  name: string;
+  web?: MarketCell;
+  ios?: MarketCell;
+  android?: MarketCell;
+};
+
+/** A sister site in a network, e.g. the other city coffee maps. */
+/** `cityId` is the Filter API city, for live shop and roaster counts. */
+export type NetworkSite = { name: string; city: string; url: string; icon: string; cityId?: string };
+
 export type AppEntry = {
   id: string;
   name: string;
@@ -31,6 +47,10 @@ export type AppEntry = {
    * sets the home indicator; `dark` swaps in for dark mode where it exists.
    */
   screens?: { scheme: "light" | "dark"; light: string[]; dark?: string[] };
+  /** Where the app is available, by market and platform. */
+  markets?: Market[];
+  /** A wider family of sites this app belongs to. */
+  network?: { title: string; intro: string; sites: NetworkSite[] };
 };
 
 export const ABOUT: AppEntry = {
@@ -42,8 +62,7 @@ export const ABOUT: AppEntry = {
   tagline: "Product design lead, currently in Istanbul.",
   tags: ["Design leadership", "Product design", "Side projects"],
   body: [
-    "I'm a Group Product Design Manager at Deel, and I'm currently based in Istanbul.",
-    "Outside work I design and build my own apps, end to end: the product, the design, the code and the data behind it. The rest of the icons on this phone are the ones I've been working on.",
+    "Group Product Design Manager at Deel, based in Istanbul. Outside work I design and build my own apps, end to end.",
   ],
   links: [
     { label: "Email", href: "mailto:hey@jonwill.ing" },
@@ -60,10 +79,7 @@ export const APPS: AppEntry[] = [
     scheme: "light",
     tagline: "My day job.",
     tags: ["Group Product Design Manager", "HR", "Payroll"],
-    body: [
-      "Deel is a global HR and payroll platform that helps companies hire, pay and manage people anywhere in the world.",
-      "I'm a Group Product Design Manager there, leading design teams working across the product.",
-    ],
+    body: ["Global HR and payroll for companies hiring anywhere. I lead product design teams there."],
     links: [
       { label: "deel.com", href: "https://www.deel.com" },
       { label: "App Store", href: "https://apps.apple.com/gb/app/deel-global-payroll-hr/id6478083155" },
@@ -76,20 +92,31 @@ export const APPS: AppEntry[] = [
     accent: "#ede8e2",
     scheme: "light",
     tagline: "Director dealings, rated as they happen.",
-    tags: ["iOS", "Web", "Android in progress", "Cloudflare"],
-    body: [
-      "ddbx tracks share purchases and sales by company insiders as they are filed. Each filing is scored against a checklist (who bought, how much, and whether the context backs it up) and given a rating from routine to significant.",
-      "You can follow how each deal performs against the market over time and see which insiders made the right call. It covers the UK and the US, with Sweden and the Netherlands on the data side.",
-    ],
+    tags: ["iOS", "Web", "Android", "Cloudflare"],
+    body: ["Tracks director share dealings as they are filed and rates each one, from routine to significant."],
     highlights: [
       "Live push alerts for new filings",
       "Ratings from routine to significant",
       "Performance tracking against benchmarks",
     ],
-    links: [
-      { label: "ddbx.uk", href: "https://ddbx.uk" },
-      { label: "App Store (UK)", href: "https://apps.apple.com/gb/app/ddbx-uk/id6762196330" },
-      { label: "App Store (US)", href: "https://apps.apple.com/gb/app/ddbx-us/id6772091960" },
+    links: [{ label: "ddbx.uk", href: "https://ddbx.uk" }],
+    markets: [
+      {
+        code: "gb",
+        name: "UK",
+        web: { label: "ddbx.uk", href: "https://ddbx.uk" },
+        ios: { label: "App Store", href: "https://apps.apple.com/gb/app/ddbx-uk/id6762196330" },
+        android: { label: "In progress" },
+      },
+      {
+        code: "us",
+        name: "US",
+        web: { label: "ddbx.us", href: "https://ddbx.us" },
+        ios: { label: "App Store", href: "https://apps.apple.com/us/app/ddbx-us/id6772091960" },
+        android: { label: "Testing" },
+      },
+      { code: "se", name: "Sweden", web: { label: "Preview", href: "https://ddbx.uk/se" } },
+      { code: "nl", name: "Netherlands", web: { label: "Preview", href: "https://ddbx.uk/nl" } },
     ],
     screens: {
       scheme: "dark",
@@ -104,9 +131,7 @@ export const APPS: AppEntry[] = [
     scheme: "light",
     tagline: "Where to work remotely next.",
     tags: ["iOS", "Android", "React Native"],
-    body: [
-      "Holdall reviews more than 50 destinations for remote working trips. For each one it covers the best areas to stay, recommended coworking spaces, good coffee shops and things to do in your free time.",
-    ],
+    body: ["Guides to 50+ places to work remotely: where to stay, where to work and where to get coffee."],
     highlights: [
       "50+ destination guides",
       "Coworking spaces and coffee shops on a map",
@@ -126,8 +151,7 @@ export const APPS: AppEntry[] = [
     tagline: "All your GA4 properties on one screen.",
     tags: ["iOS", "SwiftUI", "On-device"],
     body: [
-      "GA Bridge shows every Google Analytics 4 property you have on one screen: live users, today's users and page views, and a trend against yesterday up to the same hour.",
-      "Tap a property for its top pages and a seven-day chart. Everything runs on the device with a read-only token, and there is no backend.",
+      "Every GA4 property on one screen, with live users and a fair day-on-day trend. It runs on the device, with no backend.",
     ],
     highlights: [
       "Live users from the last 30 minutes",
@@ -150,15 +174,53 @@ export const APPS: AppEntry[] = [
     glow: "#d71f1f",
     tagline: "Speciality coffee in Istanbul.",
     tags: ["iOS", "Web", "SwiftUI"],
-    body: [
-      "Istanbrew is a guide to the best speciality coffee in Istanbul. Every shop is on one map, so you can see what's good near you, check whether it's open and get directions in a tap.",
-      "Each area has a top pick to start with, and you can see who roasts the coffee, where the beans come from and which shops pour them.",
-    ],
+    body: ["Every speciality coffee shop in Istanbul on one map, with opening hours and directions."],
     highlights: ["The whole city, from Kadıköy to Karaköy", "Our Picks for each area", "Filter by roaster or origin"],
     links: [
       { label: "istanbrew.com", href: "https://istanbrew.com" },
       { label: "App Store", href: "https://apps.apple.com/gb/app/istanbrew/id6814183189" },
     ],
+    network: {
+      title: "The coffee map network",
+      intro: "The first of a network of the best coffee maps in the world, one city at a time.",
+      sites: [
+        {
+          name: "Istanbrew",
+          city: "Istanbul",
+          url: "https://istanbrew.com",
+          icon: "/icons/network/istanbul.png",
+          cityId: "a3ueoba5n0xy0sru1hpw1xr3",
+        },
+        {
+          name: "filter",
+          city: "London",
+          url: "https://filter.coffee",
+          icon: "/icons/network/london.png",
+          cityId: "yb04fbpj59rrsos7asq4fzxq",
+        },
+        {
+          name: "bkkbrew",
+          city: "Bangkok",
+          url: "https://bkkbrew.com",
+          icon: "/icons/network/bangkok.png",
+          cityId: "tw0yqn6e8vujnxeb4yje6nwz",
+        },
+        {
+          name: "cnxbrew",
+          city: "Chiang Mai",
+          url: "https://cnxbrew.com",
+          icon: "/icons/network/chiang-mai.png",
+          cityId: "x0m7lj2wwjcyxlhtckysd641",
+        },
+        {
+          name: "brewSF",
+          city: "San Francisco",
+          url: "https://brewsf.com",
+          icon: "/icons/network/san-francisco.png",
+          cityId: "j562b54i8pp6y1l03wpaxol1",
+        },
+      ],
+    },
     screens: {
       scheme: "light",
       light: [
