@@ -6,6 +6,7 @@ import { ALL_ENTRIES, type AppEntry } from "./content/apps";
 import { DEVICE, Phone } from "./components/Phone";
 import { AppDrawer } from "./components/AppDrawer";
 import { DetailContent } from "./components/DetailPanel";
+import { AppSwitcher } from "./components/AppSwitcher";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { AppScreens, screensFor } from "./components/phone/AppScreens";
 import { Splash } from "./components/phone/Splash";
@@ -34,7 +35,7 @@ function useDeviceScale() {
   const fit = () =>
     Math.max(
       0.5,
-      Math.min(1.15, (window.innerHeight - 160) / DEVICE.height, (window.innerWidth * 0.36) / DEVICE.width),
+      Math.min(1.15, (window.innerHeight - 200) / DEVICE.height, (window.innerWidth * 0.36) / DEVICE.width),
     );
   const [scale, setScale] = useState(fit);
   useEffect(() => {
@@ -249,15 +250,16 @@ export function App() {
           </AnimatePresence>
         </main>
 
-        <footer className="flex justify-between px-6 py-5 text-sm">
-          <Link href="mailto:hey@jonwill.ing" className="text-muted">
+        <footer className="grid grid-cols-[1fr_auto_1fr] items-center px-6 pb-4 pt-2 text-sm">
+          <Link href="mailto:hey@jonwill.ing" className="justify-self-start text-muted">
             hey@jonwill.ing
           </Link>
+          <AppSwitcher open={open} onOpen={openEntry} />
           <Link
             href="https://www.linkedin.com/in/jonathanwillington/"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-muted"
+            className="justify-self-end text-muted"
           >
             LinkedIn
           </Link>
