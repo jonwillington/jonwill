@@ -5,6 +5,7 @@ import type { AppEntry } from "../../content/apps";
 import { Splash } from "./Splash";
 
 const ADVANCE_MS = 3800;
+const isVideo = (src: string) => src.endsWith(".mp4");
 const LAUNCH_MS = 650;
 
 /** The screens to show for an entry in the current theme, or null for splash-only apps. */
@@ -49,9 +50,10 @@ export function AppScreens({
     prevIndex.current = index;
   }
 
-  // Warm the cache so pushes never flash.
+  // Warm the cache so pushes never flash (videos stream on their own).
   useEffect(() => {
     screens.forEach((src) => {
+      if (isVideo(src)) return;
       const img = new Image();
       img.src = src;
     });
@@ -63,7 +65,8 @@ export function AppScreens({
   }, []);
 
   useEffect(() => {
-    if (!launched || paused || screens.length < 2) return;
+    // Videos move on when they finish instead of on a timer.
+    if (!launched || paused || screens.length < 2 || isVideo(screens[index])) return;
     const id = window.setTimeout(() => onIndex((index + 1) % screens.length), ADVANCE_MS);
     return () => window.clearTimeout(id);
   }, [launched, paused, index, screens.length, onIndex]);
@@ -92,21 +95,28 @@ export function AppScreens({
     >
       <AnimatePresence initial={false} custom={direction.current}>
         {/* The first screen sits under the launch screen from the start, so nothing slides in on launch. */}
-        {
-          <motion.img
-            key={screens[index]}
-            src={screens[index]}
-            alt=""
-            draggable={false}
-            custom={direction.current}
-            variants={push}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            transition={{ type: "spring", stiffness: 300, damping: 34, mass: 0.9 }}
-            className="absolute inset-0 size-full object-cover shadow-[-8px_0_24px_rgba(0,0,0,0.15)]"
-          />
-        }
+        <motion.div
+          key={screens[index]}
+          custom={direction.current}
+          variants={push}
+          initial="enter"
+          animate="center"
+          exit="exit"
+          transition={{ type: "spring", stiffness: 300, damping: 34, mass: 0.9 }}
+          className="absolute inset-0 shadow-[-8px_0_24px_rgba(0,0,0,0.15)]"
+          style={{ background: entry.accent }}
+        >
+          {isVideo(screens[index]) ? (
+            <Clip
+              src={screens[index]}
+              caption={entry.screens?.captions?.[index]}
+              playing={launched}
+              onEnded={() => !paused && screens.length > 1 && onIndex((index + 1) % screens.length)}
+            />
+          ) : (
+            <img src={screens[index]} alt="" draggable={false} className="size-full object-cover" />
+          )}
+        </motion.div>
       </AnimatePresence>
 
       {/* The launch screen fades away once the first screen is in place. */}
@@ -122,5 +132,45 @@ export function AppScreens({
         )}
       </AnimatePresence>
     </motion.div>
+  );
+}
+
+/**
+ * A screen recording that isn't full-screen (4:5 clips): shown as a card
+ * under the status bar with a caption, like an App Store preview.
+ */
+function Clip({
+  src,
+  caption,
+  playing,
+  onEnded,
+}: {
+  src: string;
+  caption?: string;
+  playing: boolean;
+  onEnded: () => void;
+}) {
+  const ref = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    const v = ref.current;
+    if (!v) return;
+    if (playing) v.play().catch(() => {});
+    else v.pause();
+  }, [playing]);
+
+  return (
+    <div className="flex size-full flex-col items-center justify-center gap-5 px-5 pt-10">
+      <video
+        ref={ref}
+        src={src}
+        poster={src.replace(/\.mp4$/, ".jpg")}
+        muted
+        playsInline
+        preload="metadata"
+        onEnded={onEnded}
+        className="w-full rounded-[22px] shadow-[0_0_0_1px_rgba(0,0,0,0.06),0_12px_32px_rgba(0,0,0,0.12)]"
+      />
+      {caption && <p className="text-center text-[17px] font-semibold tracking-[-0.3px] text-neutral-900">{caption}</p>}
+    </div>
   );
 }

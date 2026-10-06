@@ -138,7 +138,8 @@ export function App() {
     open,
     onOpen: openEntry,
     onClose: close,
-    ownStatusBar: !!screens && desktop,
+    // Screenshots carry their own status bar; clips are cards, so the phone draws one.
+    ownStatusBar: !!screens && desktop && !screens.some((src) => src.endsWith(".mp4")),
     lightApp:
       screens && desktop
         ? open!.screens!.scheme === "light" && !(dark && open!.screens!.dark)

@@ -56,7 +56,13 @@ export type AppEntry = {
    * when the app opens, in order. `scheme` is the screens' own look, which
    * sets the home indicator; `dark` swaps in for dark mode where it exists.
    */
-  screens?: { scheme: "light" | "dark"; light: string[]; dark?: string[] };
+  screens?: {
+    scheme: "light" | "dark";
+    light: string[];
+    dark?: string[];
+    /** Short labels shown under video clips (screen recordings that aren't full-screen). */
+    captions?: string[];
+  };
   /** Where the app is available, by market and platform. */
   markets?: Market[];
   /**
@@ -297,6 +303,21 @@ export const APPS: AppEntry[] = [
           url: "https://www.holdall.work/destinations/buenos-aires",
           scores: { work: 86, stay: 87, value: 75, fun: 86 },
         },
+      ],
+    },
+    screens: {
+      scheme: "light",
+      light: [
+        "/videos/holdall-map.mp4",
+        "/videos/holdall-relative-ratings.mp4",
+        "/videos/holdall-costs-breakdown.mp4",
+        "/videos/holdall-air-quality.mp4",
+      ],
+      captions: [
+        "Every destination on one map",
+        "Compare places side by side",
+        "What a month costs",
+        "Air quality through the year",
       ],
     },
     links: [
