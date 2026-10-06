@@ -1,10 +1,11 @@
 import type { ReactNode } from "react";
 import { motion } from "motion/react";
-import { Chip, CloseButton, buttonVariants } from "@heroui/react";
+import { Chip, buttonVariants } from "@heroui/react";
 
 import type { AppEntry, Market, MarketCell, NetworkSite } from "../content/apps";
 import type { Live } from "../lib/live";
 import { IconArt } from "./AppIcon";
+import { CloseX } from "./CloseX";
 
 const item = {
   hidden: { opacity: 0, y: 10 },
@@ -12,9 +13,20 @@ const item = {
 };
 
 /** Small uppercase label above a section, in the same mono as the chips. */
-const EYEBROW = "font-mono text-[11px] font-medium uppercase tracking-[0.08em] text-foreground/55";
+export const EYEBROW = "font-mono text-[11px] font-medium uppercase tracking-[0.08em] text-foreground/55";
 
-export function DetailContent({ entry, live, onClose }: { entry: AppEntry; live?: Live | null; onClose: () => void }) {
+/** The summary beside the phone: who or what, in a few lines, with a way into the details. */
+export function DetailContent({
+  entry,
+  live,
+  onClose,
+  onLearnMore,
+}: {
+  entry: AppEntry;
+  live?: Live | null;
+  onClose: () => void;
+  onLearnMore: () => void;
+}) {
   return (
     <motion.div
       key={entry.id}
@@ -23,7 +35,7 @@ export function DetailContent({ entry, live, onClose }: { entry: AppEntry; live?
       transition={{ staggerChildren: 0.05, delayChildren: 0.08 }}
       className="flex flex-col gap-5 text-[15px] leading-[1.6]"
     >
-      {/* Icon, then the name beneath it. */}
+      {/* Icon, then the name beneath it, and a one-line description. */}
       <motion.div variants={item} className="flex items-start justify-between">
         <div>
           <div className="size-16 [filter:drop-shadow(0_2px_6px_rgba(0,0,0,0.10))]">
@@ -34,72 +46,88 @@ export function DetailContent({ entry, live, onClose }: { entry: AppEntry; live?
           </h2>
           <p className="mt-0.5 text-foreground/65">{entry.tagline}</p>
         </div>
-        <CloseButton aria-label="Close" onPress={onClose} />
+        <CloseX onPress={onClose} />
       </motion.div>
 
-      <motion.div variants={item} className="flex flex-wrap gap-1.5">
-        {entry.tags.map((tag) => (
-          <Chip
-            key={tag}
-            size="sm"
-            className="rounded-[5px] bg-foreground/[0.07] px-2 font-mono text-[11px] uppercase tracking-[0.06em] text-foreground/80"
-          >
-            {tag}
-          </Chip>
-        ))}
+      <motion.div variants={item}>
+        <Tags tags={entry.tags} />
       </motion.div>
 
-      {entry.body.map((p, i) => (
-        <motion.p key={i} variants={item}>
-          {p}
-        </motion.p>
-      ))}
-
-      {entry.highlights && (
-        <motion.ul variants={item} className="flex flex-col gap-1.5">
-          {entry.highlights.map((h) => (
-            <li key={h} className="flex items-start gap-2.5">
-              <span className="mt-[9px] size-1.5 shrink-0 rounded-full bg-foreground/45" aria-hidden />
-              <span>{h}</span>
-            </li>
-          ))}
-        </motion.ul>
-      )}
-
+      {/* The rich data stays on the page; the longer story lives in the drawer. */}
       {entry.markets && (
         <motion.div variants={item}>
           <MarketGrid markets={entry.markets} />
         </motion.div>
       )}
-
       {entry.network && (
         <motion.div variants={item}>
           <Network {...entry.network} counts={live?.network} />
         </motion.div>
       )}
+      {!entry.markets && !entry.network && (
+        <motion.p variants={item} className="text-foreground/80">
+          {entry.body[0]}
+        </motion.p>
+      )}
 
       <motion.div variants={item} className="flex flex-wrap gap-2">
-        {entry.links.map((link, i) => {
-          const external = link.href.startsWith("http");
-          return (
-            <a
-              key={link.href}
-              href={link.href}
-              target={external ? "_blank" : undefined}
-              rel={external ? "noopener noreferrer" : undefined}
-              className={buttonVariants({
-                size: "sm",
-                // Neutral tints so the buttons sit on any app's background.
-                className: i === 0 ? "bg-foreground text-background" : "bg-foreground/10 text-foreground",
-              })}
-            >
-              {link.label}
-              {external && <span aria-hidden>↗</span>}
-            </a>
-          );
-        })}
+        {entry.links[0] && <LinkButton link={entry.links[0]} primary />}
+        <button
+          type="button"
+          onClick={onLearnMore}
+          className={buttonVariants({ size: "sm", className: "bg-foreground/10 text-foreground" })}
+        >
+          Learn more
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 12 12"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            aria-hidden
+          >
+            <path d="M4.5 3 7.5 6l-3 3" />
+          </svg>
+        </button>
       </motion.div>
     </motion.div>
+  );
+}
+
+export function Tags({ tags }: { tags: string[] }) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {tags.map((tag) => (
+        <Chip
+          key={tag}
+          size="sm"
+          className="rounded-[5px] bg-foreground/[0.07] px-2 font-mono text-[11px] uppercase tracking-[0.06em] text-foreground/80"
+        >
+          {tag}
+        </Chip>
+      ))}
+    </div>
+  );
+}
+
+export function LinkButton({ link, primary = false }: { link: { label: string; href: string }; primary?: boolean }) {
+  const external = link.href.startsWith("http");
+  return (
+    <a
+      href={link.href}
+      target={external ? "_blank" : undefined}
+      rel={external ? "noopener noreferrer" : undefined}
+      className={buttonVariants({
+        size: "sm",
+        // Neutral tints so the buttons sit on any app's background.
+        className: primary ? "bg-foreground text-background" : "bg-foreground/10 text-foreground",
+      })}
+    >
+      {link.label}
+      {external && <span aria-hidden>↗</span>}
+    </a>
   );
 }
 
@@ -109,8 +137,30 @@ const PLATFORMS = [
   ["android", "Android"],
 ] as const;
 
+/** Globe, Apple and Android marks for the grid header. */
+function PlatformIcon({ platform }: { platform: (typeof PLATFORMS)[number][0] }) {
+  if (platform === "web")
+    return (
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+        <circle cx="12" cy="12" r="9" />
+        <path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3Z" />
+      </svg>
+    );
+  if (platform === "ios")
+    return (
+      <svg width="12" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+        <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701" />
+      </svg>
+    );
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M17.6 9.48l1.84-3.18c.16-.31.04-.69-.26-.85a.637.637 0 0 0-.83.22l-1.88 3.24a11.43 11.43 0 0 0-8.94 0L5.65 5.67a.643.643 0 0 0-.87-.2c-.28.18-.37.54-.22.83L6.4 9.48A10.81 10.81 0 0 0 1 18h22a10.81 10.81 0 0 0-5.4-8.52M7 15.25a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5m10 0a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5" />
+    </svg>
+  );
+}
+
 /** Markets down the side, platforms across the top; each cell links out or shows its status. */
-function MarketGrid({ markets }: { markets: Market[] }) {
+export function MarketGrid({ markets }: { markets: Market[] }) {
   return (
     <section aria-label="Availability by market and platform">
       <p className={`mb-2 ${EYEBROW}`}>Markets</p>
@@ -121,9 +171,14 @@ function MarketGrid({ markets }: { markets: Market[] }) {
               <th scope="col" className={`px-3 py-2 ${EYEBROW}`}>
                 Market
               </th>
-              {PLATFORMS.map(([, label]) => (
+              {PLATFORMS.map(([key, label]) => (
                 <th key={label} scope="col" className={`px-3 py-2 ${EYEBROW}`}>
-                  {label}
+                  <span className="flex items-center gap-1.5">
+                    <span className="text-foreground/70">
+                      <PlatformIcon platform={key} />
+                    </span>
+                    {label}
+                  </span>
                 </th>
               ))}
             </tr>
@@ -176,7 +231,7 @@ function Cell({ cell }: { cell?: MarketCell }) {
 }
 
 /** The other sites in the family, favicon first, current one marked. */
-function Network({
+export function Network({
   title,
   intro,
   sites,

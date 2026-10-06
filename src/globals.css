@@ -104,3 +104,8 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .spin-wheel { animation: none; }
 }
+
+/* Behind the page when the Vaul drawer scales it back, like an iOS sheet. */
+body {
+  background: #000;
+}

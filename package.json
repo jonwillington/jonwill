@@ -16,7 +16,8 @@
     "figma-squircle": "^1.1.0",
     "motion": "^14.0.0",
     "react": "^19.3.0",
-    "react-dom": "^19.3.0"
+    "react-dom": "^19.3.0",
+    "vaul": "^1.1.2"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260702.1",

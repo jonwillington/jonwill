@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Link } from "@heroui/react";
 
 import { ALL_ENTRIES, type AppEntry } from "./content/apps";
 import { DEVICE, Phone } from "./components/Phone";
+import { AppDrawer } from "./components/AppDrawer";
 import { DetailContent } from "./components/DetailPanel";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { AppScreens, screensFor } from "./components/phone/AppScreens";
@@ -84,12 +85,16 @@ export function App() {
   const live = useLive();
   const [open, setOpen] = useState<AppEntry | null>(fromHash);
   const [screen, setScreen] = useState(0);
+  const [drawer, setDrawer] = useState(false);
+  const drawerRef = useRef(false);
+  drawerRef.current = drawer;
 
   const [seen, markSeen] = useSeen();
   // However an app was opened (tap, link or notification), its badge clears.
   useEffect(() => {
     if (open) markSeen(open.id);
     setScreen(0);
+    setDrawer(false);
   }, [open, markSeen]);
 
   const openEntry = useCallback((entry: AppEntry) => {
@@ -103,11 +108,19 @@ export function App() {
   }, []);
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && close();
+    // With the drawer open, Escape belongs to the drawer. Vaul closes it before this
+    // listener runs, so note whether it was open as the key goes down (capture phase).
+    let drawerWasOpen = false;
+    const onKeyCapture = (e: KeyboardEvent) => {
+      if (e.key === "Escape") drawerWasOpen = drawerRef.current;
+    };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && !drawerWasOpen && close();
     const onHash = () => setOpen(fromHash());
+    window.addEventListener("keydown", onKeyCapture, true);
     window.addEventListener("keydown", onKey);
     window.addEventListener("hashchange", onHash);
     return () => {
+      window.removeEventListener("keydown", onKeyCapture, true);
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("hashchange", onHash);
     };
@@ -135,98 +148,121 @@ export function App() {
   // Phones: the page is the home screen, and an opened app is the detail view.
   if (!desktop) {
     return (
-      <Phone
-        {...phoneProps}
-        framed={false}
-        renderOpen={(entry) => (
-          <div
-            data-theme={dark ? "dark" : (entry.scheme ?? "dark")}
-            className="size-full overflow-y-auto px-5 pb-16 pt-14 text-foreground"
-            style={{ background: dark ? mix(entry.accent, "#0e0e10", 0.82) : entry.accent }}
-          >
-            <DetailContent entry={entry} live={live} onClose={close} />
-          </div>
-        )}
-      />
+      <div data-vaul-drawer-wrapper="" className="min-h-dvh">
+        <Phone
+          {...phoneProps}
+          framed={false}
+          renderOpen={(entry) => (
+            <div
+              data-theme={dark ? "dark" : (entry.scheme ?? "dark")}
+              className="size-full overflow-y-auto px-5 pb-16 pt-14 text-foreground"
+              style={{ background: dark ? mix(entry.accent, "#0e0e10", 0.82) : entry.accent }}
+            >
+              <DetailContent entry={entry} live={live} onClose={close} onLearnMore={() => setDrawer(true)} />
+            </div>
+          )}
+        />
+        <AppDrawer
+          entry={open}
+          open={drawer}
+          onOpenChange={setDrawer}
+          dark={dark}
+          background={pageAccent ?? (dark ? "#141416" : "#fafafa")}
+        />
+      </div>
     );
   }
 
   return (
-    <div data-theme={pageScheme} className="relative isolate flex min-h-dvh flex-col overflow-hidden text-foreground">
-      <Ambient entry={open} accent={pageAccent} dark={dark} />
+    <>
+      {/* data-vaul-drawer-wrapper: the page that scales back when the drawer opens. */}
+      <div
+        data-vaul-drawer-wrapper=""
+        data-theme={pageScheme}
+        className="relative isolate flex min-h-dvh flex-col overflow-hidden text-foreground"
+      >
+        <Ambient entry={open} accent={pageAccent} dark={dark} />
 
-      <header className="flex items-center justify-between px-6 py-4 text-sm font-medium">
-        <span>Jon Willington</span>
-        <ThemeToggle mode={mode} onChange={setMode} />
-      </header>
+        <header className="flex items-center justify-between px-6 py-4 text-sm font-medium">
+          <span>Jon Willington</span>
+          <ThemeToggle mode={mode} onChange={setMode} />
+        </header>
 
-      <main className="flex flex-1 items-center justify-center gap-16 px-6">
-        <motion.div
-          layout
-          transition={{ type: "spring", stiffness: 200, damping: 26 }}
-          className="flex flex-col items-center gap-5"
-        >
-          <Phone
-            {...phoneProps}
-            framed
-            scale={scale}
-            renderOpen={(entry) =>
-              screensFor(entry, dark) ? (
-                <AppScreens entry={entry} dark={dark} index={screen} onIndex={setScreen} />
-              ) : (
-                <Splash entry={entry} />
-              )
-            }
-          />
-          <div className="flex h-5 items-center">
-            <AnimatePresence mode="wait">
-              {screens && screens.length > 1 ? (
-                <ScreenDots key="dots" count={screens.length} index={screen} onSelect={setScreen} />
-              ) : (
-                <motion.p
-                  key="hint"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: open ? 0 : 1 }}
-                  exit={{ opacity: 0 }}
-                  className="text-sm text-muted"
-                >
-                  Tap an app. Press and hold for more.
-                </motion.p>
-              )}
-            </AnimatePresence>
-          </div>
-        </motion.div>
+        <main className="flex flex-1 items-center justify-center gap-16 px-6">
+          <motion.div
+            layout
+            transition={{ type: "spring", stiffness: 200, damping: 26 }}
+            className="flex flex-col items-center gap-5"
+          >
+            <Phone
+              {...phoneProps}
+              framed
+              scale={scale}
+              renderOpen={(entry) =>
+                screensFor(entry, dark) ? (
+                  <AppScreens entry={entry} dark={dark} index={screen} onIndex={setScreen} />
+                ) : (
+                  <Splash entry={entry} />
+                )
+              }
+            />
+            <div className="flex h-5 items-center">
+              <AnimatePresence mode="wait">
+                {screens && screens.length > 1 ? (
+                  <ScreenDots key="dots" count={screens.length} index={screen} onSelect={setScreen} />
+                ) : (
+                  <motion.p
+                    key="hint"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: open ? 0 : 1 }}
+                    exit={{ opacity: 0 }}
+                    className="text-sm text-muted"
+                  >
+                    Tap an app. Press and hold for more.
+                  </motion.p>
+                )}
+              </AnimatePresence>
+            </div>
+          </motion.div>
 
-        <AnimatePresence mode="popLayout">
-          {open && (
-            <motion.aside
-              key={open.id}
-              initial={{ opacity: 0, x: 60 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 30, transition: { duration: 0.15 } }}
-              transition={{ type: "spring", stiffness: 220, damping: 26 }}
-              className="w-[min(440px,40vw)]"
-            >
-              <DetailContent entry={open} live={live} onClose={close} />
-            </motion.aside>
-          )}
-        </AnimatePresence>
-      </main>
+          <AnimatePresence mode="popLayout">
+            {open && (
+              <motion.aside
+                key={open.id}
+                initial={{ opacity: 0, x: 60 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 30, transition: { duration: 0.15 } }}
+                transition={{ type: "spring", stiffness: 220, damping: 26 }}
+                className="w-[min(440px,40vw)]"
+              >
+                <DetailContent entry={open} live={live} onClose={close} onLearnMore={() => setDrawer(true)} />
+              </motion.aside>
+            )}
+          </AnimatePresence>
+        </main>
 
-      <footer className="flex justify-between px-6 py-5 text-sm">
-        <Link href="mailto:hey@jonwill.ing" className="text-muted">
-          hey@jonwill.ing
-        </Link>
-        <Link
-          href="https://www.linkedin.com/in/jonathanwillington/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-muted"
-        >
-          LinkedIn
-        </Link>
-      </footer>
-    </div>
+        <footer className="flex justify-between px-6 py-5 text-sm">
+          <Link href="mailto:hey@jonwill.ing" className="text-muted">
+            hey@jonwill.ing
+          </Link>
+          <Link
+            href="https://www.linkedin.com/in/jonathanwillington/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-muted"
+          >
+            LinkedIn
+          </Link>
+        </footer>
+      </div>
+      <AppDrawer
+        entry={open}
+        open={drawer}
+        onOpenChange={setDrawer}
+        dark={dark}
+        background={pageAccent ?? (dark ? "#141416" : "#fafafa")}
+      />
+    </>
   );
 }
 

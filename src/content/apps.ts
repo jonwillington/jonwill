@@ -49,6 +49,11 @@ export type AppEntry = {
   screens?: { scheme: "light" | "dark"; light: string[]; dark?: string[] };
   /** Where the app is available, by market and platform. */
   markets?: Market[];
+  /**
+   * The long read in the "Learn more" drawer: titled sections, in the same
+   * order for every app (What is it? / Why I made it / How I built it / What's next).
+   */
+  article?: { title: string; body: string[] }[];
   /** A wider family of sites this app belongs to. */
   network?: { title: string; intro: string; sites: NetworkSite[] };
 };
@@ -63,6 +68,24 @@ export const ABOUT: AppEntry = {
   tags: ["Design leadership", "Product design", "Side projects"],
   body: [
     "Group Product Design Manager at Deel, based in Istanbul. Outside work I design and build my own apps, end to end.",
+  ],
+  article: [
+    {
+      title: "Who I am",
+      body: ["I'm Jon, a Group Product Design Manager at Deel, currently living in Istanbul."],
+    },
+    {
+      title: "What I do",
+      body: [
+        "At Deel I lead product design teams. Outside work I design and build my own apps from end to end: the product thinking, the design, the code and the data behind it.",
+      ],
+    },
+    {
+      title: "On this phone",
+      body: [
+        "The apps here are the ones I've been working on. Each one has a page like this one: what it is, why I made it, how it's built and where it's going.",
+      ],
+    },
   ],
   links: [
     { label: "Email", href: "mailto:hey@jonwill.ing" },
@@ -80,6 +103,18 @@ export const APPS: AppEntry[] = [
     tagline: "My day job.",
     tags: ["Group Product Design Manager", "HR", "Payroll"],
     body: ["Global HR and payroll for companies hiring anywhere. I lead product design teams there."],
+    article: [
+      {
+        title: "What is it?",
+        body: [
+          "Deel is a global HR and payroll platform. It helps companies hire, pay and manage people anywhere in the world, with contractors and employees in one place.",
+        ],
+      },
+      {
+        title: "My role",
+        body: ["I'm a Group Product Design Manager, leading design teams working across the product."],
+      },
+    ],
     links: [
       { label: "deel.com", href: "https://www.deel.com" },
       { label: "App Store", href: "https://apps.apple.com/gb/app/deel-global-payroll-hr/id6478083155" },
@@ -98,6 +133,34 @@ export const APPS: AppEntry[] = [
       "Live push alerts for new filings",
       "Ratings from routine to significant",
       "Performance tracking against benchmarks",
+    ],
+    article: [
+      {
+        title: "What is it?",
+        body: [
+          "ddbx follows what company directors do with their own money. When a director buys or sells shares in their company, they have to say so publicly. ddbx picks up those filings within minutes, screens out the routine ones and rates the rest from minor to significant, with a written analysis of why.",
+          "It covers UK and US listed companies, with Sweden and the Netherlands on the data side, and tracks how each deal performs against the market afterwards.",
+        ],
+      },
+      {
+        title: "Why I made it",
+        body: [
+          "Director dealings are public, but they're scattered across regulatory feeds and hard to read at a glance. I wanted one place that says which filings are worth a second look, and shows afterwards whether the insiders were right.",
+        ],
+      },
+      {
+        title: "How I built it",
+        body: [
+          "A Cloudflare Worker scrapes the official disclosure feeds, stores everything in D1 and runs each filing through two model passes: a quick screen that drops the routine ones, then a fuller analysis that scores the trade against a checklist.",
+          "The same API serves the website, the UK and US iOS apps and an Android port. Each market is its own module on the data side, so a new country is a new module rather than a rewrite.",
+        ],
+      },
+      {
+        title: "What's next",
+        body: [
+          "Shipping the Android app to the Play Store, taking Sweden and the Netherlands from preview to full markets, and adding more countries on the same pattern.",
+        ],
+      },
     ],
     links: [{ label: "ddbx.uk", href: "https://ddbx.uk" }],
     markets: [
@@ -137,6 +200,30 @@ export const APPS: AppEntry[] = [
       "Coworking spaces and coffee shops on a map",
       "Costs, air quality and peak season at a glance",
     ],
+    article: [
+      {
+        title: "What is it?",
+        body: [
+          "Holdall reviews more than 50 destinations for remote working trips: the best areas to stay, coworking spaces, coffee shops and what to do in your free time.",
+        ],
+      },
+      {
+        title: "Why I made it",
+        body: [
+          "Planning a remote working trip means piecing together where to stay, where to work and what a place costs from a dozen sources. Holdall puts that research into one guide per destination.",
+        ],
+      },
+      {
+        title: "How I built it",
+        body: [
+          "A React Native app built with Expo. The guides are written in a CMS, maps come from Google and Mapbox, and each destination pulls in data such as air quality, cost of living and peak season.",
+        ],
+      },
+      {
+        title: "What's next",
+        body: ["More destinations, and keeping the existing guides current."],
+      },
+    ],
     links: [
       { label: "holdall.work", href: "https://www.holdall.work" },
       { label: "App Store", href: "https://apps.apple.com/gb/app/holdall/id6745562343" },
@@ -158,6 +245,31 @@ export const APPS: AppEntry[] = [
       "Fair day-on-day trend, hour for hour",
       "No server, no tracking",
     ],
+    article: [
+      {
+        title: "What is it?",
+        body: [
+          "GA Bridge puts every Google Analytics 4 property you have on one screen: live users, today's users and page views, and a trend against yesterday. Tap a property for its top pages and a seven-day chart.",
+        ],
+      },
+      {
+        title: "Why I made it",
+        body: [
+          "Checking several sites in Google Analytics means clicking through property after property. I wanted them all in one glance, with a trend that's fair to compare at any time of day.",
+        ],
+      },
+      {
+        title: "How I built it",
+        body: [
+          "A SwiftUI app that calls Google's Analytics Admin and Data APIs directly with a read-only sign-in. There's no server: the numbers are fetched on the phone.",
+          "The trend compares the completed hours of today with the same hours yesterday, so a morning check isn't measured against a whole day.",
+        ],
+      },
+      {
+        title: "What's next",
+        body: ["Google's verification for the read-only analytics scope, then a public release on the App Store."],
+      },
+    ],
     links: [{ label: "gabridge.app", href: "https://gabridge.app" }],
     screens: {
       scheme: "light",
@@ -176,6 +288,32 @@ export const APPS: AppEntry[] = [
     tags: ["iOS", "Web", "SwiftUI"],
     body: ["Every speciality coffee shop in Istanbul on one map, with opening hours and directions."],
     highlights: ["The whole city, from Kadıköy to Karaköy", "Our Picks for each area", "Filter by roaster or origin"],
+    article: [
+      {
+        title: "What is it?",
+        body: [
+          "Istanbrew is a guide to the best speciality coffee in Istanbul. Every shop is on one map, with opening hours, directions and who roasts the beans, and each area has a top pick to start with.",
+        ],
+      },
+      {
+        title: "Why I made it",
+        body: [
+          "Istanbul's coffee scene is big and spread across two continents, and good shops are easy to miss. I wanted a map I'd trust myself, built from places that have been checked rather than scraped.",
+        ],
+      },
+      {
+        title: "How I built it",
+        body: [
+          "Everything comes from one coffee database with its own CMS and API. A native SwiftUI app and a web edition both read from it, and the web codebase builds a separate site for each city, in English and Turkish.",
+        ],
+      },
+      {
+        title: "What's next",
+        body: [
+          "Istanbrew is the first of a network. London, Bangkok, Chiang Mai and San Francisco already have their own maps from the same database, with more cities to come.",
+        ],
+      },
+    ],
     links: [
       { label: "istanbrew.com", href: "https://istanbrew.com" },
       { label: "App Store", href: "https://apps.apple.com/gb/app/istanbrew/id6814183189" },

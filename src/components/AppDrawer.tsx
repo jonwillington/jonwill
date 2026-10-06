@@ -1,0 +1,123 @@
+import { Drawer } from "vaul";
+
+import type { AppEntry } from "../content/apps";
+import { IconArt } from "./AppIcon";
+import { CloseX } from "./CloseX";
+import { EYEBROW, LinkButton, Tags } from "./DetailPanel";
+import { screensFor } from "./phone/AppScreens";
+
+/**
+ * "Learn more": a Vaul side drawer with everything that doesn't fit in the
+ * panel. Swipe it back to the right to close; the page scales back behind it
+ * (see data-vaul-drawer-wrapper in App).
+ */
+export function AppDrawer({
+  entry,
+  open,
+  onOpenChange,
+  dark,
+  background,
+}: {
+  entry: AppEntry | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  dark: boolean;
+  /** The sheet's colour: the page's, so it feels like part of the app. */
+  background: string;
+}) {
+  const screens = entry ? screensFor(entry, dark) : null;
+  const scheme = dark ? "dark" : (entry?.scheme ?? "dark");
+
+  return (
+    <Drawer.Root direction="right" open={open && !!entry} onOpenChange={onOpenChange} shouldScaleBackground>
+      <Drawer.Portal>
+        <Drawer.Overlay className="fixed inset-0 z-40 bg-black/40" />
+        <Drawer.Content
+          data-theme={scheme}
+          aria-describedby={undefined}
+          className="fixed bottom-2 right-2 top-2 z-50 flex w-[min(560px,calc(100vw-16px))] flex-col overflow-hidden rounded-[28px] text-foreground shadow-[-12px_0_48px_rgba(0,0,0,0.22)] outline-none"
+          style={{ background }}
+        >
+          {entry && (
+            <div className="overflow-y-auto px-7 pb-10 pt-7 text-[15px] leading-[1.6]">
+              <header className="flex items-start justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="size-14 shrink-0 [filter:drop-shadow(0_2px_6px_rgba(0,0,0,0.10))]">
+                    <IconArt entry={entry} size={56} round={entry.id === "about"} />
+                  </div>
+                  <div>
+                    <Drawer.Title className="text-[22px] font-semibold leading-tight tracking-[-0.02em]">
+                      {entry.id === "about" ? "Jon Willington" : entry.name}
+                    </Drawer.Title>
+                    <p className="text-foreground/65">{entry.tagline}</p>
+                  </div>
+                </div>
+                <CloseX onPress={() => onOpenChange(false)} />
+              </header>
+
+              {screens && (
+                <section className="mt-7" aria-label="Screens">
+                  <p className={`mb-3 ${EYEBROW}`}>Screens</p>
+                  {/* Scrolls sideways; data-vaul-no-drag keeps horizontal swipes from moving the sheet. */}
+                  <div
+                    data-vaul-no-drag
+                    className="-mx-7 flex snap-x gap-3 overflow-x-auto px-7 pb-2 [scrollbar-width:none]"
+                  >
+                    {screens.map((src) => (
+                      <img
+                        key={src}
+                        src={src}
+                        alt=""
+                        loading="lazy"
+                        className="aspect-[402/874] w-[150px] shrink-0 snap-start rounded-[24px] shadow-[0_0_0_1px_rgba(0,0,0,0.08),0_8px_24px_rgba(0,0,0,0.12)]"
+                      />
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {entry.highlights && (
+                <section className="mt-7 rounded-[14px] bg-foreground/[0.04] px-5 py-4" aria-label="At a glance">
+                  <p className={`mb-2 ${EYEBROW}`}>At a glance</p>
+                  <ul className="flex flex-col gap-1.5">
+                    {entry.highlights.map((h) => (
+                      <li key={h} className="flex items-start gap-2.5">
+                        <span className="mt-[9px] size-1.5 shrink-0 rounded-full bg-foreground/45" aria-hidden />
+                        <span>{h}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+
+              {/* The long read: the same sections, in the same order, for every app. */}
+              <article className="mt-8 flex max-w-[62ch] flex-col gap-8 text-[16px] leading-[1.7]">
+                {(entry.article ?? [{ title: "What is it?", body: entry.body }]).map((section) => (
+                  <section key={section.title}>
+                    <h3 className="mb-2 text-[19px] font-semibold leading-snug tracking-[-0.015em]">{section.title}</h3>
+                    <div className="flex flex-col gap-3 text-foreground/85">
+                      {section.body.map((p, i) => (
+                        <p key={i}>{p}</p>
+                      ))}
+                    </div>
+                  </section>
+                ))}
+              </article>
+
+              <section className="mt-8">
+                <p className={`mb-2 ${EYEBROW}`}>Built with</p>
+                <Tags tags={entry.tags} />
+              </section>
+
+              <div className="mt-8 flex flex-wrap gap-2">
+                {entry.links.map((l, i) => (
+                  <LinkButton key={l.href} link={l} primary={i === 0} />
+                ))}
+              </div>
+            </div>
+          )}
+        </Drawer.Content>
+      </Drawer.Portal>
+    </Drawer.Root>
+  );
+}
