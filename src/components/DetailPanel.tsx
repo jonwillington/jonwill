@@ -19,7 +19,7 @@ export function DetailContent({ entry, onClose }: { entry: AppEntry; onClose: ()
       className="flex flex-col gap-6"
     >
       <motion.div variants={item} className="flex items-start gap-4">
-        <div className="size-16 shrink-0 shadow-md [border-radius:22%]">
+        <div className={`size-16 shrink-0 overflow-hidden shadow-md ${entry.id === "about" ? "rounded-full" : "[border-radius:22.5%]"}`}>
           <IconArt entry={entry} />
         </div>
         <div className="min-w-0 flex-1">

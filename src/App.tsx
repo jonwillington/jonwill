@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
-import { AnimatePresence, motion, useMotionValue, useSpring, useTransform } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { Link } from "@heroui/react";
 
 import { ALL_ENTRIES, type AppEntry } from "./content/apps";
-import { Phone, Splash } from "./components/Phone";
+import { DEVICE, Phone, Splash } from "./components/Phone";
 import { DetailContent } from "./components/DetailPanel";
 
 const fromHash = () => ALL_ENTRIES.find((e) => e.id === window.location.hash.slice(1)) ?? null;
@@ -20,8 +20,21 @@ function useIsDesktop() {
   return matches;
 }
 
+/** Fit the device to the window, leaving room for the header, hint and footer. */
+function useDeviceScale() {
+  const fit = () => Math.min(1, Math.max(0.5, (window.innerHeight - 170) / DEVICE.height));
+  const [scale, setScale] = useState(fit);
+  useEffect(() => {
+    const onResize = () => setScale(fit());
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+  return scale;
+}
+
 export function App() {
   const desktop = useIsDesktop();
+  const scale = useDeviceScale();
   const [open, setOpen] = useState<AppEntry | null>(fromHash);
 
   const openEntry = useCallback((entry: AppEntry) => {
@@ -68,9 +81,14 @@ export function App() {
 
       <main className="flex flex-1 items-center justify-center gap-16 px-6">
         <motion.div layout transition={{ type: "spring", stiffness: 200, damping: 26 }} className="flex flex-col items-center gap-5">
-          <Tilt>
-            <Phone framed open={open} onOpen={openEntry} onClose={close} renderOpen={(entry) => <Splash entry={entry} />} />
-          </Tilt>
+          <Phone
+            framed
+            scale={scale}
+            open={open}
+            onOpen={openEntry}
+            onClose={close}
+            renderOpen={(entry) => <Splash entry={entry} />}
+          />
           <p className={`text-sm text-muted transition-opacity ${open ? "opacity-0" : ""}`}>
             Tap an app. Press and hold to wiggle.
           </p>
@@ -105,29 +123,6 @@ export function App() {
           LinkedIn
         </Link>
       </footer>
-    </div>
-  );
-}
-
-/** Leans the phone gently towards the cursor. */
-function Tilt({ children }: { children: React.ReactNode }) {
-  const x = useMotionValue(0.5);
-  const y = useMotionValue(0.5);
-  const rotateY = useSpring(useTransform(x, [0, 1], [-6, 6]), { stiffness: 120, damping: 18 });
-  const rotateX = useSpring(useTransform(y, [0, 1], [5, -5]), { stiffness: 120, damping: 18 });
-
-  useEffect(() => {
-    const onMove = (e: PointerEvent) => {
-      x.set(e.clientX / window.innerWidth);
-      y.set(e.clientY / window.innerHeight);
-    };
-    window.addEventListener("pointermove", onMove);
-    return () => window.removeEventListener("pointermove", onMove);
-  }, [x, y]);
-
-  return (
-    <div style={{ perspective: 1400 }}>
-      <motion.div style={{ rotateX, rotateY }}>{children}</motion.div>
     </div>
   );
 }

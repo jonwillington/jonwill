@@ -28,11 +28,11 @@ export const ABOUT: AppEntry = {
   name: "Jon",
   icon: "/me.jpg",
   accent: "#1f2937",
-  tagline: "Group Product Design Manager at Deel.",
+  tagline: "Product design lead, currently in Istanbul.",
   tags: ["Design leadership", "Product design", "Side projects"],
   body: [
-    "I'm a Group Product Design Manager at Deel, where I lead design teams working on the product.",
-    "Outside work I design and build my own apps, end to end: the product, the design, the code and the data behind it. The icons on this phone are the ones I've been working on.",
+    "I'm a Group Product Design Manager at Deel, and I'm currently based in Istanbul.",
+    "Outside work I design and build my own apps, end to end: the product, the design, the code and the data behind it. The rest of the icons on this phone are the ones I've been working on.",
   ],
   links: [
     { label: "Email", href: "mailto:hey@jonwill.ing" },
@@ -41,6 +41,22 @@ export const ABOUT: AppEntry = {
 };
 
 export const APPS: AppEntry[] = [
+  {
+    id: "deel",
+    name: "Deel",
+    icon: "/icons/deel.jpg",
+    accent: "#b39cf5",
+    tagline: "My day job.",
+    tags: ["Group Product Design Manager", "HR", "Payroll"],
+    body: [
+      "Deel is a global HR and payroll platform that helps companies hire, pay and manage people anywhere in the world.",
+      "I'm a Group Product Design Manager there, leading design teams working across the product.",
+    ],
+    links: [
+      { label: "deel.com", href: "https://www.deel.com" },
+      { label: "App Store", href: "https://apps.apple.com/gb/app/deel-global-payroll-hr/id6478083155" },
+    ],
+  },
   {
     id: "ddbx",
     name: "ddbx",

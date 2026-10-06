@@ -17,12 +17,11 @@ export function AppIcon({ entry, jiggle, index, onOpen, onLongPress }: Props) {
   const longPressed = useRef(false);
 
   return (
-    <div className="flex flex-col items-center gap-1.5">
+    <div className="flex flex-col items-center gap-[6px]">
       <motion.button
         type="button"
         aria-label={`Open ${entry.name}`}
-        className="relative aspect-square w-full cursor-pointer rounded-[22%] shadow-[0_6px_16px_rgba(0,0,0,0.25)] outline-none focus-visible:ring-2 focus-visible:ring-white"
-        whileHover={{ scale: 1.06, y: -2 }}
+        className="relative aspect-square w-full cursor-pointer rounded-[22.5%] shadow-[0_4px_12px_rgba(0,0,0,0.18)] outline-none after:pointer-events-none after:absolute after:inset-0 after:rounded-[22.5%] after:shadow-[inset_0_0_0_0.5px_rgba(255,255,255,0.3)] focus-visible:ring-2 focus-visible:ring-white"
         whileTap={{ scale: 0.88 }}
         animate={
           jiggle
@@ -45,7 +44,7 @@ export function AppIcon({ entry, jiggle, index, onOpen, onLongPress }: Props) {
       >
         <IconArt entry={entry} />
       </motion.button>
-      <span className="max-w-full truncate text-[11px] font-medium text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.45)]">
+      <span className="max-w-[76px] truncate text-[12px] font-medium leading-[14px] tracking-[-0.1px] text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">
         {entry.name}
       </span>
     </div>
@@ -58,7 +57,7 @@ export function IconArt({ entry, className = "" }: { entry: AppEntry; className?
   if (!entry.icon || failed) {
     return (
       <span
-        className={`flex size-full items-center justify-center rounded-[22%] bg-gradient-to-br from-amber-300 via-rose-400 to-violet-500 font-semibold text-white ${className}`}
+        className={`flex size-full items-center justify-center rounded-[22.5%] bg-gradient-to-br from-amber-300 via-rose-400 to-violet-500 font-semibold text-white ${className}`}
       >
         JW
       </span>
@@ -71,7 +70,7 @@ export function IconArt({ entry, className = "" }: { entry: AppEntry; className?
       alt=""
       draggable={false}
       onError={() => setFailed(true)}
-      className={`size-full select-none rounded-[22%] object-cover ${className}`}
+      className={`size-full select-none rounded-[22.5%] object-cover ${className}`}
     />
   );
 }

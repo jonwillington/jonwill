@@ -4,19 +4,28 @@ import { AnimatePresence, motion } from "motion/react";
 import { ABOUT, APPS, type AppEntry } from "../content/apps";
 import { AppIcon, IconArt } from "./AppIcon";
 
+// Apple's iPhone 17 bezel (public/device) is 1350×2760 at @3x, so the
+// device is 450×920pt with the 402×874pt screen inset at (24, 23).
+export const DEVICE = { width: 450, height: 920 };
+const SCREEN = { left: 24, top: 23, width: 402, height: 874, radius: 63 };
+
+const GLASS =
+  "bg-white/20 backdrop-blur-2xl backdrop-saturate-150 shadow-[inset_0_1px_0_rgba(255,255,255,0.35),inset_0_0_0_0.5px_rgba(255,255,255,0.25)]";
+
 type Origin = { x: number; y: number };
 
 type Props = {
   open: AppEntry | null;
   onOpen: (entry: AppEntry) => void;
   onClose: () => void;
-  /** On phones the page itself is the screen: no frame, and the open app fills it. */
+  /** Framed: the photoreal device at `scale`. Unframed (on phones): the page is the screen. */
   framed: boolean;
+  scale?: number;
   /** What to show inside an opened app. */
   renderOpen: (entry: AppEntry) => ReactNode;
 };
 
-export function Phone({ open, onOpen, onClose, framed, renderOpen }: Props) {
+export function Phone({ open, onOpen, onClose, framed, scale = 1, renderOpen }: Props) {
   const screenRef = useRef<HTMLDivElement>(null);
   // Opening from a link (no tap) zooms from the middle of the screen.
   const [origin, setOrigin] = useState<Origin | null>(null);
@@ -27,25 +36,38 @@ export function Phone({ open, onOpen, onClose, framed, renderOpen }: Props) {
       setJiggle(false);
       return;
     }
-    const screen = screenRef.current?.getBoundingClientRect();
-    if (screen) {
-      setOrigin({ x: rect.left + rect.width / 2 - screen.left, y: rect.top + rect.height / 2 - screen.top });
+    const el = screenRef.current;
+    if (el) {
+      // The device is CSS-scaled, so convert viewport px back to screen points.
+      const box = el.getBoundingClientRect();
+      const k = box.width / el.offsetWidth;
+      setOrigin({ x: (rect.left + rect.width / 2 - box.left) / k, y: (rect.top + rect.height / 2 - box.top) / k });
     }
     onOpen(entry);
   };
 
+  const lightSplash = open?.id === "deel";
+
   const screen = (
     <div
       ref={screenRef}
-      className={`wallpaper relative isolate flex size-full flex-col overflow-hidden ${framed ? "rounded-[46px]" : ""}`}
+      className="wallpaper absolute isolate overflow-hidden"
+      style={
+        framed
+          ? { left: SCREEN.left, top: SCREEN.top, width: SCREEN.width, height: SCREEN.height, borderRadius: SCREEN.radius }
+          : { inset: 0 }
+      }
     >
-      <StatusBar framed={framed} light={!open || framed} />
+      {framed && <StatusBar light={!lightSplash} />}
 
-      <div className="flex flex-1 flex-col px-5 pt-3" onClick={(e) => e.target === e.currentTarget && setJiggle(false)}>
-        <Widget onOpen={(rect) => handleOpen(ABOUT, rect)} />
+      <div
+        className={`relative flex h-full flex-col px-[26px] ${framed ? "pt-[68px]" : "pt-[max(16px,env(safe-area-inset-top))]"}`}
+        onClick={(e) => e.target === e.currentTarget && setJiggle(false)}
+      >
+        <MeWidget onOpen={(rect) => handleOpen(ABOUT, rect)} />
 
-        <div className="mt-6 grid grid-cols-4 gap-x-4 gap-y-5">
-          {[ABOUT, ...APPS].map((entry, i) => (
+        <div className="mt-[26px] grid grid-cols-4 gap-x-[31px] gap-y-[22px]">
+          {APPS.map((entry, i) => (
             <AppIcon
               key={entry.id}
               entry={entry}
@@ -56,22 +78,20 @@ export function Phone({ open, onOpen, onClose, framed, renderOpen }: Props) {
             />
           ))}
         </div>
-
-        <div className="flex-1" onClick={() => setJiggle(false)} />
-
-        <PageDots />
-        <Dock />
       </div>
+
+      <SearchPill />
+      <Dock framed={framed} />
 
       <AnimatePresence>
         {jiggle && (
           <motion.button
             type="button"
-            initial={{ opacity: 0, y: -6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
             onClick={() => setJiggle(false)}
-            className="absolute right-4 top-12 z-10 cursor-pointer rounded-full bg-white/25 px-3 py-1 text-xs font-semibold text-white backdrop-blur-md"
+            className={`absolute right-[22px] z-10 cursor-pointer rounded-full px-[14px] py-[5px] text-[15px] font-semibold text-white ${GLASS} ${framed ? "top-[60px]" : "top-3"}`}
           >
             Done
           </motion.button>
@@ -83,42 +103,54 @@ export function Phone({ open, onOpen, onClose, framed, renderOpen }: Props) {
           <motion.div
             key={open.id}
             className="absolute inset-0 z-20 overflow-hidden"
-            style={{ transformOrigin: origin ? `${origin.x}px ${origin.y}px` : "50% 50%", background: framed ? open.accent : "var(--background)" }}
-            initial={{ scale: 0.12, opacity: 0, borderRadius: 40 }}
-            animate={{ scale: 1, opacity: 1, borderRadius: framed ? 46 : 0 }}
-            exit={{ scale: 0.12, opacity: 0, borderRadius: 40 }}
-            transition={{ type: "spring", stiffness: 260, damping: 28 }}
+            style={{
+              transformOrigin: origin ? `${origin.x}px ${origin.y}px` : "50% 50%",
+              background: framed ? open.accent : "var(--background)",
+            }}
+            initial={{ scale: 0.16, opacity: 0, borderRadius: 60 }}
+            animate={{ scale: 1, opacity: 1, borderRadius: framed ? SCREEN.radius : 0 }}
+            exit={{ scale: 0.16, opacity: 0, borderRadius: 60 }}
+            transition={{ type: "spring", stiffness: 280, damping: 30 }}
           >
             {renderOpen(open)}
-            <HomeIndicator onClick={onClose} dark={!framed} />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {!open && <HomeIndicator onClick={() => setJiggle(false)} />}
+      {framed && open && <HomeIndicator onClick={onClose} dark={lightSplash} />}
     </div>
   );
 
-  if (!framed) return <div className="h-dvh w-full">{screen}</div>;
+  if (!framed) return <div className="relative h-dvh w-full">{screen}</div>;
 
   return (
-    <div className="relative aspect-[9/19.5] h-[min(780px,calc(100dvh-170px))] rounded-[58px] bg-neutral-900 p-[11px] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.45),inset_0_0_0_2px_#3a3a3c]">
-      {/* Side buttons */}
-      <span className="absolute -left-[3px] top-[18%] h-8 w-[3px] rounded-l bg-neutral-800" />
-      <span className="absolute -left-[3px] top-[25%] h-14 w-[3px] rounded-l bg-neutral-800" />
-      <span className="absolute -left-[3px] top-[34%] h-14 w-[3px] rounded-l bg-neutral-800" />
-      <span className="absolute -right-[3px] top-[28%] h-20 w-[3px] rounded-r bg-neutral-800" />
-      {screen}
+    <div className="relative" style={{ width: DEVICE.width * scale, height: DEVICE.height * scale }}>
+      <div
+        className="absolute left-0 top-0"
+        style={{ width: DEVICE.width, height: DEVICE.height, transform: `scale(${scale})`, transformOrigin: "0 0" }}
+      >
+        {screen}
+        <img
+          src="/device/iphone-17-black.png"
+          alt=""
+          draggable={false}
+          className="pointer-events-none absolute inset-0 size-full select-none [filter:drop-shadow(0_40px_50px_rgba(0,0,0,0.28))_drop-shadow(0_8px_12px_rgba(0,0,0,0.18))]"
+        />
+      </div>
     </div>
   );
 }
 
 /** The "app" a framed phone shows when opened: a splash with the icon. */
 export function Splash({ entry }: { entry: AppEntry }) {
+  const light = entry.id === "deel";
+  const about = entry.id === "about";
   return (
-    <div className="flex size-full flex-col items-center justify-center gap-4 px-8 text-center text-white">
+    <div
+      className={`flex size-full flex-col items-center justify-center gap-5 px-10 text-center ${light ? "text-neutral-900" : "text-white"}`}
+    >
       <motion.div
-        className="size-24 shadow-2xl"
+        className={`size-[112px] shadow-2xl ${about ? "overflow-hidden rounded-full ring-4 ring-white" : "rounded-[25px]"}`}
         initial={{ scale: 0.6, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 0.12, type: "spring", stiffness: 300, damping: 20 }}
@@ -126,84 +158,119 @@ export function Splash({ entry }: { entry: AppEntry }) {
         <IconArt entry={entry} />
       </motion.div>
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-        <p className="text-2xl font-semibold tracking-tight">{entry.name}</p>
-        <p className="mt-1 text-sm text-white/70">{entry.tagline}</p>
+        <p className="text-[28px] font-bold tracking-tight">{about ? "Jon Willington" : entry.name}</p>
+        <p className={`mt-1 text-[16px] ${light ? "text-neutral-900/70" : "text-white/70"}`}>{entry.tagline}</p>
       </motion.div>
     </div>
   );
 }
 
-function StatusBar({ framed, light }: { framed: boolean; light: boolean }) {
-  const [now, setNow] = useState(() => new Date());
+function useIstanbulTime() {
+  const format = () =>
+    new Date().toLocaleTimeString("en-GB", { hour: "numeric", minute: "2-digit", timeZone: "Europe/Istanbul" });
+  const [time, setTime] = useState(format);
   useEffect(() => {
-    const id = window.setInterval(() => setNow(new Date()), 10_000);
+    const id = window.setInterval(() => setTime(format()), 5_000);
     return () => window.clearInterval(id);
   }, []);
-  const time = now.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  return time;
+}
+
+/** Sits either side of the Dynamic Island, which is part of the bezel image. */
+function StatusBar({ light }: { light: boolean }) {
+  const time = useIstanbulTime();
 
   return (
-    <div
-      className={`relative z-30 flex h-12 shrink-0 items-center justify-between px-8 pt-1 text-[15px] font-semibold ${light ? "text-white" : "text-foreground"}`}
-    >
-      <span className="w-14 tabular-nums">{time}</span>
-      {framed && <span className="absolute left-1/2 top-2.5 h-[30px] w-[100px] -translate-x-1/2 rounded-full bg-black" />}
-      <span className="flex w-14 items-center justify-end gap-1.5">
-        <svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor" aria-hidden>
-          <rect x="0" y="7" width="3" height="4" rx="1" />
-          <rect x="4.5" y="5" width="3" height="6" rx="1" />
-          <rect x="9" y="2.5" width="3" height="8.5" rx="1" />
-          <rect x="13.5" y="0" width="3" height="11" rx="1" />
+    <div className={`pointer-events-none absolute inset-x-0 top-0 z-30 h-[54px] ${light ? "text-white" : "text-neutral-900"}`}>
+      <span className="absolute left-0 top-[21px] w-[139px] text-center text-[17px] font-semibold leading-[22px] tracking-[-0.4px] tabular-nums">
+        {time}
+      </span>
+      <span className="absolute left-[263px] top-[21px] flex h-[22px] w-[139px] items-center justify-center gap-[6px]">
+        <svg width="19" height="12" viewBox="0 0 19 12" fill="currentColor" aria-hidden>
+          <rect x="0" y="7.5" width="3.2" height="4.5" rx="1" />
+          <rect x="5.2" y="5" width="3.2" height="7" rx="1" />
+          <rect x="10.4" y="2.5" width="3.2" height="9.5" rx="1" />
+          <rect x="15.6" y="0" width="3.2" height="12" rx="1" />
         </svg>
-        <svg width="15" height="11" viewBox="0 0 15 11" fill="currentColor" aria-hidden>
-          <path d="M7.5 2.2c2.1 0 4 .8 5.4 2.1l1.1-1.1A9.2 9.2 0 0 0 7.5.6 9.2 9.2 0 0 0 1 3.2l1.1 1.1a7.7 7.7 0 0 1 5.4-2.1Zm0 3.2c1.2 0 2.3.5 3.2 1.2l1.1-1.1a6.1 6.1 0 0 0-8.6 0l1.1 1.1c.9-.7 2-1.2 3.2-1.2Zm0 3.2c-.5 0-.9.2-1.1.5l1.1 1.1 1.1-1.1c-.2-.3-.6-.5-1.1-.5Z" />
+        <svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor" aria-hidden>
+          <path d="M8.5 2.3c2.4 0 4.6.9 6.2 2.5l1.2-1.2A10.4 10.4 0 0 0 8.5.6 10.4 10.4 0 0 0 1.1 3.6l1.2 1.2a8.7 8.7 0 0 1 6.2-2.5Zm0 3.5c1.4 0 2.7.5 3.7 1.4l1.2-1.2a6.9 6.9 0 0 0-9.8 0l1.2 1.2c1-.9 2.3-1.4 3.7-1.4Zm0 3.5c-.5 0-1 .2-1.3.6l1.3 1.3 1.3-1.3c-.3-.4-.8-.6-1.3-.6Z" />
         </svg>
-        <svg width="25" height="12" viewBox="0 0 25 12" fill="none" aria-hidden>
-          <rect x="0.5" y="0.5" width="21" height="11" rx="3.5" stroke="currentColor" opacity="0.4" />
-          <rect x="2" y="2" width="16" height="8" rx="2" fill="currentColor" />
-          <path d="M23 4v4c.8-.3 1.3-1.1 1.3-2S23.8 4.3 23 4Z" fill="currentColor" opacity="0.4" />
+        <svg width="27" height="13" viewBox="0 0 27 13" fill="none" aria-hidden>
+          <rect x="0.5" y="0.5" width="23" height="12" rx="4" stroke="currentColor" opacity="0.35" />
+          <rect x="2" y="2" width="17" height="9" rx="2.5" fill="currentColor" />
+          <path d="M25 4.5v4c.8-.3 1.4-1.1 1.4-2s-.6-1.7-1.4-2Z" fill="currentColor" opacity="0.4" />
         </svg>
       </span>
     </div>
   );
 }
 
-function Widget({ onOpen }: { onOpen: (rect: DOMRect) => void }) {
+/**
+ * The "me" entry: a medium Maps-style widget with my photo pinned over
+ * Istanbul. The map is a static render (public/istanbul-map.jpg).
+ */
+function MeWidget({ onOpen }: { onOpen: (rect: DOMRect) => void }) {
   return (
     <motion.button
       type="button"
-      whileTap={{ scale: 0.97 }}
+      aria-label="Jon Willington, currently in Istanbul"
+      whileTap={{ scale: 0.96 }}
       onClick={(e) => onOpen(e.currentTarget.getBoundingClientRect())}
-      className="cursor-pointer rounded-[26px] bg-white/15 p-4 text-left text-white shadow-[0_6px_20px_rgba(0,0,0,0.15)] backdrop-blur-xl"
+      className="relative aspect-[350/164] w-full shrink-0 cursor-pointer overflow-hidden rounded-[24px] text-left shadow-[0_8px_24px_rgba(0,0,0,0.2)]"
     >
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-white/60">Currently</p>
-      <p className="mt-1 text-[17px] font-semibold leading-snug">Group Product Design Manager</p>
-      <p className="text-[15px] text-white/80">at Deel</p>
-      <p className="mt-3 text-[11px] font-semibold uppercase tracking-wider text-white/60">On the side</p>
-      <p className="text-[13px] text-white/90">{APPS.length} apps, designed and built by me</p>
+      <img src="/istanbul-map.jpg" alt="" draggable={false} className="absolute inset-0 size-full object-cover" />
+
+      {/* Photo pin over Beyoğlu, Find My style */}
+      <span className="absolute left-[37%] top-[44%] -translate-x-1/2 -translate-y-full">
+        <span className="location-pulse absolute bottom-[-12px] left-1/2 size-[44px] -translate-x-1/2 rounded-full bg-[#0a84ff]/25" />
+        <span className="relative block size-[50px] overflow-hidden rounded-full border-[3px] border-white bg-white shadow-[0_3px_10px_rgba(0,0,0,0.35)]">
+          <img src="/me.jpg" alt="" draggable={false} className="size-full object-cover" />
+        </span>
+        <span className="relative mx-auto -mt-[3px] block size-0 border-x-[7px] border-t-[9px] border-x-transparent border-t-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.2)]" />
+      </span>
+
+      <span className="absolute inset-x-0 bottom-0 h-[78px] bg-gradient-to-t from-black/50 to-transparent" />
+      <span className="absolute bottom-[12px] left-[14px] text-white">
+        <span className="block text-[20px] font-bold leading-tight tracking-[-0.4px]">Jon Willington</span>
+        <span className="flex items-center gap-[5px] text-[13px] font-medium text-white/85">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+            <path d="M21.7 2.3a1 1 0 0 0-1.1-.2L2.9 9.8a1 1 0 0 0 .1 1.9l7.6 1.7 1.7 7.6a1 1 0 0 0 1.9.1l7.7-17.7a1 1 0 0 0-.2-1.1Z" />
+          </svg>
+          Currently in Istanbul
+        </span>
+      </span>
+      <span className="absolute bottom-[6px] right-[10px] text-[7px] text-white/70">© OpenStreetMap</span>
     </motion.button>
   );
 }
 
-function PageDots() {
+function SearchPill() {
   return (
-    <div className="mb-3 flex justify-center gap-1.5">
-      <span className="size-1.5 rounded-full bg-white" />
-      <span className="size-1.5 rounded-full bg-white/40" />
+    <div
+      className={`pointer-events-none absolute bottom-[118px] left-1/2 flex h-[30px] -translate-x-1/2 items-center gap-[5px] rounded-full px-[12px] text-[13px] font-medium text-white ${GLASS}`}
+    >
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden>
+        <circle cx="10.5" cy="10.5" r="7" />
+        <path d="m16 16 5.5 5.5" strokeLinecap="round" />
+      </svg>
+      Search
     </div>
   );
 }
 
-function Dock() {
+function Dock({ framed }: { framed: boolean }) {
   return (
-    <div className="mb-7 flex justify-center gap-5 rounded-[30px] bg-white/20 px-4 py-3 backdrop-blur-xl">
-      <DockLink href="mailto:hey@jonwill.ing" label="Email" className="bg-gradient-to-b from-sky-400 to-blue-600">
-        <svg viewBox="0 0 24 24" className="size-8" fill="none" stroke="white" strokeWidth="1.8" aria-hidden>
-          <rect x="3" y="5.5" width="18" height="13" rx="2.5" />
-          <path d="m4 7 8 6 8-6" />
+    <div
+      className={`absolute inset-x-[12px] flex h-[94px] items-center justify-center gap-[31px] rounded-[40px] ${GLASS} ${framed ? "bottom-[12px]" : "bottom-[max(12px,env(safe-area-inset-bottom))]"}`}
+    >
+      <DockLink href="mailto:hey@jonwill.ing" label="Email" className="bg-gradient-to-b from-[#1fb0ff] to-[#0a6cf0]">
+        <svg viewBox="0 0 24 24" className="size-[38px]" fill="white" aria-hidden>
+          <path d="M3.5 6.2A2.2 2.2 0 0 1 5.7 4h12.6a2.2 2.2 0 0 1 2.2 2.2v.3l-8.5 5.6-8.5-5.6v-.3Z" />
+          <path d="M3.5 8.3v9.5A2.2 2.2 0 0 0 5.7 20h12.6a2.2 2.2 0 0 0 2.2-2.2V8.3l-8 5.3a.9.9 0 0 1-1 0l-8-5.3Z" />
         </svg>
       </DockLink>
       <DockLink href="https://www.linkedin.com/in/jonathanwillington/" label="LinkedIn" className="bg-[#0a66c2]">
-        <span className="text-[26px] font-bold leading-none tracking-tight text-white">in</span>
+        <span className="text-[34px] font-bold leading-none tracking-[-1px] text-white">in</span>
       </DockLink>
     </div>
   );
@@ -217,25 +284,24 @@ function DockLink({ href, label, className, children }: { href: string; label: s
       aria-label={label}
       target={external ? "_blank" : undefined}
       rel={external ? "noopener noreferrer" : undefined}
-      whileHover={{ scale: 1.08, y: -3 }}
       whileTap={{ scale: 0.88 }}
-      className={`flex size-14 items-center justify-center rounded-[22%] shadow-[0_6px_16px_rgba(0,0,0,0.25)] ${className}`}
+      className={`flex size-[64px] items-center justify-center rounded-[22.5%] shadow-[inset_0_0_0_0.5px_rgba(255,255,255,0.25)] ${className}`}
     >
       {children}
     </motion.a>
   );
 }
 
-function HomeIndicator({ onClick, dark = false }: { onClick: () => void; dark?: boolean }) {
+function HomeIndicator({ onClick, dark }: { onClick: () => void; dark: boolean }) {
   return (
     <button
       type="button"
       aria-label="Go home"
       onClick={onClick}
-      className="group absolute bottom-0 left-1/2 z-30 flex h-6 w-40 -translate-x-1/2 cursor-pointer items-center justify-center"
+      className="group absolute bottom-0 left-1/2 z-30 flex h-[22px] w-[180px] -translate-x-1/2 cursor-pointer items-start justify-center"
     >
       <span
-        className={`h-[5px] w-32 rounded-full transition-transform group-hover:scale-x-110 ${dark ? "bg-foreground/80" : "bg-white/90"}`}
+        className={`mt-[8px] h-[5px] w-[139px] rounded-full transition-transform group-hover:scale-x-110 ${dark ? "bg-neutral-900" : "bg-white"}`}
       />
     </button>
   );

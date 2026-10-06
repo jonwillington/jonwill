@@ -27,3 +27,17 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .wallpaper { animation: none; }
 }
+
+/* The ring around the "you are here" pin. */
+.location-pulse {
+  animation: location-pulse 2.4s ease-out infinite;
+}
+
+@keyframes location-pulse {
+  0% { transform: translateX(-50%) scale(0.4); opacity: 0.9; }
+  100% { transform: translateX(-50%) scale(1.6); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .location-pulse { animation: none; }
+}
