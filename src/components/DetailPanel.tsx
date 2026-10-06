@@ -349,7 +349,12 @@ function Destinations({ title, intro, items }: { title: string; intro: string; i
     <section aria-label={title}>
       <p className={`mb-2 ${EYEBROW}`}>{title}</p>
       <p className="mb-3 text-foreground/75">{intro}</p>
-      <ol className="overflow-hidden rounded-[10px] border border-foreground/10">
+      {/* Fixed height: about four rows show, the rest scroll inside the box. */}
+      <ol
+        tabIndex={0}
+        aria-label={`${title}, scrollable`}
+        className="max-h-[236px] overflow-y-auto overscroll-contain rounded-[10px] border border-foreground/10 outline-none [scrollbar-width:thin] focus-visible:ring-2 focus-visible:ring-foreground/30"
+      >
         {items.map((d, i) => (
           <li key={d.url} className={i ? "border-t border-foreground/10" : ""}>
             <a
