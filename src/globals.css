@@ -1,2 +1,29 @@
 @import "tailwindcss";
 @import "@heroui/styles";
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Home-screen wallpaper: soft colour fields that drift slowly. */
+.wallpaper {
+  background-color: #10122b;
+  background-image:
+    radial-gradient(60% 45% at 15% 10%, #ff8a5b 0%, transparent 70%),
+    radial-gradient(55% 45% at 90% 30%, #8b5cf6 0%, transparent 70%),
+    radial-gradient(70% 50% at 30% 85%, #0ea5e9 0%, transparent 70%),
+    radial-gradient(50% 40% at 85% 95%, #f43f5e 0%, transparent 70%);
+  background-size: 160% 160%;
+  animation: wallpaper-drift 24s ease-in-out infinite alternate;
+}
+
+@keyframes wallpaper-drift {
+  0% { background-position: 0% 0%; }
+  50% { background-position: 60% 40%; }
+  100% { background-position: 100% 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wallpaper { animation: none; }
+}
