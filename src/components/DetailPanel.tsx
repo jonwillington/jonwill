@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { motion } from "motion/react";
 import { Chip, buttonVariants } from "@heroui/react";
 
-import type { AppEntry, Market, MarketCell, NetworkSite } from "../content/apps";
+import type { AppEntry, Destination, Market, MarketCell, NetworkSite } from "../content/apps";
 import type { Live } from "../lib/live";
 import { IconArt } from "./AppIcon";
 import { CloseX } from "./CloseX";
@@ -64,7 +64,12 @@ export function DetailContent({
           <Network {...entry.network} counts={live?.network} />
         </motion.div>
       )}
-      {!entry.markets && !entry.network && (
+      {entry.destinations && (
+        <motion.div variants={item}>
+          <Destinations {...entry.destinations} />
+        </motion.div>
+      )}
+      {!entry.markets && !entry.network && !entry.destinations && (
         <motion.p variants={item} className="text-foreground/80">
           {entry.body[0]}
         </motion.p>
@@ -327,5 +332,63 @@ function Flag({ code }: { code: Market["code"] }) {
     >
       {flags[code]}
     </svg>
+  );
+}
+
+const SCORES = [
+  ["work", "Work"],
+  ["stay", "Stay"],
+  ["value", "Value"],
+  ["fun", "Fun"],
+] as const;
+
+/** Ranked places with flags and their four scores; each row opens the write-up. */
+function Destinations({ title, intro, items }: { title: string; intro: string; items: Destination[] }) {
+  const overall = (d: Destination) => Math.round((d.scores.work + d.scores.stay + d.scores.value + d.scores.fun) / 4);
+  return (
+    <section aria-label={title}>
+      <p className={`mb-2 ${EYEBROW}`}>{title}</p>
+      <p className="mb-3 text-foreground/75">{intro}</p>
+      <ol className="overflow-hidden rounded-[10px] border border-foreground/10">
+        {items.map((d, i) => (
+          <li key={d.url} className={i ? "border-t border-foreground/10" : ""}>
+            <a
+              href={d.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex items-center gap-3 px-3 py-2.5 text-[13px] transition-colors hover:bg-foreground/[0.04]"
+            >
+              <span className="w-4 font-mono text-[11px] text-foreground/40 tabular-nums">{i + 1}</span>
+              <img
+                src={`/flags/${d.code}.svg`}
+                alt=""
+                className="size-6 shrink-0 rounded-full shadow-[0_0_0_0.5px_rgba(0,0,0,0.15)]"
+              />
+              <span className="min-w-0 flex-1">
+                <span className="block font-medium group-hover:underline group-hover:decoration-foreground/30 group-hover:underline-offset-[3px]">
+                  {d.name}
+                </span>
+                <span className="block text-foreground/55">{d.country}</span>
+              </span>
+              <span className="hidden gap-2.5 font-mono text-[11px] tabular-nums text-foreground/55 sm:flex">
+                {SCORES.map(([key, label]) => (
+                  <span
+                    key={key}
+                    title={`${label}: ${d.scores[key]}%`}
+                    className="flex flex-col items-end leading-tight"
+                  >
+                    <span className="text-[9px] uppercase tracking-[0.06em] text-foreground/40">{label}</span>
+                    {d.scores[key]}
+                  </span>
+                ))}
+              </span>
+              <span className="ml-1 rounded-[5px] bg-foreground/[0.07] px-1.5 py-0.5 font-mono text-[12px] font-medium tabular-nums">
+                {overall(d)}
+              </span>
+            </a>
+          </li>
+        ))}
+      </ol>
+    </section>
   );
 }

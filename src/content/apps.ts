@@ -19,6 +19,16 @@ export type Market = {
   android?: MarketCell;
 };
 
+/** A reviewed place with its scores out of 100, linking to the full write-up. */
+export type Destination = {
+  name: string;
+  country: string;
+  /** ISO 3166 code; the flag is /flags/<code>.svg. */
+  code: string;
+  url: string;
+  scores: { work: number; stay: number; value: number; fun: number };
+};
+
 /** A sister site in a network, e.g. the other city coffee maps. */
 /** `cityId` is the Filter API city, for live shop and roaster counts. */
 export type NetworkSite = { name: string; city: string; url: string; icon: string; cityId?: string };
@@ -54,6 +64,8 @@ export type AppEntry = {
    * order for every app (What is it? / Why I made it / How I built it / What's next).
    */
   article?: { title: string; body: string[] }[];
+  /** Top-rated places, highest overall first. */
+  destinations?: { title: string; intro: string; items: Destination[] };
   /** A wider family of sites this app belongs to. */
   network?: { title: string; intro: string; sites: NetworkSite[] };
 };
@@ -224,6 +236,69 @@ export const APPS: AppEntry[] = [
         body: ["More destinations, and keeping the existing guides current."],
       },
     ],
+    // Snapshot of holdall.work/destinations, ranked by the average of its four ratings.
+    destinations: {
+      title: "Top destinations",
+      intro: "The highest-rated places so far, scored for working, staying, value and fun.",
+      items: [
+        {
+          name: "Bangkok",
+          country: "Thailand",
+          code: "th",
+          url: "https://www.holdall.work/destinations/bangkok",
+          scores: { work: 85, stay: 89, value: 89, fun: 91 },
+        },
+        {
+          name: "Chiang Mai",
+          country: "Thailand",
+          code: "th",
+          url: "https://www.holdall.work/destinations/chiang-mai",
+          scores: { work: 92, stay: 94, value: 96, fun: 68 },
+        },
+        {
+          name: "São Paulo",
+          country: "Brazil",
+          code: "br",
+          url: "https://www.holdall.work/destinations/sao-paulo",
+          scores: { work: 95, stay: 85, value: 87, fun: 78 },
+        },
+        {
+          name: "Lima",
+          country: "Peru",
+          code: "pe",
+          url: "https://www.holdall.work/destinations/lima",
+          scores: { work: 82, stay: 86, value: 92, fun: 84 },
+        },
+        {
+          name: "Cape Town",
+          country: "South Africa",
+          code: "za",
+          url: "https://www.holdall.work/destinations/cape-town",
+          scores: { work: 92, stay: 85, value: 83, fun: 84 },
+        },
+        {
+          name: "Bogotá",
+          country: "Colombia",
+          code: "co",
+          url: "https://www.holdall.work/destinations/bogota",
+          scores: { work: 85, stay: 86, value: 88, fun: 78 },
+        },
+        {
+          name: "Ho Chi Minh",
+          country: "Vietnam",
+          code: "vn",
+          url: "https://www.holdall.work/destinations/ho-chi-minh",
+          scores: { work: 78, stay: 88, value: 84, fun: 85 },
+        },
+        {
+          name: "Buenos Aires",
+          country: "Argentina",
+          code: "ar",
+          url: "https://www.holdall.work/destinations/buenos-aires",
+          scores: { work: 86, stay: 87, value: 75, fun: 86 },
+        },
+      ],
+    },
     links: [
       { label: "holdall.work", href: "https://www.holdall.work" },
       { label: "App Store", href: "https://apps.apple.com/gb/app/holdall/id6745562343" },
