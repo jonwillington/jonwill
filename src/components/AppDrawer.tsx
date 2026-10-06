@@ -4,7 +4,6 @@ import type { AppEntry } from "../content/apps";
 import { IconArt } from "./AppIcon";
 import { CloseX } from "./CloseX";
 import { EYEBROW, LinkButton, Tags } from "./DetailPanel";
-import { screensFor } from "./phone/AppScreens";
 
 /**
  * "Learn more": a Vaul side drawer with everything that doesn't fit in the
@@ -25,7 +24,6 @@ export function AppDrawer({
   /** The sheet's colour: the page's, so it feels like part of the app. */
   background: string;
 }) {
-  const screens = entry ? screensFor(entry, dark) : null;
   const scheme = dark ? "dark" : (entry?.scheme ?? "dark");
 
   return (
@@ -54,27 +52,6 @@ export function AppDrawer({
                 </div>
                 <CloseX onPress={() => onOpenChange(false)} />
               </header>
-
-              {screens && (
-                <section className="mt-7" aria-label="Screens">
-                  <p className={`mb-3 ${EYEBROW}`}>Screens</p>
-                  {/* Scrolls sideways; data-vaul-no-drag keeps horizontal swipes from moving the sheet. */}
-                  <div
-                    data-vaul-no-drag
-                    className="-mx-7 flex snap-x gap-3 overflow-x-auto px-7 pb-2 [scrollbar-width:none]"
-                  >
-                    {screens.map((src) => (
-                      <img
-                        key={src}
-                        src={src}
-                        alt=""
-                        loading="lazy"
-                        className="aspect-[402/874] w-[150px] shrink-0 snap-start rounded-[24px] shadow-[0_0_0_1px_rgba(0,0,0,0.08),0_8px_24px_rgba(0,0,0,0.12)]"
-                      />
-                    ))}
-                  </div>
-                </section>
-              )}
 
               {entry.highlights && (
                 <section className="mt-7 rounded-[14px] bg-foreground/[0.04] px-5 py-4" aria-label="At a glance">
