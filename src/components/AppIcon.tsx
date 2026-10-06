@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "motion/react";
 
 import type { AppEntry } from "../content/apps";
 import { iconClip } from "../lib/squircle";
+import { InterestsIcon } from "./InterestsWidget";
 
 type Props = {
   entry: AppEntry;
@@ -77,6 +78,14 @@ export function AppIcon({ entry, jiggle, badge, index, onOpen, onLongPress }: Pr
 export function IconArt({ entry, size = 64, round = false }: { entry: AppEntry; size?: number; round?: boolean }) {
   const [failed, setFailed] = useState(false);
   const shape = round ? { borderRadius: "9999px" } : { clipPath: iconClip(size) };
+
+  if (entry.id === "interests") {
+    return (
+      <span className="block size-full" style={shape}>
+        <InterestsIcon size={size} />
+      </span>
+    );
+  }
 
   if (!entry.icon || failed) {
     return (

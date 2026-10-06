@@ -139,11 +139,7 @@ export const APPS: AppEntry[] = [
       "Istanbrew is a guide to the best speciality coffee in Istanbul. Every shop is on one map, so you can see what's good near you, check whether it's open and get directions in a tap.",
       "Each area has a top pick to start with, and you can see who roasts the coffee, where the beans come from and which shops pour them.",
     ],
-    highlights: [
-      "The whole city, from Kadıköy to Karaköy",
-      "Our Picks for each area",
-      "Filter by roaster or origin",
-    ],
+    highlights: ["The whole city, from Kadıköy to Karaköy", "Our Picks for each area", "Filter by roaster or origin"],
     links: [
       { label: "istanbrew.com", href: "https://istanbrew.com" },
       { label: "App Store", href: "https://apps.apple.com/gb/app/istanbrew/id6814183189" },
@@ -151,4 +147,21 @@ export const APPS: AppEntry[] = [
   },
 ];
 
-export const ALL_ENTRIES: AppEntry[] = [ABOUT, ...APPS];
+export const INTERESTS: AppEntry = {
+  id: "interests",
+  name: "Interests",
+  // Drawn in code (InterestsWidget), not an image.
+  icon: null,
+  accent: "#fbf8f4",
+  scheme: "light",
+  glow: "#ffb08a",
+  tagline: "Coffee, cycling and walking.",
+  tags: ["Coffee", "Cycling", "Walking"],
+  body: [
+    "Speciality coffee is why Istanbrew exists. I'm always after the next good cup.",
+    "Cycling and walking are how I like to get to know a place.",
+  ],
+  links: [{ label: "istanbrew.com", href: "https://istanbrew.com" }],
+};
+
+export const ALL_ENTRIES: AppEntry[] = [ABOUT, INTERESTS, ...APPS];

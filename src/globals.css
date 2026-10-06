@@ -41,3 +41,18 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .location-pulse { animation: none; }
 }
+
+/* Bike wheels in the interests widget. */
+.spin-wheel {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: spin-wheel 1.4s linear infinite;
+}
+
+@keyframes spin-wheel {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spin-wheel { animation: none; }
+}

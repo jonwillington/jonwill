@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "motion/react";
 
-import { ABOUT, APPS, type AppEntry } from "../content/apps";
+import { ABOUT, APPS, INTERESTS, type AppEntry } from "../content/apps";
+import { InterestsWidget } from "./InterestsWidget";
 import { AppIcon, IconArt } from "./AppIcon";
 import { SHAPE, Squircle, iconClip } from "../lib/squircle";
 
@@ -104,6 +105,14 @@ export function Phone({ open, seen, onOpen, onClose, framed, scale = 1, renderOp
               onLongPress={() => setJiggle(true)}
             />
           ))}
+        </div>
+
+        {/* Two more rows: the interests widget, labelled like Find My. */}
+        <div className="flex shrink-0 flex-col items-center" style={{ height: 2 * GRID.rowPitch }}>
+          <InterestsWidget height={WIDGET_HEIGHT} onOpen={(rect) => handleOpen(INTERESTS, rect)} />
+          <span className="mt-[6.5px] text-[12px] font-medium leading-[14px] text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">
+            Interests
+          </span>
         </div>
       </div>
 
