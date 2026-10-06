@@ -6,11 +6,23 @@ import "./globals.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <main className="flex min-h-dvh flex-col items-center justify-center gap-2 bg-background text-foreground">
-      <h1 className="text-xl font-medium tracking-tight">Jon Willington</h1>
-      <Link href="mailto:hey@jonwill.ing" className="text-sm text-muted">
-        hey@jonwill.ing
-      </Link>
-    </main>
+    <div className="flex min-h-dvh flex-col bg-background text-foreground">
+      <main className="flex flex-1 items-center justify-center">
+        <h1 className="text-xl font-medium tracking-tight">Jon Willington</h1>
+      </main>
+      <footer className="flex justify-between px-6 py-5 text-sm">
+        <Link href="mailto:hey@jonwill.ing" className="text-muted">
+          hey@jonwill.ing
+        </Link>
+        <Link
+          href="https://www.linkedin.com/in/jonathanwillington/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-muted"
+        >
+          LinkedIn
+        </Link>
+      </footer>
+    </div>
   </React.StrictMode>,
 );
