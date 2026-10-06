@@ -45,22 +45,26 @@ export function AppDrawer({
               className="overflow-y-auto px-7 pb-10 text-[15px] leading-[1.6]"
               onScroll={(e) => setScrolled(e.currentTarget.scrollTop > 4)}
             >
-              {/* Pinned while the article scrolls underneath. */}
+              {/* Pinned while the article scrolls underneath; it shrinks to a compact bar once scrolled. */}
               <header
-                className={`sticky top-0 z-10 -mx-7 flex items-start justify-between gap-4 px-7 pb-4 pt-7 transition-shadow duration-200 ${
-                  scrolled ? "shadow-[0_1px_0_rgba(0,0,0,0.08),0_8px_16px_-12px_rgba(0,0,0,0.25)]" : ""
+                className={`sticky top-0 z-10 -mx-7 flex items-center justify-between gap-4 px-7 transition-[padding,box-shadow] duration-200 ${
+                  scrolled ? "py-3 shadow-[0_1px_0_rgba(0,0,0,0.08),0_8px_16px_-12px_rgba(0,0,0,0.25)]" : "pb-4 pt-7"
                 }`}
                 style={{ background }}
               >
-                <div className="flex items-center gap-4">
-                  <div className="size-14 shrink-0 [filter:drop-shadow(0_2px_6px_rgba(0,0,0,0.10))]">
-                    <IconArt entry={entry} size={56} round={entry.id === "about"} />
+                <div className="flex min-w-0 items-center gap-3">
+                  <div
+                    className={`shrink-0 transition-[width,height] duration-200 [filter:drop-shadow(0_2px_6px_rgba(0,0,0,0.10))] ${scrolled ? "size-8" : "size-12"}`}
+                  >
+                    <IconArt entry={entry} size={scrolled ? 32 : 48} round={entry.id === "about"} />
                   </div>
-                  <div>
-                    <Drawer.Title className="text-[22px] font-semibold leading-tight tracking-[-0.02em]">
+                  <div className="min-w-0">
+                    <Drawer.Title
+                      className={`truncate font-semibold leading-tight tracking-[-0.02em] transition-[font-size] duration-200 ${scrolled ? "text-[16px]" : "text-[19px]"}`}
+                    >
                       {entry.id === "about" ? "Jon Willington" : entry.name}
                     </Drawer.Title>
-                    <p className="text-foreground/65">{entry.tagline}</p>
+                    {!scrolled && <p className="truncate text-[14px] text-foreground/65">{entry.tagline}</p>}
                   </div>
                 </div>
                 <CloseX onPress={() => onOpenChange(false)} />
