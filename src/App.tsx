@@ -200,11 +200,14 @@ function Ambient({ entry }: { entry: AppEntry | null }) {
                 background: `radial-gradient(circle, ${
                   entry.glow ?? (entry.scheme === "dark" ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.55)")
                 } 0%, transparent 65%)`,
-                opacity: entry.glow ? 0.45 : 1,
               }}
-              initial={{ x: "-50%", y: "-50%", scale: 0.8 }}
-              animate={{ x: "-50%", y: "-50%", scale: [1, 1.12, 1] }}
-              transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
+              // The colour change is quick; the glow builds up slowly after it.
+              initial={{ x: "-50%", y: "-50%", scale: 0.9, opacity: 0 }}
+              animate={{ x: "-50%", y: "-50%", scale: [1, 1.12, 1], opacity: entry.glow ? 0.38 : 1 }}
+              transition={{
+                scale: { duration: 14, repeat: Infinity, ease: "easeInOut" },
+                opacity: { duration: 4, delay: 0.5, ease: [0.4, 0, 0.2, 1] },
+              }}
             />
             {/* Soft vignette so text at the edges stays readable. */}
             <div

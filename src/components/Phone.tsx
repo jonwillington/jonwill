@@ -37,6 +37,7 @@ export function Phone({ open, seen, onOpen, onClose, framed, scale = 1, renderOp
   // Opening from a link (no tap) zooms from the middle of the screen.
   const [origin, setOrigin] = useState<Origin | null>(null);
   const [jiggle, setJiggle] = useState(false);
+  const [alertOpen, setAlertOpen] = useState(false);
 
   const handleOpen = (entry: AppEntry, rect: DOMRect) => {
     if (jiggle) {
@@ -107,7 +108,8 @@ export function Phone({ open, seen, onOpen, onClose, framed, scale = 1, renderOp
       </div>
 
       <SearchPill />
-      <Dock framed={framed} />
+      <Dock framed={framed} onWhatsApp={() => setAlertOpen(true)} />
+      <AnimatePresence>{alertOpen && <NotThatCrazy onClose={() => setAlertOpen(false)} />}</AnimatePresence>
 
       <AnimatePresence>
         {jiggle && (
@@ -302,22 +304,59 @@ function SearchPill() {
   );
 }
 
-function Dock({ framed }: { framed: boolean }) {
+function Dock({ framed, onWhatsApp }: { framed: boolean; onWhatsApp: () => void }) {
   return (
     <Squircle
       radius={SHAPE.dock.radius}
       smoothing={SHAPE.dock.smoothing}
       rim
-      className={`absolute inset-x-[17px] flex h-[101.5px] items-center justify-center gap-[23.7px] ${GLASS} ${framed ? "bottom-[18px]" : "bottom-[max(18px,env(safe-area-inset-bottom))]"}`}
+      glass={GLASS}
+      className={`absolute inset-x-[17px] flex h-[101.5px] items-center justify-center gap-[23.7px] ${framed ? "bottom-[18px]" : "bottom-[max(18px,env(safe-area-inset-bottom))]"}`}
     >
       <DockLink href="mailto:hey@jonwill.ing" label="Email" icon="/icons/mail-glass.png" />
       <DockLink href="https://www.linkedin.com/in/jonathanwillington/" label="LinkedIn" icon="/icons/linkedin.png" />
+      <DockLink onPress={onWhatsApp} label="WhatsApp" icon="/icons/whatsapp.png" />
     </Squircle>
   );
 }
 
-function DockLink({ href, label, icon }: { href: string; label: string; icon: string }) {
-  const external = href.startsWith("http");
+/** A dock icon: a link, or a button when `onPress` is given. */
+function DockLink({
+  href,
+  onPress,
+  label,
+  icon,
+}: {
+  href?: string;
+  onPress?: () => void;
+  label: string;
+  icon: string;
+}) {
+  const external = href?.startsWith("http");
+  const art = (
+    <img
+      src={icon}
+      alt=""
+      draggable={false}
+      className="size-full select-none object-cover"
+      style={{ clipPath: iconClip(64) }}
+    />
+  );
+  const className = "relative size-[64px] cursor-pointer [filter:drop-shadow(0_2px_5px_rgba(0,0,0,0.12))]";
+
+  if (onPress) {
+    return (
+      <motion.button
+        type="button"
+        aria-label={label}
+        whileTap={{ scale: 0.88 }}
+        onClick={onPress}
+        className={className}
+      >
+        {art}
+      </motion.button>
+    );
+  }
   return (
     <motion.a
       href={href}
@@ -325,16 +364,69 @@ function DockLink({ href, label, icon }: { href: string; label: string; icon: st
       target={external ? "_blank" : undefined}
       rel={external ? "noopener noreferrer" : undefined}
       whileTap={{ scale: 0.88 }}
-      className="relative size-[64px] [filter:drop-shadow(0_2px_5px_rgba(0,0,0,0.12))]"
+      className={className}
     >
-      <img
-        src={icon}
-        alt=""
-        draggable={false}
-        className="size-full select-none object-cover"
-        style={{ clipPath: iconClip(64) }}
-      />
+      {art}
     </motion.a>
+  );
+}
+
+/** What WhatsApp does: an iOS 26-style alert, because my number isn't on the internet. */
+function NotThatCrazy({ onClose }: { onClose: () => void }) {
+  return (
+    <motion.div
+      className="absolute inset-0 z-40 flex items-center justify-center bg-black/25"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+      onClick={onClose}
+    >
+      <motion.div
+        role="alertdialog"
+        aria-labelledby="not-that-crazy-title"
+        aria-describedby="not-that-crazy-body"
+        initial={{ scale: 1.15, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
+        transition={{ type: "spring", stiffness: 420, damping: 30 }}
+        onClick={(e) => e.stopPropagation()}
+        className="w-[300px]"
+      >
+        <Squircle
+          radius={34}
+          smoothing={0.6}
+          rim
+          glass="bg-white/75 backdrop-blur-2xl backdrop-saturate-150"
+          className="relative text-center text-neutral-900"
+        >
+          <div className="relative px-[20px] pb-[16px] pt-[22px]">
+            <p id="not-that-crazy-title" className="text-[17px] font-semibold leading-[22px]">
+              I'm not that crazy
+            </p>
+            <p id="not-that-crazy-body" className="mt-[6px] text-[15px] leading-[20px] text-neutral-900/80">
+              My number stays off the internet. Send me an email and I'll get back to you.
+            </p>
+            <div className="mt-[18px] flex gap-[10px]">
+              <button
+                type="button"
+                onClick={onClose}
+                className="h-[48px] flex-1 cursor-pointer rounded-full bg-black/10 text-[17px] font-medium"
+              >
+                OK
+              </button>
+              <a
+                href="mailto:hey@jonwill.ing"
+                onClick={onClose}
+                className="flex h-[48px] flex-1 items-center justify-center rounded-full bg-[#0a84ff] text-[17px] font-semibold text-white"
+              >
+                Email me
+              </a>
+            </div>
+          </div>
+        </Squircle>
+      </motion.div>
+    </motion.div>
   );
 }
 
