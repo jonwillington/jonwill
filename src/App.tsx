@@ -3,8 +3,13 @@ import { AnimatePresence, motion } from "motion/react";
 import { Link } from "@heroui/react";
 
 import { ALL_ENTRIES, type AppEntry } from "./content/apps";
-import { DEVICE, Phone, Splash } from "./components/Phone";
+import { DEVICE, Phone } from "./components/Phone";
 import { DetailContent } from "./components/DetailPanel";
+import { ThemeToggle } from "./components/ThemeToggle";
+import { AppScreens, screensFor } from "./components/phone/AppScreens";
+import { Splash } from "./components/phone/Splash";
+import { useLive } from "./lib/live";
+import { useTheme } from "./lib/theme";
 
 const fromHash = () => ALL_ENTRIES.find((e) => e.id === window.location.hash.slice(1)) ?? null;
 
@@ -20,7 +25,7 @@ function useIsDesktop() {
   return matches;
 }
 
-/** Fit the device to the window, leaving room for the header, hint and footer. */
+/** Fit the device to the window, leaving room for the header, dots and footer. */
 function useDeviceScale() {
   const fit = () => Math.min(1, Math.max(0.5, (window.innerHeight - 170) / DEVICE.height));
   const [scale, setScale] = useState(fit);
@@ -58,15 +63,33 @@ function useSeen() {
   return [seen, markSeen] as const;
 }
 
+/** Mix a hex colour towards another; used to darken app colours for dark mode. */
+function mix(hex: string, into: string, amount: number) {
+  const parse = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+  const a = parse(hex);
+  const b = parse(into);
+  return `#${a
+    .map((v, i) =>
+      Math.round(v + (b[i] - v) * amount)
+        .toString(16)
+        .padStart(2, "0"),
+    )
+    .join("")}`;
+}
+
 export function App() {
   const desktop = useIsDesktop();
   const scale = useDeviceScale();
+  const { mode, setMode, dark } = useTheme();
+  const live = useLive();
   const [open, setOpen] = useState<AppEntry | null>(fromHash);
+  const [screen, setScreen] = useState(0);
 
   const [seen, markSeen] = useSeen();
-  // However an app was opened (tap or link), its badge clears.
+  // However an app was opened (tap, link or notification), its badge clears.
   useEffect(() => {
     if (open) markSeen(open.id);
+    setScreen(0);
   }, [open, markSeen]);
 
   const openEntry = useCallback((entry: AppEntry) => {
@@ -76,7 +99,7 @@ export function App() {
 
   const close = useCallback(() => {
     setOpen(null);
-    history.replaceState(null, "", window.location.pathname);
+    history.replaceState(null, "", window.location.pathname + window.location.search);
   }, []);
 
   useEffect(() => {
@@ -90,20 +113,36 @@ export function App() {
     };
   }, [close]);
 
+  const screens = open ? screensFor(open, dark) : null;
+  // In dark mode the page takes a deep tint of the app's colour instead of the colour itself.
+  const pageAccent = open ? (dark ? mix(open.accent, "#0e0e10", 0.82) : open.accent) : null;
+  const pageScheme = open ? (dark ? "dark" : (open.scheme ?? "dark")) : dark ? "dark" : "light";
+
+  const phoneProps = {
+    seen,
+    live,
+    dark,
+    open,
+    onOpen: openEntry,
+    onClose: close,
+    ownStatusBar: !!screens && desktop,
+    lightApp:
+      screens && desktop
+        ? open!.screens!.scheme === "light" && !(dark && open!.screens!.dark)
+        : open?.scheme === "light",
+  };
+
   // Phones: the page is the home screen, and an opened app is the detail view.
   if (!desktop) {
     return (
       <Phone
+        {...phoneProps}
         framed={false}
-        seen={seen}
-        open={open}
-        onOpen={openEntry}
-        onClose={close}
         renderOpen={(entry) => (
           <div
-            data-theme={entry.scheme ?? "dark"}
+            data-theme={dark ? "dark" : (entry.scheme ?? "dark")}
             className="size-full overflow-y-auto px-5 pb-16 pt-14 text-foreground"
-            style={{ background: entry.accent }}
+            style={{ background: dark ? mix(entry.accent, "#0e0e10", 0.82) : entry.accent }}
           >
             <DetailContent entry={entry} onClose={close} />
           </div>
@@ -113,13 +152,13 @@ export function App() {
   }
 
   return (
-    <div
-      data-theme={open ? (open.scheme ?? "dark") : "light"}
-      className="relative isolate flex min-h-dvh flex-col overflow-hidden text-foreground"
-    >
-      <Ambient entry={open} />
+    <div data-theme={pageScheme} className="relative isolate flex min-h-dvh flex-col overflow-hidden text-foreground">
+      <Ambient entry={open} accent={pageAccent} dark={dark} />
 
-      <header className="px-6 py-5 text-sm font-medium">Jon Willington</header>
+      <header className="flex items-center justify-between px-6 py-4 text-sm font-medium">
+        <span>Jon Willington</span>
+        <ThemeToggle mode={mode} onChange={setMode} />
+      </header>
 
       <main className="flex flex-1 items-center justify-center gap-16 px-6">
         <motion.div
@@ -128,17 +167,34 @@ export function App() {
           className="flex flex-col items-center gap-5"
         >
           <Phone
+            {...phoneProps}
             framed
             scale={scale}
-            seen={seen}
-            open={open}
-            onOpen={openEntry}
-            onClose={close}
-            renderOpen={(entry) => <Splash entry={entry} />}
+            renderOpen={(entry) =>
+              screensFor(entry, dark) ? (
+                <AppScreens entry={entry} dark={dark} index={screen} onIndex={setScreen} />
+              ) : (
+                <Splash entry={entry} />
+              )
+            }
           />
-          <p className={`text-sm text-muted transition-opacity ${open ? "opacity-0" : ""}`}>
-            Tap an app. Press and hold to wiggle.
-          </p>
+          <div className="flex h-5 items-center">
+            <AnimatePresence mode="wait">
+              {screens && screens.length > 1 ? (
+                <ScreenDots key="dots" count={screens.length} index={screen} onSelect={setScreen} />
+              ) : (
+                <motion.p
+                  key="hint"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: open ? 0 : 1 }}
+                  exit={{ opacity: 0 }}
+                  className="text-sm text-muted"
+                >
+                  Tap an app. Press and hold for more.
+                </motion.p>
+              )}
+            </AnimatePresence>
+          </div>
         </motion.div>
 
         <AnimatePresence mode="popLayout">
@@ -174,20 +230,55 @@ export function App() {
   );
 }
 
-/**
- * The page backdrop. Fades to the open app's colour, with a huge blurred
- * copy of its icon drifting behind the phone, so the whole page takes on
- * the app's mood.
- */
-function Ambient({ entry }: { entry: AppEntry | null }) {
+/** Which real app screen is showing; click to jump. */
+function ScreenDots({ count, index, onSelect }: { count: number; index: number; onSelect: (i: number) => void }) {
   return (
-    <div className="pointer-events-none absolute inset-0 -z-10 bg-[#f5f5f5]" aria-hidden>
+    <motion.div
+      className="flex items-center gap-2"
+      initial={{ opacity: 0, y: 4 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 4 }}
+      role="tablist"
+      aria-label="App screens"
+    >
+      {Array.from({ length: count }, (_, i) => (
+        <button
+          key={i}
+          type="button"
+          role="tab"
+          aria-selected={i === index}
+          aria-label={`Screen ${i + 1}`}
+          onClick={() => onSelect(i)}
+          className="flex h-5 cursor-pointer items-center"
+        >
+          <motion.span
+            className="block h-[7px] rounded-full bg-foreground"
+            animate={{ width: i === index ? 22 : 7, opacity: i === index ? 0.85 : 0.25 }}
+            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+          />
+        </button>
+      ))}
+    </motion.div>
+  );
+}
+
+/**
+ * The page backdrop. Fades to the open app's colour, with a soft light
+ * building up behind the phone, so the whole page takes on the app's mood.
+ */
+function Ambient({ entry, accent, dark }: { entry: AppEntry | null; accent: string | null; dark: boolean }) {
+  return (
+    <div
+      className="pointer-events-none absolute inset-0 -z-10 transition-colors duration-700"
+      style={{ background: dark ? "#0e0e10" : "#f5f5f5" }}
+      aria-hidden
+    >
       <AnimatePresence>
-        {entry && (
+        {entry && accent && (
           <motion.div
-            key={entry.id}
+            key={`${entry.id}-${dark}`}
             className="absolute inset-0 overflow-hidden"
-            style={{ background: entry.accent }}
+            style={{ background: accent }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -198,12 +289,12 @@ function Ambient({ entry }: { entry: AppEntry | null }) {
               className="absolute left-[32%] top-1/2 aspect-square w-[70vmax] rounded-full will-change-transform"
               style={{
                 background: `radial-gradient(circle, ${
-                  entry.glow ?? (entry.scheme === "dark" ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.55)")
+                  entry.glow ?? (dark || entry.scheme === "dark" ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.55)")
                 } 0%, transparent 65%)`,
               }}
               // The colour change is quick; the glow builds up slowly after it.
               initial={{ x: "-50%", y: "-50%", scale: 0.9, opacity: 0 }}
-              animate={{ x: "-50%", y: "-50%", scale: [1, 1.12, 1], opacity: entry.glow ? 0.38 : 1 }}
+              animate={{ x: "-50%", y: "-50%", scale: [1, 1.12, 1], opacity: entry.glow ? (dark ? 0.22 : 0.38) : 1 }}
               transition={{
                 scale: { duration: 14, repeat: Infinity, ease: "easeInOut" },
                 opacity: { duration: 4, delay: 0.5, ease: [0.4, 0, 0.2, 1] },
@@ -212,7 +303,7 @@ function Ambient({ entry }: { entry: AppEntry | null }) {
             {/* Soft vignette so text at the edges stays readable. */}
             <div
               className="absolute inset-0"
-              style={{ background: `radial-gradient(120% 90% at 50% 50%, transparent 40%, ${entry.accent} 100%)` }}
+              style={{ background: `radial-gradient(120% 90% at 50% 50%, transparent 40%, ${accent} 100%)` }}
             />
           </motion.div>
         )}

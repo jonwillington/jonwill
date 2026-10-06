@@ -6,8 +6,9 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Home-screen wallpaper: soft colour fields that drift slowly. */
-.wallpaper {
+/* Home and lock screen wallpaper: soft colour fields that drift slowly.
+   The night version fades in over it when the phone is in dark mode. */
+.wallpaper-layer {
   background-color: #10122b;
   background-image:
     radial-gradient(60% 45% at 15% 10%, #ff8a5b 0%, transparent 70%),
@@ -18,14 +19,61 @@ body {
   animation: wallpaper-drift 24s ease-in-out infinite alternate;
 }
 
+.wallpaper-layer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: #05060f;
+  background-image:
+    radial-gradient(60% 45% at 15% 10%, #6b2f3a 0%, transparent 70%),
+    radial-gradient(55% 45% at 90% 30%, #3b2a7a 0%, transparent 70%),
+    radial-gradient(70% 50% at 30% 85%, #0b3a5c 0%, transparent 70%),
+    radial-gradient(50% 40% at 85% 95%, #4a1630 0%, transparent 70%);
+  background-size: 160% 160%;
+  animation: wallpaper-drift 24s ease-in-out infinite alternate;
+  opacity: 0;
+  transition: opacity 0.9s ease;
+}
+
+[data-night="true"] .wallpaper-layer::after {
+  opacity: 1;
+}
+
 @keyframes wallpaper-drift {
   0% { background-position: 0% 0%; }
   50% { background-position: 60% 40%; }
   100% { background-position: 100% 100%; }
 }
 
+/* The lock-screen clock: big, bright and a touch glassy. */
+.lock-clock {
+  font-family: "SF Pro Rounded", ui-rounded, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.78) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 2px 18px rgba(0, 0, 0, 0.12));
+}
+
+/* "Swipe up to open", with a light sweeping across it. */
+.lock-hint {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.55) 30%, #fff 50%, rgba(255, 255, 255, 0.55) 70%);
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: lock-hint 2.6s linear infinite;
+}
+
+@keyframes lock-hint {
+  from { background-position: 100% 0; }
+  to { background-position: -150% 0; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .wallpaper { animation: none; }
+  .wallpaper-layer,
+  .wallpaper-layer::after,
+  .lock-hint { animation: none; }
 }
 
 /* The ring around the "you are here" pin. */

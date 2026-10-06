@@ -25,6 +25,12 @@ export type AppEntry = {
   body: string[];
   highlights?: string[];
   links: AppLink[];
+  /**
+   * Real screenshots (804×1748, in /public/screens) shown inside the phone
+   * when the app opens, in order. `scheme` is the screens' own look, which
+   * sets the home indicator; `dark` swaps in for dark mode where it exists.
+   */
+  screens?: { scheme: "light" | "dark"; light: string[]; dark?: string[] };
 };
 
 export const ABOUT: AppEntry = {
@@ -85,6 +91,10 @@ export const APPS: AppEntry[] = [
       { label: "App Store (UK)", href: "https://apps.apple.com/gb/app/ddbx-uk/id6762196330" },
       { label: "App Store (US)", href: "https://apps.apple.com/gb/app/ddbx-us/id6772091960" },
     ],
+    screens: {
+      scheme: "dark",
+      light: ["/screens/ddbx-deals.webp", "/screens/ddbx-performance.webp", "/screens/ddbx-company.webp"],
+    },
   },
   {
     id: "holdall",
@@ -125,6 +135,11 @@ export const APPS: AppEntry[] = [
       "No server, no tracking",
     ],
     links: [{ label: "gabridge.app", href: "https://gabridge.app" }],
+    screens: {
+      scheme: "light",
+      light: ["/screens/gabridge-home.webp", "/screens/gabridge-detail.webp"],
+      dark: ["/screens/gabridge-home-dark.webp", "/screens/gabridge-detail-dark.webp"],
+    },
   },
   {
     id: "istanbrew",
@@ -144,6 +159,15 @@ export const APPS: AppEntry[] = [
       { label: "istanbrew.com", href: "https://istanbrew.com" },
       { label: "App Store", href: "https://apps.apple.com/gb/app/istanbrew/id6814183189" },
     ],
+    screens: {
+      scheme: "light",
+      light: [
+        "/screens/istanbrew-welcome.webp",
+        "/screens/istanbrew-map.webp",
+        "/screens/istanbrew-areas.webp",
+        "/screens/istanbrew-shop.webp",
+      ],
+    },
   },
 ];
 

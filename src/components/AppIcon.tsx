@@ -1,53 +1,103 @@
 import { useRef, useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, type PanInfo } from "motion/react";
 
 import type { AppEntry } from "../content/apps";
 import { iconClip } from "../lib/squircle";
 import { InterestsIcon } from "./InterestsWidget";
 
+const LONG_PRESS_MS = 500;
+
 type Props = {
   entry: AppEntry;
-  jiggle: boolean;
-  badge: boolean;
-  /** Seed so neighbouring icons don't jiggle in sync. */
+  /** Position in the grid; also staggers the badge pop-in and the wiggle. */
   index: number;
+  editing: boolean;
+  badge: boolean;
+  /** True while this icon is being dragged to a new spot. */
+  dragging: boolean;
   onOpen: (entry: AppEntry, rect: DOMRect) => void;
-  onLongPress: () => void;
+  onMenu: (entry: AppEntry, rect: DOMRect) => void;
+  onRemove: (entry: AppEntry) => void;
+  onDragStart: (entry: AppEntry) => void;
+  onDragMove: (entry: AppEntry, point: { x: number; y: number }) => void;
+  onDragEnd: () => void;
 };
 
-export function AppIcon({ entry, jiggle, badge, index, onOpen, onLongPress }: Props) {
+export function AppIcon({
+  entry,
+  index,
+  editing,
+  badge,
+  dragging,
+  onOpen,
+  onMenu,
+  onRemove,
+  onDragStart,
+  onDragMove,
+  onDragEnd,
+}: Props) {
   const timer = useRef<number | undefined>(undefined);
   const longPressed = useRef(false);
+  const moved = useRef(false);
+  const button = useRef<HTMLButtonElement>(null);
+
+  const cancelPress = () => window.clearTimeout(timer.current);
+  const rect = () => button.current!.getBoundingClientRect();
 
   return (
-    <div className="flex flex-col items-center">
+    <motion.div
+      layout
+      // Icons slide into their new places while one is dragged.
+      transition={{ type: "spring", stiffness: 500, damping: 38 }}
+      className={`relative flex flex-col items-center ${dragging ? "z-20" : "z-0"}`}
+      drag={editing}
+      dragSnapToOrigin
+      dragElastic={1}
+      dragMomentum={false}
+      onDragStart={() => {
+        moved.current = true;
+        cancelPress();
+        onDragStart(entry);
+      }}
+      onDrag={(_, info: PanInfo) => onDragMove(entry, info.point)}
+      onDragEnd={() => onDragEnd()}
+      whileDrag={{ scale: 1.12 }}
+    >
       <motion.button
+        ref={button}
         type="button"
-        aria-label={`Open ${entry.name}`}
+        aria-label={editing ? `${entry.name}, drag to move` : `Open ${entry.name}`}
         className="relative size-[64px] shrink-0 cursor-pointer outline-none [filter:drop-shadow(0_2px_5px_rgba(0,0,0,0.12))] focus-visible:[filter:drop-shadow(0_0_2px_white)]"
-        whileTap={{ scale: 0.88 }}
+        whileTap={editing ? undefined : { scale: 0.88 }}
         animate={
-          jiggle
-            ? { rotate: [-2.5, 2.5, -2.5], transition: { repeat: Infinity, duration: 0.28, delay: (index % 3) * 0.07 } }
+          editing && !dragging
+            ? { rotate: [-2.2, 2.2, -2.2], transition: { repeat: Infinity, duration: 0.26, delay: (index % 3) * 0.06 } }
             : { rotate: 0 }
         }
         onPointerDown={() => {
           longPressed.current = false;
+          moved.current = false;
+          if (editing) return;
           timer.current = window.setTimeout(() => {
             longPressed.current = true;
-            onLongPress();
-          }, 550);
+            onMenu(entry, rect());
+          }, LONG_PRESS_MS);
         }}
-        onPointerUp={() => window.clearTimeout(timer.current)}
-        onPointerLeave={() => window.clearTimeout(timer.current)}
-        onClick={(e) => {
-          if (longPressed.current) return;
-          onOpen(entry, e.currentTarget.getBoundingClientRect());
+        onPointerUp={cancelPress}
+        onPointerLeave={cancelPress}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          cancelPress();
+          if (!editing) onMenu(entry, rect());
+        }}
+        onClick={() => {
+          if (longPressed.current || moved.current || editing) return;
+          onOpen(entry, rect());
         }}
       >
         <IconArt entry={entry} />
         <AnimatePresence>
-          {badge && (
+          {badge && !editing && (
             // Size and position measured from an iPhone 17 home screen.
             <motion.span
               aria-label="1 notification"
@@ -64,10 +114,33 @@ export function AppIcon({ entry, jiggle, badge, index, onOpen, onLongPress }: Pr
           )}
         </AnimatePresence>
       </motion.button>
+
+      {/* Edit mode's remove button, top-left like iOS. */}
+      <AnimatePresence>
+        {editing && !dragging && (
+          <motion.button
+            type="button"
+            aria-label={`Remove ${entry.name}`}
+            className="absolute left-[-7px] top-[-7px] z-10 flex size-[24px] cursor-pointer items-center justify-center rounded-full bg-[rgba(120,120,128,0.55)] text-white backdrop-blur-md"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            exit={{ scale: 0 }}
+            transition={{ type: "spring", stiffness: 500, damping: 25 }}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemove(entry);
+            }}
+          >
+            <span className="h-[2.5px] w-[11px] rounded-full bg-white" />
+          </motion.button>
+        )}
+      </AnimatePresence>
+
       <span className="mt-[6.5px] max-w-[88px] truncate text-[12px] font-medium leading-[14px] tracking-[-0.1px] text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">
         {entry.name}
       </span>
-    </div>
+    </motion.div>
   );
 }
 

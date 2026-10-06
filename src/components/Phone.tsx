@@ -1,29 +1,31 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { AnimatePresence, motion, useDragControls, useMotionValue, useTransform, type PanInfo } from "motion/react";
 
 import { ABOUT, APPS, INTERESTS, SHOW_INTERESTS, type AppEntry } from "../content/apps";
+import type { Live } from "../lib/live";
+import { AppIcon } from "./AppIcon";
 import { InterestsWidget } from "./InterestsWidget";
-import { AppIcon, IconArt } from "./AppIcon";
-import { SHAPE, Squircle, iconClip } from "../lib/squircle";
+import { ContextMenu, type MenuAnchor } from "./phone/ContextMenu";
+import { DEVICE, GLASS, GLASS_EDGE, GRID, SCREEN, WIDGET } from "./phone/constants";
+import { Dock, SearchPill } from "./phone/Dock";
+import { DynamicIsland } from "./phone/DynamicIsland";
+import { DdbxWidget, IstanbrewWidget, MeWidget } from "./phone/HomeWidgets";
+import { IOSAlert, type AlertAction } from "./phone/IOSAlert";
+import { LockScreen } from "./phone/LockScreen";
+import { Spotlight } from "./phone/Spotlight";
+import { StatusBar } from "./phone/StatusBar";
 
-// Apple's iPhone 17 bezel (public/device) is 1350×2760 at @3x, so the
-// device is 450×920pt with the 402×874pt screen inset at (24, 23).
-export const DEVICE = { width: 450, height: 920 };
-const SCREEN = { left: 24, top: 23, width: 402, height: 874, radius: 63 };
-
-// Home-screen metrics, measured from an iPhone 17 screenshot (points).
-const GRID = { top: 89.33, left: 30.33, icon: 64, colPitch: 92.56, rowPitch: 100.33 };
-
-// Pills keep a CSS edge highlight; squircle surfaces get theirs from <Squircle rim>.
-const GLASS = "bg-white/20 backdrop-blur-2xl backdrop-saturate-150";
-const GLASS_EDGE = "shadow-[inset_0_1px_0_rgba(255,255,255,0.35),inset_0_0_0_0.5px_rgba(255,255,255,0.25)]";
+export { DEVICE };
 
 type Origin = { x: number; y: number };
+type Alert = { title: string; message: string; actions: AlertAction[] };
 
 type Props = {
   open: AppEntry | null;
   /** Apps this visitor has opened; the rest show a "1" badge. */
   seen: ReadonlySet<string>;
+  live: Live | null;
+  dark: boolean;
   onOpen: (entry: AppEntry) => void;
   onClose: () => void;
   /** Framed: the photoreal device at `scale`. Unframed (on phones): the page is the screen. */
@@ -31,36 +33,243 @@ type Props = {
   scale?: number;
   /** What to show inside an opened app. */
   renderOpen: (entry: AppEntry) => ReactNode;
+  /** Whether the opened app draws its own status bar (real screenshots do). */
+  ownStatusBar: boolean;
+  /** Whether the opened app is light, so the home indicator and status bar go dark. */
+  lightApp: boolean;
 };
 
-export function Phone({ open, seen, onOpen, onClose, framed, scale = 1, renderOpen }: Props) {
+/** The ddbx and Istanbrew home-screen widgets are built but hidden for now. */
+const SHOW_LIVE_WIDGETS = false;
+
+const ORDER_KEY = "jonwill:order";
+const UNLOCKED_KEY = "jonwill:unlocked";
+const ACTIVITY_KEY = "jonwill:activity";
+
+const storage = {
+  get(store: Storage, key: string) {
+    try {
+      return store.getItem(key);
+    } catch {
+      return null;
+    }
+  },
+  set(store: Storage, key: string, value: string) {
+    try {
+      store.setItem(key, value);
+    } catch {
+      // Blocked storage: the setting just isn't remembered.
+    }
+  },
+};
+
+/** The visitor's icon order, falling back to the content order for new or unknown apps. */
+function initialOrder() {
+  const ids = APPS.map((a) => a.id);
+  try {
+    const saved = JSON.parse(storage.get(localStorage, ORDER_KEY) ?? "[]") as string[];
+    const kept = saved.filter((id) => ids.includes(id));
+    return [...kept, ...ids.filter((id) => !kept.includes(id))];
+  } catch {
+    return ids;
+  }
+}
+
+export function Phone({
+  open,
+  seen,
+  live,
+  dark,
+  onOpen,
+  onClose,
+  framed,
+  scale = 1,
+  renderOpen,
+  ownStatusBar,
+  lightApp,
+}: Props) {
   const screenRef = useRef<HTMLDivElement>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
   // Opening from a link (no tap) zooms from the middle of the screen.
   const [origin, setOrigin] = useState<Origin | null>(null);
-  const [jiggle, setJiggle] = useState(false);
-  const [alertOpen, setAlertOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [order, setOrder] = useState(initialOrder);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [menu, setMenu] = useState<{ entry: AppEntry; anchor: MenuAnchor } | null>(null);
+  const [alert, setAlert] = useState<Alert | null>(null);
+  const [spotlight, setSpotlight] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  // Deep links skip the lock screen; otherwise once per browser session.
+  const [locked, setLocked] = useState(
+    () => !window.location.hash && storage.get(sessionStorage, UNLOCKED_KEY) !== "1",
+  );
+  const [unlockCount, setUnlockCount] = useState(0);
+  const [activity, setActivity] = useState(false);
 
-  const handleOpen = (entry: AppEntry, rect: DOMRect) => {
-    if (jiggle) {
-      setJiggle(false);
+  const apps = order.map((id) => APPS.find((a) => a.id === id)!);
+
+  /** Viewport px → screen points (the framed device is CSS-scaled). */
+  const toScreen = useCallback((x: number, y: number) => {
+    const el = screenRef.current;
+    if (!el) return { x, y, k: 1 };
+    const box = el.getBoundingClientRect();
+    const k = box.width / el.offsetWidth;
+    return { x: (x - box.left) / k, y: (y - box.top) / k, k };
+  }, []);
+
+  const showToast = useCallback((text: string) => setToast(text), []);
+  useEffect(() => {
+    if (!toast) return;
+    const id = window.setTimeout(() => setToast(null), 2200);
+    return () => window.clearTimeout(id);
+  }, [toast]);
+
+  const handleOpen = (entry: AppEntry, rect?: DOMRect) => {
+    if (editing) {
+      setEditing(false);
       return;
     }
-    const el = screenRef.current;
-    if (el) {
-      // The device is CSS-scaled, so convert viewport px back to screen points.
-      const box = el.getBoundingClientRect();
-      const k = box.width / el.offsetWidth;
-      setOrigin({ x: (rect.left + rect.width / 2 - box.left) / k, y: (rect.top + rect.height / 2 - box.top) / k });
-    }
+    setOrigin(rect ? toScreen(rect.left + rect.width / 2, rect.top + rect.height / 2) : null);
     onOpen(entry);
   };
 
-  const lightSplash = open?.scheme === "light";
+  const openMenu = (entry: AppEntry, rect: DOMRect) => {
+    const a = toScreen(rect.left, rect.top);
+    setMenu({ entry, anchor: { x: a.x, y: a.y, width: rect.width / a.k, height: rect.height / a.k } });
+  };
+
+  const share = async (entry: AppEntry) => {
+    const url = `${window.location.origin}/ton#${entry.id}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: `${entry.name} by Jon Willington`, url });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      showToast("Link copied");
+    } catch {
+      // Share sheet dismissed.
+    }
+  };
+
+  const askRemove = (entry: AppEntry) =>
+    setAlert({
+      title: `Remove “${entry.name}”?`,
+      message: "You can't, sorry. I spent far too long on it.",
+      actions: [
+        { label: "Remove", destructive: true, onPress: () => showToast("Nice try. It's staying.") },
+        { label: "Keep It", primary: true },
+      ],
+    });
+
+  // Drag to rearrange: work out which slot the pointer is over and move the app there.
+  const onDragMove = (entry: AppEntry, point: { x: number; y: number }) => {
+    const grid = gridRef.current;
+    if (!grid) return;
+    const box = grid.getBoundingClientRect();
+    const k = box.width / grid.offsetWidth;
+    const x = (point.x - box.left) / k;
+    const y = (point.y - box.top) / k;
+    const rows = Math.ceil(apps.length / 4);
+    const col = Math.max(0, Math.min(3, Math.round((x - 4 - GRID.icon / 2) / GRID.colPitch)));
+    const row = Math.max(0, Math.min(rows - 1, Math.floor(y / GRID.rowPitch)));
+    const target = Math.min(apps.length - 1, row * 4 + col);
+    const from = order.indexOf(entry.id);
+    if (target !== from) {
+      const next = order.filter((id) => id !== entry.id);
+      next.splice(target, 0, entry.id);
+      setOrder(next);
+    }
+  };
+  const onDragEnd = () => {
+    setDraggingId(null);
+    storage.set(localStorage, ORDER_KEY, JSON.stringify(order));
+  };
+
+  // Hold an empty part of the home screen to start editing, as on iOS.
+  const emptyPress = useRef<number | undefined>(undefined);
+  const onHomePointerDown = (e: React.PointerEvent) => {
+    if (e.target !== e.currentTarget) return;
+    emptyPress.current = window.setTimeout(() => setEditing(true), 600);
+  };
+  const cancelEmptyPress = () => window.clearTimeout(emptyPress.current);
+
+  const unlock = (into?: AppEntry) => {
+    storage.set(sessionStorage, UNLOCKED_KEY, "1");
+    setLocked(false);
+    setUnlockCount((n) => n + 1);
+    if (into) window.setTimeout(() => handleOpen(into), 380);
+  };
+
+  // The brew-timer Live Activity: once per session, a few seconds after reaching the home screen.
+  useEffect(() => {
+    if (!framed || locked || open || storage.get(sessionStorage, ACTIVITY_KEY)) return;
+    const id = window.setTimeout(() => {
+      storage.set(sessionStorage, ACTIVITY_KEY, "1");
+      setActivity(true);
+    }, 5000);
+    return () => window.clearTimeout(id);
+  }, [framed, locked, open]);
+
+  // Keyboard: ⌘K / "/" for Spotlight, ⌘Z for an "Undo Typing" joke.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const typing = (e.target as HTMLElement)?.closest("input, textarea");
+      if (((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") || (e.key === "/" && !typing)) {
+        if (locked) return;
+        e.preventDefault();
+        setSpotlight(true);
+      } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "z" && !typing) {
+        e.preventDefault();
+        undoTyping();
+      } else if (e.key === "Escape" && editing) {
+        setEditing(false);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
+
+  // Shake to undo, where the browser allows motion events without asking.
+  useEffect(() => {
+    let last = 0;
+    const onMotion = (e: DeviceMotionEvent) => {
+      const a = e.accelerationIncludingGravity;
+      if (!a) return;
+      const force = Math.abs(a.x ?? 0) + Math.abs(a.y ?? 0) + Math.abs(a.z ?? 0);
+      if (force > 38 && Date.now() - last > 2000) {
+        last = Date.now();
+        undoTyping();
+      }
+    };
+    window.addEventListener("devicemotion", onMotion);
+    return () => window.removeEventListener("devicemotion", onMotion);
+  });
+
+  const undoTyping = () =>
+    setAlert({
+      title: "Undo Typing",
+      message: "There's nothing to undo. Everything on this phone is here on purpose.",
+      actions: [{ label: "Cancel" }, { label: "Undo", primary: true, onPress: () => showToast("Nothing to undo") }],
+    });
+
+  // Swipe up from the home indicator to close an app, as on iOS.
+  const dragControls = useDragControls();
+  const appY = useMotionValue(0);
+  const appScale = useTransform(appY, [0, -320], [1, 0.62]);
+  const appRadius = useTransform(appY, [0, -60], [framed ? SCREEN.radius : 0, 44]);
+  const onAppDragEnd = (_: unknown, info: PanInfo) => {
+    if (info.offset.y < -70 || info.velocity.y < -400) onClose();
+  };
+  useEffect(() => appY.set(0), [open, appY]);
+
+  const statusLight = open ? !(ownStatusBar ? lightApp : open.scheme === "light") : true;
 
   const screen = (
     <div
       ref={screenRef}
-      className="wallpaper absolute isolate overflow-hidden"
+      data-night={dark ? "true" : "false"}
+      className="absolute isolate select-none overflow-hidden"
       style={
         framed
           ? {
@@ -73,90 +282,201 @@ export function Phone({ open, seen, onOpen, onClose, framed, scale = 1, renderOp
           : { inset: 0 }
       }
     >
-      {framed && <StatusBar light={!lightSplash} />}
+      <div className="wallpaper-layer absolute inset-0" />
 
-      <div
+      {framed && (!open || !ownStatusBar) && <StatusBar light={locked || statusLight} activity={activity} />}
+
+      {/* The home screen. Re-keyed on unlock so the icons fly in like iOS. */}
+      <motion.div
+        key={unlockCount}
         className="relative flex h-full flex-col"
+        initial={unlockCount ? { scale: 1.12, opacity: 0 } : false}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: "spring", stiffness: 220, damping: 26 }}
         style={{
           paddingTop: framed ? GRID.top : "max(16px, env(safe-area-inset-top))",
           paddingLeft: GRID.left - 4,
           paddingRight: GRID.left - 4,
         }}
-        onClick={(e) => e.target === e.currentTarget && setJiggle(false)}
+        onPointerDown={onHomePointerDown}
+        onPointerUp={cancelEmptyPress}
+        onPointerLeave={cancelEmptyPress}
+        onClick={(e) => e.target === e.currentTarget && setEditing(false)}
       >
-        <MeWidget onOpen={(rect) => handleOpen(ABOUT, rect)} />
+        <MeWidget dark={dark} onOpen={(rect) => handleOpen(ABOUT, rect)} />
 
-        {/* The widget fills two icon rows; apps start on row three. */}
+        {/* The Find My widget fills two icon rows; apps start on row three. */}
         <div
+          ref={gridRef}
           className="grid justify-between px-[4px]"
-          style={{
-            gridTemplateColumns: `repeat(4, ${GRID.icon}px)`,
-            gridAutoRows: GRID.rowPitch,
-          }}
+          style={{ gridTemplateColumns: `repeat(4, ${GRID.icon}px)`, gridAutoRows: GRID.rowPitch }}
         >
-          {APPS.map((entry, i) => (
+          {apps.map((entry, i) => (
             <AppIcon
               key={entry.id}
               entry={entry}
               index={i}
-              jiggle={jiggle}
+              editing={editing}
+              dragging={draggingId === entry.id}
               badge={!seen.has(entry.id)}
               onOpen={handleOpen}
-              onLongPress={() => setJiggle(true)}
+              onMenu={openMenu}
+              onRemove={askRemove}
+              onDragStart={(e) => setDraggingId(e.id)}
+              onDragMove={onDragMove}
+              onDragEnd={onDragEnd}
             />
           ))}
         </div>
 
-        {/* Two more rows: the interests widget, labelled like Find My. */}
-        {SHOW_INTERESTS && (
-          <div className="flex shrink-0 flex-col items-center" style={{ height: 2 * GRID.rowPitch }}>
-            <InterestsWidget height={WIDGET_HEIGHT} onOpen={(rect) => handleOpen(INTERESTS, rect)} />
-            <span className="mt-[6.5px] text-[12px] font-medium leading-[14px] text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">
-              Interests
-            </span>
+        {/* Rows five and six: the live widgets or the interests widget, both switched off for now. */}
+        {SHOW_LIVE_WIDGETS && (
+          <div className="flex justify-between">
+            <DdbxWidget
+              live={live?.ddbx}
+              onOpen={(rect) =>
+                handleOpen(
+                  APPS.find((a) => a.id === "ddbx")!,
+                  rect,
+                )
+              }
+            />
+            <IstanbrewWidget
+              live={live?.istanbrew}
+              onOpen={(rect) =>
+                handleOpen(
+                  APPS.find((a) => a.id === "istanbrew")!,
+                  rect,
+                )
+              }
+            />
           </div>
         )}
-      </div>
+        {SHOW_INTERESTS && (
+          <div className="flex shrink-0 flex-col items-center" style={{ height: 2 * GRID.rowPitch }}>
+            <InterestsWidget height={WIDGET.medium.height} onOpen={(rect) => handleOpen(INTERESTS, rect)} />
+          </div>
+        )}
+      </motion.div>
 
-      <SearchPill />
-      <Dock framed={framed} onWhatsApp={() => setAlertOpen(true)} />
-      <AnimatePresence>{alertOpen && <NotThatCrazy onClose={() => setAlertOpen(false)} />}</AnimatePresence>
+      <SearchPill onPress={() => setSpotlight(true)} hidden={spotlight} />
+      <Dock
+        framed={framed}
+        hidden={spotlight}
+        onWhatsApp={() =>
+          setAlert({
+            title: "I'm not that crazy",
+            message: "My number stays off the internet. Send me an email and I'll get back to you.",
+            actions: [{ label: "OK" }, { label: "Email me", primary: true, href: "mailto:hey@jonwill.ing" }],
+          })
+        }
+      />
 
       <AnimatePresence>
-        {jiggle && (
+        {editing && (
           <motion.button
             type="button"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
-            onClick={() => setJiggle(false)}
-            className={`absolute right-[22px] z-10 cursor-pointer rounded-full px-[14px] py-[5px] text-[15px] font-semibold text-white ${GLASS} ${GLASS_EDGE} ${framed ? "top-[60px]" : "top-3"}`}
+            onClick={() => setEditing(false)}
+            className={`absolute right-[22px] z-30 cursor-pointer rounded-full px-[14px] py-[5px] text-[15px] font-semibold text-white ${GLASS} ${GLASS_EDGE} ${framed ? "top-[60px]" : "top-3"}`}
           >
             Done
           </motion.button>
         )}
       </AnimatePresence>
 
+      {/* The open app: zooms out of its icon; swipe up from the bottom to close. */}
       <AnimatePresence>
         {open && (
           <motion.div
             key={open.id}
-            className="absolute inset-0 z-20 overflow-hidden"
-            style={{
-              transformOrigin: origin ? `${origin.x}px ${origin.y}px` : "50% 50%",
-              background: open.accent,
-            }}
-            initial={{ scale: 0.16, opacity: 0, borderRadius: 60 }}
-            animate={{ scale: 1, opacity: 1, borderRadius: framed ? SCREEN.radius : 0 }}
-            exit={{ scale: 0.16, opacity: 0, borderRadius: 60 }}
+            className="absolute inset-0 z-20"
+            style={{ transformOrigin: origin ? `${origin.x}px ${origin.y}px` : "50% 50%" }}
+            initial={{ scale: 0.16, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.16, opacity: 0 }}
             transition={{ type: "spring", stiffness: 280, damping: 30 }}
           >
-            {renderOpen(open)}
+            <motion.div
+              className="absolute inset-0 overflow-hidden"
+              style={{ y: appY, scale: appScale, borderRadius: appRadius, background: open.accent }}
+              drag={framed ? "y" : false}
+              dragControls={dragControls}
+              dragListener={false}
+              dragConstraints={{ top: -SCREEN.height, bottom: 0 }}
+              dragElastic={{ top: 0.6, bottom: 0 }}
+              dragSnapToOrigin
+              onDragEnd={onAppDragEnd}
+            >
+              {renderOpen(open)}
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {framed && open && <HomeIndicator onClick={onClose} dark={lightSplash} />}
+      {framed && open && (
+        <HomeIndicator dark={lightApp} onClick={onClose} onPointerDown={(e) => dragControls.start(e)} />
+      )}
+
+      <AnimatePresence>
+        {spotlight && (
+          <Spotlight
+            onClose={() => setSpotlight(false)}
+            onOpenEntry={(e) => window.setTimeout(() => handleOpen(e), 200)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {menu && (
+          <ContextMenu
+            entry={menu.entry}
+            anchor={menu.anchor}
+            onClose={() => setMenu(null)}
+            onShare={() => share(menu.entry)}
+            onEdit={() => setEditing(true)}
+            onRemove={() => askRemove(menu.entry)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {alert && (
+          <IOSAlert
+            title={alert.title}
+            message={alert.message}
+            actions={alert.actions}
+            onClose={() => setAlert(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            role="status"
+            className={`absolute left-1/2 top-[62px] z-[70] -translate-x-1/2 whitespace-nowrap rounded-full px-[16px] py-[8px] text-[15px] font-semibold text-white ${GLASS} ${GLASS_EDGE}`}
+            initial={{ opacity: 0, y: -12, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -12, scale: 0.9 }}
+          >
+            {toast}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {locked && <LockScreen live={live} framed={framed} onUnlock={unlock} />}
+
+      <AnimatePresence>
+        {activity && framed && (
+          <DynamicIsland
+            onOpenIstanbrew={() => handleOpen(APPS.find((a) => a.id === "istanbrew")!)}
+            onFinished={() => setActivity(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 
@@ -186,279 +506,25 @@ export function Phone({ open, seen, onOpen, onClose, framed, scale = 1, renderOp
   );
 }
 
-/** The "app" a framed phone shows when opened: a splash with the icon. */
-export function Splash({ entry }: { entry: AppEntry }) {
-  const light = entry.scheme === "light";
-  const about = entry.id === "about";
-  return (
-    <div
-      className={`flex size-full flex-col items-center justify-center gap-5 px-10 text-center ${light ? "text-neutral-900" : "text-white"}`}
-    >
-      <motion.div
-        className={`size-[112px] [filter:drop-shadow(0_6px_14px_rgba(0,0,0,0.12))] ${about ? "rounded-full ring-4 ring-white" : ""}`}
-        initial={{ scale: 0.6, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: 0.12, type: "spring", stiffness: 300, damping: 20 }}
-      >
-        <IconArt entry={entry} size={112} round={about} />
-      </motion.div>
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-        <p className="text-[28px] font-bold tracking-tight">{about ? "Jon Willington" : entry.name}</p>
-        <p className={`mt-1 text-[16px] ${light ? "text-neutral-900/70" : "text-white/70"}`}>{entry.tagline}</p>
-      </motion.div>
-    </div>
-  );
-}
-
-function useIstanbulTime() {
-  const format = () =>
-    new Date().toLocaleTimeString("en-GB", { hour: "numeric", minute: "2-digit", timeZone: "Europe/Istanbul" });
-  const [time, setTime] = useState(format);
-  useEffect(() => {
-    const id = window.setInterval(() => setTime(format()), 5_000);
-    return () => window.clearInterval(id);
-  }, []);
-  return time;
-}
-
-/** Sits either side of the Dynamic Island, which is part of the bezel image. */
-function StatusBar({ light }: { light: boolean }) {
-  const time = useIstanbulTime();
-
-  return (
-    <div
-      className={`pointer-events-none absolute inset-x-0 top-0 z-30 h-[54px] ${light ? "text-white" : "text-neutral-900"}`}
-    >
-      <span className="absolute left-0 top-[21px] w-[139px] text-center text-[17px] font-semibold leading-[22px] tracking-[-0.4px] tabular-nums">
-        {time}
-      </span>
-      <span className="absolute left-[263px] top-[21px] flex h-[22px] w-[139px] items-center justify-center gap-[6px]">
-        <svg width="19" height="12" viewBox="0 0 19 12" fill="currentColor" aria-hidden>
-          <rect x="0" y="7.5" width="3.2" height="4.5" rx="1" />
-          <rect x="5.2" y="5" width="3.2" height="7" rx="1" />
-          <rect x="10.4" y="2.5" width="3.2" height="9.5" rx="1" />
-          <rect x="15.6" y="0" width="3.2" height="12" rx="1" />
-        </svg>
-        <svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor" aria-hidden>
-          <path d="M8.5 2.3c2.4 0 4.6.9 6.2 2.5l1.2-1.2A10.4 10.4 0 0 0 8.5.6 10.4 10.4 0 0 0 1.1 3.6l1.2 1.2a8.7 8.7 0 0 1 6.2-2.5Zm0 3.5c1.4 0 2.7.5 3.7 1.4l1.2-1.2a6.9 6.9 0 0 0-9.8 0l1.2 1.2c1-.9 2.3-1.4 3.7-1.4Zm0 3.5c-.5 0-1 .2-1.3.6l1.3 1.3 1.3-1.3c-.3-.4-.8-.6-1.3-.6Z" />
-        </svg>
-        <svg width="27" height="13" viewBox="0 0 27 13" fill="none" aria-hidden>
-          <rect x="0.5" y="0.5" width="23" height="12" rx="4" stroke="currentColor" opacity="0.35" />
-          <rect x="2" y="2" width="17" height="9" rx="2.5" fill="currentColor" />
-          <path d="M25 4.5v4c.8-.3 1.4-1.1 1.4-2s-.6-1.7-1.4-2Z" fill="currentColor" opacity="0.4" />
-        </svg>
-      </span>
-    </div>
-  );
-}
-
-/**
- * The "me" entry: a medium Maps-style widget with my photo pinned over
- * Istanbul. The map is a static render (public/istanbul-map.jpg).
- */
-const WIDGET_HEIGHT = 164.33;
-
-function MeWidget({ onOpen }: { onOpen: (rect: DOMRect) => void }) {
-  return (
-    <div className="flex shrink-0 flex-col items-center" style={{ height: 2 * GRID.rowPitch }}>
-      <motion.button
-        type="button"
-        aria-label="Jon Willington, currently in Istanbul"
-        whileTap={{ scale: 0.96 }}
-        onClick={(e) => onOpen(e.currentTarget.getBoundingClientRect())}
-        className="relative w-full cursor-pointer text-left [filter:drop-shadow(0_6px_14px_rgba(0,0,0,0.18))]"
-        style={{ height: WIDGET_HEIGHT }}
-      >
-        <Squircle radius={SHAPE.widget.radius} smoothing={SHAPE.widget.smoothing} rim className="absolute inset-0">
-          <img src="/istanbul-map.jpg" alt="" draggable={false} className="absolute inset-0 size-full object-cover" />
-
-          {/* Photo pin over Beyoğlu, Find My style */}
-          <span className="absolute left-[37%] top-[44%] -translate-x-1/2 -translate-y-full">
-            <span className="location-pulse absolute bottom-[-12px] left-1/2 size-[44px] -translate-x-1/2 rounded-full bg-[#0a84ff]/25" />
-            <span className="relative block size-[50px] overflow-hidden rounded-full border-[3px] border-white bg-white shadow-[0_3px_10px_rgba(0,0,0,0.35)]">
-              <img src="/me.jpg" alt="" draggable={false} className="size-full object-cover" />
-            </span>
-            <span className="relative mx-auto -mt-[3px] block size-0 border-x-[7px] border-t-[9px] border-x-transparent border-t-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.2)]" />
-          </span>
-
-          <span className="absolute inset-x-0 bottom-0 h-[78px] bg-gradient-to-t from-black/50 to-transparent" />
-          <span className="absolute bottom-[12px] left-[14px] text-white">
-            <span className="block text-[20px] font-bold leading-tight tracking-[-0.4px]">Jon Willington</span>
-            <span className="flex items-center gap-[5px] text-[13px] font-medium text-white/85">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-                <path d="M21.7 2.3a1 1 0 0 0-1.1-.2L2.9 9.8a1 1 0 0 0 .1 1.9l7.6 1.7 1.7 7.6a1 1 0 0 0 1.9.1l7.7-17.7a1 1 0 0 0-.2-1.1Z" />
-              </svg>
-              Currently in Istanbul
-            </span>
-          </span>
-          <span className="absolute bottom-[6px] right-[10px] text-[7px] text-white/70">© OpenStreetMap</span>
-        </Squircle>
-      </motion.button>
-      <span className="mt-[6.5px] text-[12px] font-medium leading-[14px] text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">
-        Find My
-      </span>
-    </div>
-  );
-}
-
-function SearchPill() {
-  return (
-    <div
-      className={`pointer-events-none absolute bottom-[141px] left-1/2 flex h-[28.5px] w-[78px] -translate-x-1/2 items-center justify-center gap-[5px] rounded-full text-[15px] text-white ${GLASS} ${GLASS_EDGE}`}
-    >
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" aria-hidden>
-        <circle cx="10.5" cy="10.5" r="7" />
-        <path d="m16 16 5.5 5.5" strokeLinecap="round" />
-      </svg>
-      Search
-    </div>
-  );
-}
-
-function Dock({ framed, onWhatsApp }: { framed: boolean; onWhatsApp: () => void }) {
-  return (
-    <Squircle
-      radius={SHAPE.dock.radius}
-      smoothing={SHAPE.dock.smoothing}
-      rim
-      glass={GLASS}
-      className={`absolute inset-x-[17px] flex h-[101.5px] items-center justify-center gap-[23.7px] ${framed ? "bottom-[18px]" : "bottom-[max(18px,env(safe-area-inset-bottom))]"}`}
-    >
-      <DockLink href="mailto:hey@jonwill.ing" label="Email" icon="/icons/mail-glass.png" />
-      <DockLink href="https://www.linkedin.com/in/jonathanwillington/" label="LinkedIn" icon="/icons/linkedin.png" />
-      <DockLink onPress={onWhatsApp} label="WhatsApp" icon="/icons/whatsapp.png" />
-    </Squircle>
-  );
-}
-
-/** A dock icon: a link, or a button when `onPress` is given. */
-function DockLink({
-  href,
-  onPress,
-  label,
-  icon,
+function HomeIndicator({
+  onClick,
+  onPointerDown,
+  dark,
 }: {
-  href?: string;
-  onPress?: () => void;
-  label: string;
-  icon: string;
+  onClick: () => void;
+  onPointerDown: (e: React.PointerEvent) => void;
+  dark: boolean;
 }) {
-  const external = href?.startsWith("http");
-  const art = (
-    <img
-      src={icon}
-      alt=""
-      draggable={false}
-      className="size-full select-none object-cover"
-      style={{ clipPath: iconClip(64) }}
-    />
-  );
-  const className = "relative size-[64px] cursor-pointer [filter:drop-shadow(0_2px_5px_rgba(0,0,0,0.12))]";
-
-  if (onPress) {
-    return (
-      <motion.button
-        type="button"
-        aria-label={label}
-        whileTap={{ scale: 0.88 }}
-        onClick={onPress}
-        className={className}
-      >
-        {art}
-      </motion.button>
-    );
-  }
-  return (
-    <motion.a
-      href={href}
-      aria-label={label}
-      target={external ? "_blank" : undefined}
-      rel={external ? "noopener noreferrer" : undefined}
-      whileTap={{ scale: 0.88 }}
-      className={className}
-    >
-      {art}
-    </motion.a>
-  );
-}
-
-/** What WhatsApp does: an iOS 26-style alert, because my number isn't on the internet. */
-function NotThatCrazy({ onClose }: { onClose: () => void }) {
-  return (
-    <motion.div
-      className="absolute inset-0 z-40 flex items-center justify-center bg-black/20"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
-      onClick={onClose}
-    >
-      {/* iOS 26 alert: left-aligned text, pill buttons, Liquid Glass panel. */}
-      <motion.div
-        role="alertdialog"
-        aria-labelledby="not-that-crazy-title"
-        aria-describedby="not-that-crazy-body"
-        initial={{ scale: 1.1, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.97, opacity: 0, transition: { duration: 0.15 } }}
-        transition={{ type: "spring", stiffness: 380, damping: 28 }}
-        onClick={(e) => e.stopPropagation()}
-        className="relative w-[306px]"
-      >
-        {/* Shadow as its own layer: a filter on an ancestor would stop the glass blurring what's behind. */}
-        <div className="absolute inset-x-[10px] bottom-[-14px] top-[18px] rounded-[40px] bg-black/25 blur-2xl" />
-        <Squircle
-          radius={36}
-          smoothing={0.6}
-          rim
-          glass="bg-[rgba(250,250,252,0.82)] backdrop-blur-[30px] backdrop-saturate-[1.8]"
-          className="relative text-left text-black"
-        >
-          <div className="relative px-[22px] pb-[18px] pt-[22px]">
-            <p id="not-that-crazy-title" className="text-[17px] font-semibold leading-[22px] tracking-[-0.4px]">
-              I'm not that crazy
-            </p>
-            <p
-              id="not-that-crazy-body"
-              className="mt-[4px] text-[15px] leading-[20px] tracking-[-0.2px] text-[rgba(60,60,67,0.85)]"
-            >
-              My number stays off the internet. Send me an email and I'll get back to you.
-            </p>
-            <div className="mt-[20px] flex gap-[12px]">
-              <motion.button
-                type="button"
-                whileTap={{ scale: 0.96 }}
-                onClick={onClose}
-                className="h-[48px] flex-1 cursor-pointer rounded-full bg-[rgba(120,120,128,0.16)] text-[17px] font-medium tracking-[-0.4px] text-black"
-              >
-                OK
-              </motion.button>
-              <motion.a
-                href="mailto:hey@jonwill.ing"
-                whileTap={{ scale: 0.96 }}
-                onClick={onClose}
-                className="flex h-[48px] flex-1 items-center justify-center rounded-full bg-[#0088ff] text-[17px] font-semibold tracking-[-0.4px] text-white"
-              >
-                Email me
-              </motion.a>
-            </div>
-          </div>
-        </Squircle>
-      </motion.div>
-    </motion.div>
-  );
-}
-
-function HomeIndicator({ onClick, dark }: { onClick: () => void; dark: boolean }) {
   return (
     <button
       type="button"
-      aria-label="Go home"
+      aria-label="Go home (or swipe up)"
       onClick={onClick}
-      className="group absolute bottom-0 left-1/2 z-30 flex h-[22px] w-[180px] -translate-x-1/2 cursor-pointer items-start justify-center"
+      onPointerDown={onPointerDown}
+      className="group absolute bottom-0 left-1/2 z-30 flex h-[34px] w-[220px] -translate-x-1/2 cursor-grab touch-none items-end justify-center pb-[8px] active:cursor-grabbing"
     >
       <span
-        className={`mt-[8px] h-[5px] w-[139px] rounded-full transition-transform group-hover:scale-x-110 ${dark ? "bg-neutral-900" : "bg-white"}`}
+        className={`h-[5px] w-[139px] rounded-full transition-transform group-hover:scale-x-110 ${dark ? "bg-neutral-900" : "bg-white"}`}
       />
     </button>
   );
