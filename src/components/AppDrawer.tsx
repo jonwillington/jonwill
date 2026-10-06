@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Drawer } from "vaul";
 
 import type { AppEntry } from "../content/apps";
@@ -25,6 +26,9 @@ export function AppDrawer({
   background: string;
 }) {
   const scheme = dark ? "dark" : (entry?.scheme ?? "dark");
+  // Once the article scrolls, the pinned header gets a hairline and a softer shadow underneath.
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => setScrolled(false), [entry?.id, open]);
 
   return (
     <Drawer.Root direction="right" open={open && !!entry} onOpenChange={onOpenChange} shouldScaleBackground>
@@ -37,8 +41,17 @@ export function AppDrawer({
           style={{ background }}
         >
           {entry && (
-            <div className="overflow-y-auto px-7 pb-10 pt-7 text-[15px] leading-[1.6]">
-              <header className="flex items-start justify-between gap-4">
+            <div
+              className="overflow-y-auto px-7 pb-10 text-[15px] leading-[1.6]"
+              onScroll={(e) => setScrolled(e.currentTarget.scrollTop > 4)}
+            >
+              {/* Pinned while the article scrolls underneath. */}
+              <header
+                className={`sticky top-0 z-10 -mx-7 flex items-start justify-between gap-4 px-7 pb-4 pt-7 transition-shadow duration-200 ${
+                  scrolled ? "shadow-[0_1px_0_rgba(0,0,0,0.08),0_8px_16px_-12px_rgba(0,0,0,0.25)]" : ""
+                }`}
+                style={{ background }}
+              >
                 <div className="flex items-center gap-4">
                   <div className="size-14 shrink-0 [filter:drop-shadow(0_2px_6px_rgba(0,0,0,0.10))]">
                     <IconArt entry={entry} size={56} round={entry.id === "about"} />
@@ -54,7 +67,7 @@ export function AppDrawer({
               </header>
 
               {entry.highlights && (
-                <section className="mt-7 rounded-[14px] bg-foreground/[0.04] px-5 py-4" aria-label="At a glance">
+                <section className="mt-3 rounded-[14px] bg-foreground/[0.04] px-5 py-4" aria-label="At a glance">
                   <p className={`mb-2 ${EYEBROW}`}>At a glance</p>
                   <ul className="flex flex-col gap-1.5">
                     {entry.highlights.map((h) => (
