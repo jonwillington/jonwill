@@ -24,11 +24,14 @@ export function DetailContent({
   live,
   onClose,
   onLearnMore,
+  showClose = true,
 }: {
   entry: AppEntry;
   live?: Live | null;
   onClose: () => void;
   onLearnMore: () => void;
+  /** On desktop the page's top-right close does this job, so the panel hides its own. */
+  showClose?: boolean;
 }) {
   const hasData = !!(entry.markets || entry.network || entry.destinations);
   const left = "2xl:col-start-1";
@@ -55,7 +58,7 @@ export function DetailContent({
           </h2>
           <p className="mt-0.5 text-foreground/65">{entry.tagline}</p>
         </div>
-        <CloseX onPress={onClose} />
+        {showClose && <CloseX onPress={onClose} />}
       </motion.div>
 
       <motion.div variants={item} className={left}>

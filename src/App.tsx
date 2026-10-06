@@ -7,6 +7,8 @@ import { DEVICE, Phone } from "./components/Phone";
 import { AppDrawer } from "./components/AppDrawer";
 import { DetailContent } from "./components/DetailPanel";
 import { AppSwitcher } from "./components/AppSwitcher";
+import { CloseX } from "./components/CloseX";
+import { LiveStrip } from "./components/LiveStrip";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { AppScreens, screensFor } from "./components/phone/AppScreens";
 import { Splash } from "./components/phone/Splash";
@@ -188,16 +190,31 @@ export function App() {
       <div
         data-vaul-drawer-wrapper=""
         data-theme={pageScheme}
-        className="relative isolate flex min-h-dvh flex-col overflow-hidden text-foreground"
+        className="relative isolate flex h-dvh min-h-[600px] flex-col overflow-hidden text-foreground"
       >
         <Ambient entry={open} accent={pageAccent} dark={dark} />
 
         <header className="flex items-center justify-between px-6 py-4 text-sm font-medium">
           <span>Jon Willington</span>
-          <ThemeToggle mode={mode} onChange={setMode} />
+          <LiveStrip live={live} />
+          <div className="flex items-center gap-3">
+            <ThemeToggle mode={mode} onChange={setMode} />
+            {/* Closing the app lives top right, where it covers the whole page. */}
+            <AnimatePresence>
+              {open && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                >
+                  <CloseX onPress={close} label={`Close ${open.name}`} />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </header>
 
-        <main className="flex flex-1 items-center justify-center gap-16 px-6 2xl:gap-20">
+        <main className="flex min-h-0 flex-1 items-center justify-center gap-16 px-6 2xl:gap-20">
           <motion.div
             layout
             transition={{ type: "spring", stiffness: 200, damping: 26 }}
@@ -244,7 +261,13 @@ export function App() {
                 transition={{ type: "spring", stiffness: 220, damping: 26 }}
                 className={`w-[min(440px,40vw)] ${open.markets || open.network || open.destinations ? "2xl:w-[min(860px,50vw)]" : ""}`}
               >
-                <DetailContent entry={open} live={live} onClose={close} onLearnMore={() => setDrawer(true)} />
+                <DetailContent
+                  entry={open}
+                  live={live}
+                  showClose={false}
+                  onClose={close}
+                  onLearnMore={() => setDrawer(true)}
+                />
               </motion.aside>
             )}
           </AnimatePresence>
@@ -254,7 +277,21 @@ export function App() {
           <Link href="mailto:hey@jonwill.ing" className="justify-self-start text-muted">
             hey@jonwill.ing
           </Link>
-          <AppSwitcher open={open} onOpen={openEntry} />
+          {/* Only inside an app: hop to another without going home. */}
+          <AnimatePresence>
+            {open ? (
+              <motion.div
+                key="switcher"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 12 }}
+              >
+                <AppSwitcher open={open} onOpen={openEntry} />
+              </motion.div>
+            ) : (
+              <span key="spacer" />
+            )}
+          </AnimatePresence>
           <Link
             href="https://www.linkedin.com/in/jonathanwillington/"
             target="_blank"
