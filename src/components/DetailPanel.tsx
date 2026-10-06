@@ -47,16 +47,20 @@ export function DetailContent({
         hasData ? "2xl:grid 2xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] 2xl:content-start 2xl:gap-x-12" : ""
       }`}
     >
-      {/* Icon, then the name beneath it, and a one-line description. */}
+      {/* Desktop: a big title (the phone already shows the icon). Phones: icon, then the name. */}
       <motion.div variants={item} className={`flex items-start justify-between ${left}`}>
         <div>
-          <div className="size-16 [filter:drop-shadow(0_2px_6px_rgba(0,0,0,0.10))]">
-            <IconArt entry={entry} size={64} round={entry.id === "about"} />
-          </div>
-          <h2 className="mt-4 text-[26px] font-semibold leading-tight tracking-[-0.02em]">
+          {showClose && (
+            <div className="mb-4 size-16 [filter:drop-shadow(0_2px_6px_rgba(0,0,0,0.10))]">
+              <IconArt entry={entry} size={64} round={entry.id === "about"} />
+            </div>
+          )}
+          <h2
+            className={`font-semibold leading-[1.05] tracking-[-0.03em] ${showClose ? "text-[26px]" : "text-[44px] 2xl:text-[52px]"}`}
+          >
             {entry.id === "about" ? "Jon Willington" : entry.name}
           </h2>
-          <p className="mt-0.5 text-foreground/65">{entry.tagline}</p>
+          <p className={`text-foreground/65 ${showClose ? "mt-0.5" : "mt-2 text-[17px]"}`}>{entry.tagline}</p>
         </div>
         {showClose && <CloseX onPress={onClose} />}
       </motion.div>

@@ -194,20 +194,34 @@ export function App() {
       >
         <Ambient entry={open} accent={pageAccent} dark={dark} />
 
-        <header className="flex items-center justify-between px-6 py-4 text-sm font-medium">
+        <header className="flex h-[72px] shrink-0 items-center justify-between px-6 text-sm font-medium">
           <span>Jon Willington</span>
           <LiveStrip live={live} />
-          <div className="flex items-center gap-3">
+          <div className="flex items-center">
             <ThemeToggle mode={mode} onChange={setMode} />
-            {/* Closing the app lives top right, where it covers the whole page. */}
-            <AnimatePresence>
+            {/* Closing the app lives top right, where it covers the whole page. Its slot opens and
+                closes with a spring, so the theme toggle glides aside and back rather than jumping. */}
+            <AnimatePresence initial={false}>
               {open && (
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
+                  key="close"
+                  className="flex justify-end overflow-hidden"
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: 52, opacity: 1 }}
+                  exit={{ width: 0, opacity: 0 }}
+                  transition={{
+                    width: { type: "spring", stiffness: 420, damping: 36 },
+                    opacity: { duration: 0.18 },
+                  }}
                 >
-                  <CloseX onPress={close} label={`Close ${open.name}`} />
+                  <motion.div
+                    initial={{ scale: 0.6, rotate: -90 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    exit={{ scale: 0.6, rotate: 90 }}
+                    transition={{ type: "spring", stiffness: 420, damping: 26 }}
+                  >
+                    <CloseX onPress={close} label={`Close ${open.name}`} />
+                  </motion.div>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -273,11 +287,12 @@ export function App() {
           </AnimatePresence>
         </main>
 
-        <footer className="grid grid-cols-[1fr_auto_1fr] items-center px-6 pb-4 pt-2 text-sm">
+        <footer className="grid h-16 shrink-0 grid-cols-[1fr_auto_1fr] items-center px-6 text-sm">
           <Link href="mailto:hey@jonwill.ing" className="justify-self-start text-muted">
             hey@jonwill.ing
           </Link>
-          {/* Only inside an app: hop to another without going home. */}
+          {/* Only inside an app: hop to another without going home. The footer has a fixed
+              height, so it arriving or leaving never shifts anything. */}
           <AnimatePresence>
             {open ? (
               <motion.div
