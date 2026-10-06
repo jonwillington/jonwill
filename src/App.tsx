@@ -159,16 +159,19 @@ function Ambient({ entry }: { entry: AppEntry | null }) {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.7, ease: "easeInOut" }}
           >
-            {entry.icon && (
-              <motion.img
-                src={entry.icon}
-                alt=""
-                className="absolute left-[32%] top-1/2 aspect-square w-[75vmax] max-w-none rounded-full object-cover opacity-55 blur-[120px] saturate-150 will-change-transform"
-                initial={{ x: "-50%", y: "-50%", scale: 0.7, rotate: 0 }}
-                animate={{ x: "-50%", y: "-50%", scale: [1, 1.15, 1], rotate: [0, 25, 0] }}
-                transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-              />
-            )}
+            {/* A soft light drifting behind the phone: the icon's colour where it has one, otherwise a highlight. */}
+            <motion.div
+              className="absolute left-[32%] top-1/2 aspect-square w-[70vmax] rounded-full will-change-transform"
+              style={{
+                background: `radial-gradient(circle, ${
+                  entry.glow ?? (entry.scheme === "dark" ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.55)")
+                } 0%, transparent 65%)`,
+                opacity: entry.glow ? 0.45 : 1,
+              }}
+              initial={{ x: "-50%", y: "-50%", scale: 0.8 }}
+              animate={{ x: "-50%", y: "-50%", scale: [1, 1.12, 1] }}
+              transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
+            />
             {/* Soft vignette so text at the edges stays readable. */}
             <div
               className="absolute inset-0"

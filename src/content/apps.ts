@@ -16,6 +16,8 @@ export type AppEntry = {
   accent: string;
   /** Whether `accent` needs light text (dark) or dark text (light). Defaults to dark. */
   scheme?: "dark" | "light";
+  /** Optional colour for the light behind the phone, e.g. the icon's mark. */
+  glow?: string;
   tagline: string;
   /** Short labels shown as chips, e.g. platform or stack. */
   tags: string[];
@@ -130,6 +132,7 @@ export const APPS: AppEntry[] = [
     icon: "/icons/istanbrew.jpg",
     accent: "#fbf8f3",
     scheme: "light",
+    glow: "#d71f1f",
     tagline: "Speciality coffee in Istanbul.",
     tags: ["iOS", "Web", "SwiftUI"],
     body: [

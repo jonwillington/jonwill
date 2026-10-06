@@ -157,7 +157,13 @@ export function Phone({ open, onOpen, onClose, framed, scale = 1, renderOpen }: 
           src="/device/iphone-17-black.png"
           alt=""
           draggable={false}
-          className="pointer-events-none absolute inset-0 size-full select-none [filter:drop-shadow(0_40px_50px_rgba(0,0,0,0.28))_drop-shadow(0_8px_12px_rgba(0,0,0,0.18))]"
+          className="pointer-events-none absolute inset-0 size-full select-none transition-[filter] duration-700"
+          // Softer when an app is open: the page is coloured and a heavy shadow muddies it.
+          style={{
+            filter: open
+              ? "drop-shadow(0 24px 40px rgba(0,0,0,0.10)) drop-shadow(0 2px 6px rgba(0,0,0,0.06))"
+              : "drop-shadow(0 32px 48px rgba(0,0,0,0.20)) drop-shadow(0 6px 10px rgba(0,0,0,0.12))",
+          }}
         />
       </div>
     </div>
@@ -173,7 +179,7 @@ export function Splash({ entry }: { entry: AppEntry }) {
       className={`flex size-full flex-col items-center justify-center gap-5 px-10 text-center ${light ? "text-neutral-900" : "text-white"}`}
     >
       <motion.div
-        className={`size-[112px] [filter:drop-shadow(0_12px_24px_rgba(0,0,0,0.25))] ${about ? "rounded-full ring-4 ring-white" : ""}`}
+        className={`size-[112px] [filter:drop-shadow(0_6px_14px_rgba(0,0,0,0.12))] ${about ? "rounded-full ring-4 ring-white" : ""}`}
         initial={{ scale: 0.6, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 0.12, type: "spring", stiffness: 300, damping: 20 }}
