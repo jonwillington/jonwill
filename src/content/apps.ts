@@ -147,6 +147,9 @@ export const APPS: AppEntry[] = [
   },
 ];
 
+/** The interests widget is built but hidden for now. Flip to bring it back. */
+export const SHOW_INTERESTS = false;
+
 export const INTERESTS: AppEntry = {
   id: "interests",
   name: "Interests",
@@ -164,4 +167,4 @@ export const INTERESTS: AppEntry = {
   links: [{ label: "istanbrew.com", href: "https://istanbrew.com" }],
 };
 
-export const ALL_ENTRIES: AppEntry[] = [ABOUT, INTERESTS, ...APPS];
+export const ALL_ENTRIES: AppEntry[] = [ABOUT, ...(SHOW_INTERESTS ? [INTERESTS] : []), ...APPS];
