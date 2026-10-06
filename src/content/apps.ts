@@ -29,7 +29,8 @@ export const ABOUT: AppEntry = {
   id: "about",
   name: "Jon",
   icon: "/me.jpg",
-  accent: "#1f2937",
+  accent: "#cfcbd7",
+  scheme: "light",
   tagline: "Product design lead, currently in Istanbul.",
   tags: ["Design leadership", "Product design", "Side projects"],
   body: [
@@ -47,7 +48,7 @@ export const APPS: AppEntry[] = [
     id: "deel",
     name: "Deel",
     icon: "/icons/deel.jpg",
-    accent: "#b39cf5",
+    accent: "#b59cf7",
     scheme: "light",
     tagline: "My day job.",
     tags: ["Group Product Design Manager", "HR", "Payroll"],
@@ -64,7 +65,8 @@ export const APPS: AppEntry[] = [
     id: "ddbx",
     name: "ddbx",
     icon: "/icons/ddbx.jpg",
-    accent: "#0f3d2e",
+    accent: "#ede8e2",
+    scheme: "light",
     tagline: "Director dealings, rated as they happen.",
     tags: ["iOS", "Web", "Android in progress", "Cloudflare"],
     body: [
@@ -86,7 +88,8 @@ export const APPS: AppEntry[] = [
     id: "holdall",
     name: "Holdall",
     icon: "/icons/holdall.jpg",
-    accent: "#2b3a55",
+    accent: "#ffffff",
+    scheme: "light",
     tagline: "Where to work remotely next.",
     tags: ["iOS", "Android", "React Native"],
     body: [
@@ -106,7 +109,8 @@ export const APPS: AppEntry[] = [
     id: "ga-bridge",
     name: "GA Bridge",
     icon: "/icons/gabridge.png",
-    accent: "#111214",
+    accent: "#111113",
+    scheme: "dark",
     tagline: "All your GA4 properties on one screen.",
     tags: ["iOS", "SwiftUI", "On-device"],
     body: [
@@ -124,7 +128,8 @@ export const APPS: AppEntry[] = [
     id: "istanbrew",
     name: "Istanbrew",
     icon: "/icons/istanbrew.jpg",
-    accent: "#6b3a1f",
+    accent: "#fbf8f3",
+    scheme: "light",
     tagline: "Speciality coffee in Istanbul.",
     tags: ["iOS", "Web", "SwiftUI"],
     body: [

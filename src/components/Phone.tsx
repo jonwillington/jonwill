@@ -294,30 +294,13 @@ function Dock({ framed }: { framed: boolean }) {
     <div
       className={`absolute inset-x-[17px] flex h-[101.5px] items-center justify-center gap-[23.7px] rounded-[44px] ${GLASS} ${framed ? "bottom-[18px]" : "bottom-[max(18px,env(safe-area-inset-bottom))]"}`}
     >
-      <DockLink href="mailto:hey@jonwill.ing" label="Email" className="bg-gradient-to-b from-[#1fb0ff] to-[#0a6cf0]">
-        <svg viewBox="0 0 24 24" className="size-[38px]" fill="white" aria-hidden>
-          <path d="M3.5 6.2A2.2 2.2 0 0 1 5.7 4h12.6a2.2 2.2 0 0 1 2.2 2.2v.3l-8.5 5.6-8.5-5.6v-.3Z" />
-          <path d="M3.5 8.3v9.5A2.2 2.2 0 0 0 5.7 20h12.6a2.2 2.2 0 0 0 2.2-2.2V8.3l-8 5.3a.9.9 0 0 1-1 0l-8-5.3Z" />
-        </svg>
-      </DockLink>
-      <DockLink href="https://www.linkedin.com/in/jonathanwillington/" label="LinkedIn" className="bg-[#0a66c2]">
-        <span className="text-[34px] font-bold leading-none tracking-[-1px] text-white">in</span>
-      </DockLink>
+      <DockLink href="mailto:hey@jonwill.ing" label="Email" icon="/icons/mail.png" />
+      <DockLink href="https://www.linkedin.com/in/jonathanwillington/" label="LinkedIn" icon="/icons/linkedin.png" />
     </div>
   );
 }
 
-function DockLink({
-  href,
-  label,
-  className,
-  children,
-}: {
-  href: string;
-  label: string;
-  className: string;
-  children: ReactNode;
-}) {
+function DockLink({ href, label, icon }: { href: string; label: string; icon: string }) {
   const external = href.startsWith("http");
   return (
     <motion.a
@@ -326,9 +309,9 @@ function DockLink({
       target={external ? "_blank" : undefined}
       rel={external ? "noopener noreferrer" : undefined}
       whileTap={{ scale: 0.88 }}
-      className={`flex size-[63.7px] items-center justify-center rounded-[22.5%] shadow-[inset_0_0_0_0.5px_rgba(255,255,255,0.25)] ${className}`}
+      className="relative size-[63.7px] overflow-hidden rounded-[22.5%] shadow-[0_4px_12px_rgba(0,0,0,0.18)] after:pointer-events-none after:absolute after:inset-0 after:rounded-[22.5%] after:shadow-[inset_0_0_0_0.5px_rgba(255,255,255,0.3)]"
     >
-      {children}
+      <img src={icon} alt="" draggable={false} className="size-full select-none object-cover" />
     </motion.a>
   );
 }
