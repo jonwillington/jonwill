@@ -19,19 +19,23 @@ export function DetailContent({ entry, onClose }: { entry: AppEntry; onClose: ()
       className="flex flex-col gap-6"
     >
       <motion.div variants={item} className="flex items-start gap-4">
-        <div className={`size-16 shrink-0 overflow-hidden shadow-md ${entry.id === "about" ? "rounded-full" : "[border-radius:22.5%]"}`}>
+        <div
+          className={`size-16 shrink-0 overflow-hidden shadow-md ${entry.id === "about" ? "rounded-full" : "[border-radius:22.5%]"}`}
+        >
           <IconArt entry={entry} />
         </div>
         <div className="min-w-0 flex-1">
-          <h2 className="text-2xl font-semibold tracking-tight">{entry.id === "about" ? "Jon Willington" : entry.name}</h2>
-          <p className="text-muted">{entry.tagline}</p>
+          <h2 className="text-2xl font-semibold tracking-tight">
+            {entry.id === "about" ? "Jon Willington" : entry.name}
+          </h2>
+          <p className="text-foreground/70">{entry.tagline}</p>
         </div>
         <CloseButton aria-label="Close" onPress={onClose} />
       </motion.div>
 
       <motion.div variants={item} className="flex flex-wrap gap-1.5">
         {entry.tags.map((tag) => (
-          <Chip key={tag} size="sm">
+          <Chip key={tag} size="sm" className="bg-foreground/10 text-foreground">
             {tag}
           </Chip>
         ))}
@@ -47,11 +51,7 @@ export function DetailContent({ entry, onClose }: { entry: AppEntry; onClose: ()
         <motion.ul variants={item} className="flex flex-col gap-2">
           {entry.highlights.map((h) => (
             <li key={h} className="flex items-start gap-2.5">
-              <span
-                className="mt-[7px] size-2 shrink-0 rounded-full"
-                style={{ background: entry.accent }}
-                aria-hidden
-              />
+              <span className="mt-[7px] size-2 shrink-0 rounded-full bg-foreground/50" aria-hidden />
               <span>{h}</span>
             </li>
           ))}
@@ -67,7 +67,11 @@ export function DetailContent({ entry, onClose }: { entry: AppEntry; onClose: ()
               href={link.href}
               target={external ? "_blank" : undefined}
               rel={external ? "noopener noreferrer" : undefined}
-              className={buttonVariants({ variant: i === 0 ? "primary" : "secondary", size: "sm" })}
+              className={buttonVariants({
+                size: "sm",
+                // Neutral tints so the buttons sit on any app's background.
+                className: i === 0 ? "bg-foreground text-background" : "bg-foreground/10 text-foreground",
+              })}
             >
               {link.label}
               {external && <span aria-hidden>↗</span>}

@@ -17,11 +17,11 @@ export function AppIcon({ entry, jiggle, index, onOpen, onLongPress }: Props) {
   const longPressed = useRef(false);
 
   return (
-    <div className="flex flex-col items-center gap-[6px]">
+    <div className="flex flex-col items-center">
       <motion.button
         type="button"
         aria-label={`Open ${entry.name}`}
-        className="relative aspect-square w-full cursor-pointer rounded-[22.5%] shadow-[0_4px_12px_rgba(0,0,0,0.18)] outline-none after:pointer-events-none after:absolute after:inset-0 after:rounded-[22.5%] after:shadow-[inset_0_0_0_0.5px_rgba(255,255,255,0.3)] focus-visible:ring-2 focus-visible:ring-white"
+        className="relative size-[63.7px] shrink-0 cursor-pointer rounded-[22.5%] shadow-[0_4px_12px_rgba(0,0,0,0.18)] outline-none after:pointer-events-none after:absolute after:inset-0 after:rounded-[22.5%] after:shadow-[inset_0_0_0_0.5px_rgba(255,255,255,0.3)] focus-visible:ring-2 focus-visible:ring-white"
         whileTap={{ scale: 0.88 }}
         animate={
           jiggle
@@ -44,7 +44,7 @@ export function AppIcon({ entry, jiggle, index, onOpen, onLongPress }: Props) {
       >
         <IconArt entry={entry} />
       </motion.button>
-      <span className="max-w-[76px] truncate text-[12px] font-medium leading-[14px] tracking-[-0.1px] text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">
+      <span className="mt-[6.5px] max-w-[88px] truncate text-[12px] font-medium leading-[14px] tracking-[-0.1px] text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">
         {entry.name}
       </span>
     </div>

@@ -67,7 +67,11 @@ export function App() {
         onOpen={openEntry}
         onClose={close}
         renderOpen={(entry) => (
-          <div className="size-full overflow-y-auto bg-background px-5 pb-16 pt-14 text-foreground">
+          <div
+            data-theme={entry.scheme ?? "dark"}
+            className="size-full overflow-y-auto px-5 pb-16 pt-14 text-foreground"
+            style={{ background: entry.accent }}
+          >
             <DetailContent entry={entry} onClose={close} />
           </div>
         )}
@@ -76,11 +80,20 @@ export function App() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col overflow-hidden bg-background text-foreground">
+    <div
+      data-theme={open ? (open.scheme ?? "dark") : "light"}
+      className="relative isolate flex min-h-dvh flex-col overflow-hidden text-foreground"
+    >
+      <Ambient entry={open} />
+
       <header className="px-6 py-5 text-sm font-medium">Jon Willington</header>
 
       <main className="flex flex-1 items-center justify-center gap-16 px-6">
-        <motion.div layout transition={{ type: "spring", stiffness: 200, damping: 26 }} className="flex flex-col items-center gap-5">
+        <motion.div
+          layout
+          transition={{ type: "spring", stiffness: 200, damping: 26 }}
+          className="flex flex-col items-center gap-5"
+        >
           <Phone
             framed
             scale={scale}
@@ -123,6 +136,47 @@ export function App() {
           LinkedIn
         </Link>
       </footer>
+    </div>
+  );
+}
+
+/**
+ * The page backdrop. Fades to the open app's colour, with a huge blurred
+ * copy of its icon drifting behind the phone, so the whole page takes on
+ * the app's mood.
+ */
+function Ambient({ entry }: { entry: AppEntry | null }) {
+  return (
+    <div className="pointer-events-none absolute inset-0 -z-10 bg-[#f5f5f5]" aria-hidden>
+      <AnimatePresence>
+        {entry && (
+          <motion.div
+            key={entry.id}
+            className="absolute inset-0 overflow-hidden"
+            style={{ background: entry.accent }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.7, ease: "easeInOut" }}
+          >
+            {entry.icon && (
+              <motion.img
+                src={entry.icon}
+                alt=""
+                className="absolute left-[32%] top-1/2 aspect-square w-[75vmax] max-w-none rounded-full object-cover opacity-55 blur-[120px] saturate-150 will-change-transform"
+                initial={{ x: "-50%", y: "-50%", scale: 0.7, rotate: 0 }}
+                animate={{ x: "-50%", y: "-50%", scale: [1, 1.15, 1], rotate: [0, 25, 0] }}
+                transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
+              />
+            )}
+            {/* Soft vignette so text at the edges stays readable. */}
+            <div
+              className="absolute inset-0"
+              style={{ background: `radial-gradient(120% 90% at 50% 50%, transparent 40%, ${entry.accent} 100%)` }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

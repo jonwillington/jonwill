@@ -12,8 +12,10 @@ export type AppEntry = {
   name: string;
   /** Path under /public, or null to draw a monogram instead. */
   icon: string | null;
-  /** Used for the splash screen and the panel tint. */
+  /** Background colour for the splash screen and the page when open. */
   accent: string;
+  /** Whether `accent` needs light text (dark) or dark text (light). Defaults to dark. */
+  scheme?: "dark" | "light";
   tagline: string;
   /** Short labels shown as chips, e.g. platform or stack. */
   tags: string[];
@@ -46,6 +48,7 @@ export const APPS: AppEntry[] = [
     name: "Deel",
     icon: "/icons/deel.jpg",
     accent: "#b39cf5",
+    scheme: "light",
     tagline: "My day job.",
     tags: ["Group Product Design Manager", "HR", "Payroll"],
     body: [
