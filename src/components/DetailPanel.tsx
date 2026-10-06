@@ -12,6 +12,9 @@ const item = {
   show: { opacity: 1, y: 0 },
 };
 
+/** The panel's call-to-action buttons: tall, easy to hit. */
+const BIG_BUTTON = "h-12 gap-2 px-6 text-[16px] font-medium";
+
 /** Small uppercase label above a section, in the same mono as the chips. */
 export const EYEBROW = "font-mono text-[11px] font-medium uppercase tracking-[0.08em] text-foreground/55";
 
@@ -80,12 +83,12 @@ export function DetailContent({
         <button
           type="button"
           onClick={onLearnMore}
-          className={buttonVariants({ size: "sm", className: "bg-foreground/10 text-foreground" })}
+          className={buttonVariants({ size: "lg", className: `${BIG_BUTTON} bg-foreground/10 text-foreground` })}
         >
           Learn more
           <svg
-            width="12"
-            height="12"
+            width="15"
+            height="15"
             viewBox="0 0 12 12"
             fill="none"
             stroke="currentColor"
@@ -125,13 +128,13 @@ export function LinkButton({ link, primary = false }: { link: { label: string; h
       target={external ? "_blank" : undefined}
       rel={external ? "noopener noreferrer" : undefined}
       className={buttonVariants({
-        size: "sm",
+        size: "lg",
         // Neutral tints so the buttons sit on any app's background.
-        className: primary ? "bg-foreground text-background" : "bg-foreground/10 text-foreground",
+        className: `${BIG_BUTTON} ${primary ? "bg-foreground text-background" : "bg-foreground/10 text-foreground"}`,
       })}
     >
       {link.label}
-      {external && <span aria-hidden>↗</span>}
+      {external && <span aria-hidden className="text-[17px] leading-none">↗</span>}
     </a>
   );
 }
