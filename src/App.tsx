@@ -32,10 +32,42 @@ function useDeviceScale() {
   return scale;
 }
 
+const SEEN_KEY = "jonwill:seen";
+
+/** Which apps this visitor has opened, remembered in their browser. */
+function useSeen() {
+  const [seen, setSeen] = useState<ReadonlySet<string>>(() => {
+    try {
+      return new Set(JSON.parse(localStorage.getItem(SEEN_KEY) ?? "[]"));
+    } catch {
+      return new Set();
+    }
+  });
+  const markSeen = useCallback((id: string) => {
+    setSeen((prev) => {
+      if (prev.has(id)) return prev;
+      const next = new Set(prev).add(id);
+      try {
+        localStorage.setItem(SEEN_KEY, JSON.stringify([...next]));
+      } catch {
+        // Private mode or blocked storage: badges just come back next visit.
+      }
+      return next;
+    });
+  }, []);
+  return [seen, markSeen] as const;
+}
+
 export function App() {
   const desktop = useIsDesktop();
   const scale = useDeviceScale();
   const [open, setOpen] = useState<AppEntry | null>(fromHash);
+
+  const [seen, markSeen] = useSeen();
+  // However an app was opened (tap or link), its badge clears.
+  useEffect(() => {
+    if (open) markSeen(open.id);
+  }, [open, markSeen]);
 
   const openEntry = useCallback((entry: AppEntry) => {
     setOpen(entry);
@@ -63,6 +95,7 @@ export function App() {
     return (
       <Phone
         framed={false}
+        seen={seen}
         open={open}
         onOpen={openEntry}
         onClose={close}
@@ -97,6 +130,7 @@ export function App() {
           <Phone
             framed
             scale={scale}
+            seen={seen}
             open={open}
             onOpen={openEntry}
             onClose={close}

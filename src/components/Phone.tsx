@@ -21,6 +21,8 @@ type Origin = { x: number; y: number };
 
 type Props = {
   open: AppEntry | null;
+  /** Apps this visitor has opened; the rest show a "1" badge. */
+  seen: ReadonlySet<string>;
   onOpen: (entry: AppEntry) => void;
   onClose: () => void;
   /** Framed: the photoreal device at `scale`. Unframed (on phones): the page is the screen. */
@@ -30,7 +32,7 @@ type Props = {
   renderOpen: (entry: AppEntry) => ReactNode;
 };
 
-export function Phone({ open, onOpen, onClose, framed, scale = 1, renderOpen }: Props) {
+export function Phone({ open, seen, onOpen, onClose, framed, scale = 1, renderOpen }: Props) {
   const screenRef = useRef<HTMLDivElement>(null);
   // Opening from a link (no tap) zooms from the middle of the screen.
   const [origin, setOrigin] = useState<Origin | null>(null);
@@ -96,6 +98,7 @@ export function Phone({ open, onOpen, onClose, framed, scale = 1, renderOpen }: 
               entry={entry}
               index={i}
               jiggle={jiggle}
+              badge={!seen.has(entry.id)}
               onOpen={handleOpen}
               onLongPress={() => setJiggle(true)}
             />
