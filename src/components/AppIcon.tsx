@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { motion } from "motion/react";
 
 import type { AppEntry } from "../content/apps";
+import { iconClip } from "../lib/squircle";
 
 type Props = {
   entry: AppEntry;
@@ -21,7 +22,7 @@ export function AppIcon({ entry, jiggle, index, onOpen, onLongPress }: Props) {
       <motion.button
         type="button"
         aria-label={`Open ${entry.name}`}
-        className="relative size-[63.7px] shrink-0 cursor-pointer rounded-[22.5%] shadow-[0_4px_12px_rgba(0,0,0,0.18)] outline-none after:pointer-events-none after:absolute after:inset-0 after:rounded-[22.5%] after:shadow-[inset_0_0_0_0.5px_rgba(255,255,255,0.3)] focus-visible:ring-2 focus-visible:ring-white"
+        className="relative size-[64px] shrink-0 cursor-pointer outline-none [filter:drop-shadow(0_2px_5px_rgba(0,0,0,0.12))] focus-visible:[filter:drop-shadow(0_0_2px_white)]"
         whileTap={{ scale: 0.88 }}
         animate={
           jiggle
@@ -51,13 +52,19 @@ export function AppIcon({ entry, jiggle, index, onOpen, onLongPress }: Props) {
   );
 }
 
-export function IconArt({ entry, className = "" }: { entry: AppEntry; className?: string }) {
+/**
+ * An app icon clipped to the iOS icon shape at `size` px. `round` draws a
+ * circle instead, for my photo.
+ */
+export function IconArt({ entry, size = 64, round = false }: { entry: AppEntry; size?: number; round?: boolean }) {
   const [failed, setFailed] = useState(false);
+  const shape = round ? { borderRadius: "9999px" } : { clipPath: iconClip(size) };
 
   if (!entry.icon || failed) {
     return (
       <span
-        className={`flex size-full items-center justify-center rounded-[22.5%] bg-gradient-to-br from-amber-300 via-rose-400 to-violet-500 font-semibold text-white ${className}`}
+        className="flex size-full items-center justify-center bg-gradient-to-br from-amber-300 via-rose-400 to-violet-500 font-semibold text-white"
+        style={shape}
       >
         JW
       </span>
@@ -70,7 +77,8 @@ export function IconArt({ entry, className = "" }: { entry: AppEntry; className?
       alt=""
       draggable={false}
       onError={() => setFailed(true)}
-      className={`size-full select-none rounded-[22.5%] object-cover ${className}`}
+      className="size-full select-none object-cover"
+      style={shape}
     />
   );
 }

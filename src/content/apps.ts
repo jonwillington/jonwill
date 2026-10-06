@@ -64,7 +64,7 @@ export const APPS: AppEntry[] = [
   {
     id: "ddbx",
     name: "ddbx",
-    icon: "/icons/ddbx.jpg",
+    icon: "/icons/ddbx-glass.png",
     accent: "#ede8e2",
     scheme: "light",
     tagline: "Director dealings, rated as they happen.",
@@ -108,7 +108,7 @@ export const APPS: AppEntry[] = [
   {
     id: "ga-bridge",
     name: "GA Bridge",
-    icon: "/icons/gabridge.png",
+    icon: "/icons/gabridge-glass.png",
     accent: "#111113",
     scheme: "dark",
     tagline: "All your GA4 properties on one screen.",

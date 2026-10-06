@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "motion/react";
 
 import { ABOUT, APPS, type AppEntry } from "../content/apps";
 import { AppIcon, IconArt } from "./AppIcon";
+import { SHAPE, Squircle, iconClip } from "../lib/squircle";
 
 // Apple's iPhone 17 bezel (public/device) is 1350×2760 at @3x, so the
 // device is 450×920pt with the 402×874pt screen inset at (24, 23).
@@ -10,10 +11,11 @@ export const DEVICE = { width: 450, height: 920 };
 const SCREEN = { left: 24, top: 23, width: 402, height: 874, radius: 63 };
 
 // Home-screen metrics, measured from an iPhone 17 screenshot (points).
-const GRID = { top: 89.3, left: 30.3, icon: 63.7, colPitch: 92.57, rowPitch: 100.33 };
+const GRID = { top: 89.33, left: 30.33, icon: 64, colPitch: 92.56, rowPitch: 100.33 };
 
-const GLASS =
-  "bg-white/20 backdrop-blur-2xl backdrop-saturate-150 shadow-[inset_0_1px_0_rgba(255,255,255,0.35),inset_0_0_0_0.5px_rgba(255,255,255,0.25)]";
+// Pills keep a CSS edge highlight; squircle surfaces get theirs from <Squircle rim>.
+const GLASS = "bg-white/20 backdrop-blur-2xl backdrop-saturate-150";
+const GLASS_EDGE = "shadow-[inset_0_1px_0_rgba(255,255,255,0.35),inset_0_0_0_0.5px_rgba(255,255,255,0.25)]";
 
 type Origin = { x: number; y: number };
 
@@ -112,7 +114,7 @@ export function Phone({ open, onOpen, onClose, framed, scale = 1, renderOpen }: 
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             onClick={() => setJiggle(false)}
-            className={`absolute right-[22px] z-10 cursor-pointer rounded-full px-[14px] py-[5px] text-[15px] font-semibold text-white ${GLASS} ${framed ? "top-[60px]" : "top-3"}`}
+            className={`absolute right-[22px] z-10 cursor-pointer rounded-full px-[14px] py-[5px] text-[15px] font-semibold text-white ${GLASS} ${GLASS_EDGE} ${framed ? "top-[60px]" : "top-3"}`}
           >
             Done
           </motion.button>
@@ -171,12 +173,12 @@ export function Splash({ entry }: { entry: AppEntry }) {
       className={`flex size-full flex-col items-center justify-center gap-5 px-10 text-center ${light ? "text-neutral-900" : "text-white"}`}
     >
       <motion.div
-        className={`size-[112px] shadow-2xl ${about ? "overflow-hidden rounded-full ring-4 ring-white" : "rounded-[25px]"}`}
+        className={`size-[112px] [filter:drop-shadow(0_12px_24px_rgba(0,0,0,0.25))] ${about ? "rounded-full ring-4 ring-white" : ""}`}
         initial={{ scale: 0.6, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 0.12, type: "spring", stiffness: 300, damping: 20 }}
       >
-        <IconArt entry={entry} />
+        <IconArt entry={entry} size={112} round={about} />
       </motion.div>
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
         <p className="text-[28px] font-bold tracking-tight">{about ? "Jon Willington" : entry.name}</p>
@@ -232,7 +234,7 @@ function StatusBar({ light }: { light: boolean }) {
  * The "me" entry: a medium Maps-style widget with my photo pinned over
  * Istanbul. The map is a static render (public/istanbul-map.jpg).
  */
-const WIDGET_HEIGHT = 164;
+const WIDGET_HEIGHT = 164.33;
 
 function MeWidget({ onOpen }: { onOpen: (rect: DOMRect) => void }) {
   return (
@@ -242,31 +244,33 @@ function MeWidget({ onOpen }: { onOpen: (rect: DOMRect) => void }) {
         aria-label="Jon Willington, currently in Istanbul"
         whileTap={{ scale: 0.96 }}
         onClick={(e) => onOpen(e.currentTarget.getBoundingClientRect())}
-        className="relative w-full cursor-pointer overflow-hidden rounded-[26px] text-left shadow-[0_8px_24px_rgba(0,0,0,0.2)]"
+        className="relative w-full cursor-pointer text-left [filter:drop-shadow(0_6px_14px_rgba(0,0,0,0.18))]"
         style={{ height: WIDGET_HEIGHT }}
       >
-        <img src="/istanbul-map.jpg" alt="" draggable={false} className="absolute inset-0 size-full object-cover" />
+        <Squircle radius={SHAPE.widget.radius} smoothing={SHAPE.widget.smoothing} rim className="absolute inset-0">
+          <img src="/istanbul-map.jpg" alt="" draggable={false} className="absolute inset-0 size-full object-cover" />
 
-        {/* Photo pin over Beyoğlu, Find My style */}
-        <span className="absolute left-[37%] top-[44%] -translate-x-1/2 -translate-y-full">
-          <span className="location-pulse absolute bottom-[-12px] left-1/2 size-[44px] -translate-x-1/2 rounded-full bg-[#0a84ff]/25" />
-          <span className="relative block size-[50px] overflow-hidden rounded-full border-[3px] border-white bg-white shadow-[0_3px_10px_rgba(0,0,0,0.35)]">
-            <img src="/me.jpg" alt="" draggable={false} className="size-full object-cover" />
+          {/* Photo pin over Beyoğlu, Find My style */}
+          <span className="absolute left-[37%] top-[44%] -translate-x-1/2 -translate-y-full">
+            <span className="location-pulse absolute bottom-[-12px] left-1/2 size-[44px] -translate-x-1/2 rounded-full bg-[#0a84ff]/25" />
+            <span className="relative block size-[50px] overflow-hidden rounded-full border-[3px] border-white bg-white shadow-[0_3px_10px_rgba(0,0,0,0.35)]">
+              <img src="/me.jpg" alt="" draggable={false} className="size-full object-cover" />
+            </span>
+            <span className="relative mx-auto -mt-[3px] block size-0 border-x-[7px] border-t-[9px] border-x-transparent border-t-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.2)]" />
           </span>
-          <span className="relative mx-auto -mt-[3px] block size-0 border-x-[7px] border-t-[9px] border-x-transparent border-t-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.2)]" />
-        </span>
 
-        <span className="absolute inset-x-0 bottom-0 h-[78px] bg-gradient-to-t from-black/50 to-transparent" />
-        <span className="absolute bottom-[12px] left-[14px] text-white">
-          <span className="block text-[20px] font-bold leading-tight tracking-[-0.4px]">Jon Willington</span>
-          <span className="flex items-center gap-[5px] text-[13px] font-medium text-white/85">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-              <path d="M21.7 2.3a1 1 0 0 0-1.1-.2L2.9 9.8a1 1 0 0 0 .1 1.9l7.6 1.7 1.7 7.6a1 1 0 0 0 1.9.1l7.7-17.7a1 1 0 0 0-.2-1.1Z" />
-            </svg>
-            Currently in Istanbul
+          <span className="absolute inset-x-0 bottom-0 h-[78px] bg-gradient-to-t from-black/50 to-transparent" />
+          <span className="absolute bottom-[12px] left-[14px] text-white">
+            <span className="block text-[20px] font-bold leading-tight tracking-[-0.4px]">Jon Willington</span>
+            <span className="flex items-center gap-[5px] text-[13px] font-medium text-white/85">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                <path d="M21.7 2.3a1 1 0 0 0-1.1-.2L2.9 9.8a1 1 0 0 0 .1 1.9l7.6 1.7 1.7 7.6a1 1 0 0 0 1.9.1l7.7-17.7a1 1 0 0 0-.2-1.1Z" />
+              </svg>
+              Currently in Istanbul
+            </span>
           </span>
-        </span>
-        <span className="absolute bottom-[6px] right-[10px] text-[7px] text-white/70">© OpenStreetMap</span>
+          <span className="absolute bottom-[6px] right-[10px] text-[7px] text-white/70">© OpenStreetMap</span>
+        </Squircle>
       </motion.button>
       <span className="mt-[6.5px] text-[12px] font-medium leading-[14px] text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">
         Find My
@@ -278,7 +282,7 @@ function MeWidget({ onOpen }: { onOpen: (rect: DOMRect) => void }) {
 function SearchPill() {
   return (
     <div
-      className={`pointer-events-none absolute bottom-[141px] left-1/2 flex h-[28.5px] w-[78px] -translate-x-1/2 items-center justify-center gap-[5px] rounded-full text-[15px] text-white ${GLASS}`}
+      className={`pointer-events-none absolute bottom-[141px] left-1/2 flex h-[28.5px] w-[78px] -translate-x-1/2 items-center justify-center gap-[5px] rounded-full text-[15px] text-white ${GLASS} ${GLASS_EDGE}`}
     >
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" aria-hidden>
         <circle cx="10.5" cy="10.5" r="7" />
@@ -291,12 +295,15 @@ function SearchPill() {
 
 function Dock({ framed }: { framed: boolean }) {
   return (
-    <div
-      className={`absolute inset-x-[17px] flex h-[101.5px] items-center justify-center gap-[23.7px] rounded-[44px] ${GLASS} ${framed ? "bottom-[18px]" : "bottom-[max(18px,env(safe-area-inset-bottom))]"}`}
+    <Squircle
+      radius={SHAPE.dock.radius}
+      smoothing={SHAPE.dock.smoothing}
+      rim
+      className={`absolute inset-x-[17px] flex h-[101.5px] items-center justify-center gap-[23.7px] ${GLASS} ${framed ? "bottom-[18px]" : "bottom-[max(18px,env(safe-area-inset-bottom))]"}`}
     >
-      <DockLink href="mailto:hey@jonwill.ing" label="Email" icon="/icons/mail.png" />
+      <DockLink href="mailto:hey@jonwill.ing" label="Email" icon="/icons/mail-glass.png" />
       <DockLink href="https://www.linkedin.com/in/jonathanwillington/" label="LinkedIn" icon="/icons/linkedin.png" />
-    </div>
+    </Squircle>
   );
 }
 
@@ -309,9 +316,15 @@ function DockLink({ href, label, icon }: { href: string; label: string; icon: st
       target={external ? "_blank" : undefined}
       rel={external ? "noopener noreferrer" : undefined}
       whileTap={{ scale: 0.88 }}
-      className="relative size-[63.7px] overflow-hidden rounded-[22.5%] shadow-[0_4px_12px_rgba(0,0,0,0.18)] after:pointer-events-none after:absolute after:inset-0 after:rounded-[22.5%] after:shadow-[inset_0_0_0_0.5px_rgba(255,255,255,0.3)]"
+      className="relative size-[64px] [filter:drop-shadow(0_2px_5px_rgba(0,0,0,0.12))]"
     >
-      <img src={icon} alt="" draggable={false} className="size-full select-none object-cover" />
+      <img
+        src={icon}
+        alt=""
+        draggable={false}
+        className="size-full select-none object-cover"
+        style={{ clipPath: iconClip(64) }}
+      />
     </motion.a>
   );
 }
