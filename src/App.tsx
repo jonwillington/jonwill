@@ -26,9 +26,16 @@ function useIsDesktop() {
   return matches;
 }
 
-/** Fit the device to the window, leaving room for the header, dots and footer. */
+/**
+ * Fit the device to the window, leaving room for the header, dots and footer.
+ * Big windows get a larger phone (up to 1.15x), as long as it leaves room for the panel.
+ */
 function useDeviceScale() {
-  const fit = () => Math.min(1, Math.max(0.5, (window.innerHeight - 170) / DEVICE.height));
+  const fit = () =>
+    Math.max(
+      0.5,
+      Math.min(1.15, (window.innerHeight - 160) / DEVICE.height, (window.innerWidth * 0.36) / DEVICE.width),
+    );
   const [scale, setScale] = useState(fit);
   useEffect(() => {
     const onResize = () => setScale(fit());
@@ -189,7 +196,7 @@ export function App() {
           <ThemeToggle mode={mode} onChange={setMode} />
         </header>
 
-        <main className="flex flex-1 items-center justify-center gap-16 px-6">
+        <main className="flex flex-1 items-center justify-center gap-16 px-6 2xl:gap-20">
           <motion.div
             layout
             transition={{ type: "spring", stiffness: 200, damping: 26 }}
@@ -234,7 +241,7 @@ export function App() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 30, transition: { duration: 0.15 } }}
                 transition={{ type: "spring", stiffness: 220, damping: 26 }}
-                className="w-[min(440px,40vw)]"
+                className={`w-[min(440px,40vw)] ${open.markets || open.network || open.destinations ? "2xl:w-[min(860px,50vw)]" : ""}`}
               >
                 <DetailContent entry={open} live={live} onClose={close} onLearnMore={() => setDrawer(true)} />
               </motion.aside>

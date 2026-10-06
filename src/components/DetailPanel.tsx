@@ -30,16 +30,22 @@ export function DetailContent({
   onClose: () => void;
   onLearnMore: () => void;
 }) {
+  const hasData = !!(entry.markets || entry.network || entry.destinations);
+  const left = "2xl:col-start-1";
+  const right = "2xl:col-start-2 2xl:row-span-5 2xl:row-start-1";
   return (
     <motion.div
       key={entry.id}
       initial="hidden"
       animate="show"
       transition={{ staggerChildren: 0.05, delayChildren: 0.08 }}
-      className="flex flex-col gap-5 text-[15px] leading-[1.6]"
+      // Wide screens: summary on the left, the data block taking the right column.
+      className={`flex flex-col gap-5 text-[15px] leading-[1.6] ${
+        hasData ? "2xl:grid 2xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] 2xl:content-start 2xl:gap-x-12" : ""
+      }`}
     >
       {/* Icon, then the name beneath it, and a one-line description. */}
-      <motion.div variants={item} className="flex items-start justify-between">
+      <motion.div variants={item} className={`flex items-start justify-between ${left}`}>
         <div>
           <div className="size-16 [filter:drop-shadow(0_2px_6px_rgba(0,0,0,0.10))]">
             <IconArt entry={entry} size={64} round={entry.id === "about"} />
@@ -52,33 +58,32 @@ export function DetailContent({
         <CloseX onPress={onClose} />
       </motion.div>
 
-      <motion.div variants={item}>
+      <motion.div variants={item} className={left}>
         <Tags tags={entry.tags} />
       </motion.div>
 
       {/* The rich data stays on the page; the longer story lives in the drawer. */}
       {entry.markets && (
-        <motion.div variants={item}>
+        <motion.div variants={item} className={right}>
           <MarketGrid markets={entry.markets} />
         </motion.div>
       )}
       {entry.network && (
-        <motion.div variants={item}>
+        <motion.div variants={item} className={right}>
           <Network {...entry.network} counts={live?.network} />
         </motion.div>
       )}
       {entry.destinations && (
-        <motion.div variants={item}>
+        <motion.div variants={item} className={right}>
           <Destinations {...entry.destinations} />
         </motion.div>
       )}
-      {!entry.markets && !entry.network && !entry.destinations && (
-        <motion.p variants={item} className="text-foreground/80">
-          {entry.body[0]}
-        </motion.p>
-      )}
+      {/* The one-line description: always when there's no data; beside it on wide screens. */}
+      <motion.p variants={item} className={`text-foreground/80 ${left} ${hasData ? "hidden 2xl:block" : ""}`}>
+        {entry.body[0]}
+      </motion.p>
 
-      <motion.div variants={item} className="flex flex-wrap gap-2">
+      <motion.div variants={item} className={`flex flex-wrap gap-2 ${left}`}>
         {entry.links[0] && <LinkButton link={entry.links[0]} primary />}
         <button
           type="button"
@@ -134,7 +139,11 @@ export function LinkButton({ link, primary = false }: { link: { label: string; h
       })}
     >
       {link.label}
-      {external && <span aria-hidden className="text-[17px] leading-none">↗</span>}
+      {external && (
+        <span aria-hidden className="text-[17px] leading-none">
+          ↗
+        </span>
+      )}
     </a>
   );
 }
@@ -356,7 +365,7 @@ function Destinations({ title, intro, items }: { title: string; intro: string; i
       <ol
         tabIndex={0}
         aria-label={`${title}, scrollable`}
-        className="max-h-[236px] overflow-y-auto overscroll-contain rounded-[10px] border border-foreground/10 outline-none [scrollbar-width:thin] focus-visible:ring-2 focus-visible:ring-foreground/30"
+        className="max-h-[236px] overflow-y-auto 2xl:max-h-[540px] overscroll-contain rounded-[10px] border border-foreground/10 outline-none [scrollbar-width:thin] focus-visible:ring-2 focus-visible:ring-foreground/30"
       >
         {items.map((d, i) => (
           <li key={d.url} className={i ? "border-t border-foreground/10" : ""}>
