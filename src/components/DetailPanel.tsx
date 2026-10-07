@@ -16,7 +16,11 @@ const item = {
 };
 
 /** The panel's call-to-action buttons: tall, easy to hit. */
-const BIG_BUTTON = "h-12 gap-2 px-6 text-[16px] font-medium";
+const BIG_BUTTON =
+  "h-12 gap-2 px-6 text-[16px] font-medium transition-[background-color,transform,box-shadow] duration-200 hover:-translate-y-px active:translate-y-0 active:scale-[0.98] [&_svg]:transition-transform [&_svg]:duration-200 hover:[&_svg]:translate-x-0.5";
+/** Our own tints, with hover states: HeroUI's colour classes are replaced, so its hovers go too. */
+const PRIMARY = "bg-foreground text-background hover:bg-foreground/85 hover:shadow-[0_6px_16px_-6px_rgba(0,0,0,0.35)]";
+const SECONDARY = "bg-foreground/10 text-foreground hover:bg-foreground/[0.16]";
 
 /** Small uppercase label above a section, in the same mono as the chips. */
 export const EYEBROW = "font-mono text-[11px] font-medium uppercase tracking-[0.08em] text-foreground/55";
@@ -98,7 +102,7 @@ export function DetailContent({
         <button
           type="button"
           onClick={onLearnMore}
-          className={buttonVariants({ size: "lg", className: `${BIG_BUTTON} bg-foreground/10 text-foreground` })}
+          className={buttonVariants({ size: "lg", className: `${BIG_BUTTON} ${SECONDARY}` })}
         >
           Learn more
           <svg
@@ -145,7 +149,7 @@ export function LinkButton({ link, primary = false }: { link: { label: string; h
       className={buttonVariants({
         size: "lg",
         // Neutral tints so the buttons sit on any app's background.
-        className: `${BIG_BUTTON} ${primary ? "bg-foreground text-background" : "bg-foreground/10 text-foreground"}`,
+        className: `group ${BIG_BUTTON} ${primary ? PRIMARY : SECONDARY}`,
       })}
     >
       {link.label}
