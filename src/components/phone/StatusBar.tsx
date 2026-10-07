@@ -39,25 +39,28 @@ function Signal() {
 }
 
 function WiFi() {
-  // Two arcs and a wedge sharing one centre at the bottom tip, ±45° from vertical.
+  // Two bands and a wedge cut from one circle centred at the bottom tip, ±43°. Fitted to the
+  // real glyph from an iPhone 17 screenshot; a thin round stroke softens the corners as Apple's
+  // are, so each radius is pulled in by half of it.
   const cx = 8.5;
-  const cy = 12.4;
-  const arc = (r: number) => {
-    const d = r * Math.SQRT1_2;
-    return `M${cx - d} ${cy - d}A${r} ${r} 0 0 1 ${cx + d} ${cy - d}`;
+  const cy = 12.9;
+  const a = (43.1 * Math.PI) / 180;
+  const soft = 0.6;
+  const sector = (ro: number, ri: number) => {
+    ro -= soft / 2;
+    ri = ri ? ri + soft / 2 : 0;
+    const p = (r: number, s: number) => `${cx + s * r * Math.sin(a)} ${cy - r * Math.cos(a)}`;
+    return ri
+      ? `M${p(ro, -1)}A${ro} ${ro} 0 0 1 ${p(ro, 1)}L${p(ri, 1)}A${ri} ${ri} 0 0 0 ${p(ri, -1)}Z`
+      : `M${cx} ${cy - soft / 2}L${p(ro, -1)}A${ro} ${ro} 0 0 1 ${p(ro, 1)}Z`;
   };
-  const w = 3.6 * Math.SQRT1_2;
   return (
-    <svg width="17" height="12.5" viewBox="0 0 17 12.5" fill="none" aria-hidden>
-      <path d={arc(10.6)} stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" />
-      <path d={arc(6.4)} stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" />
-      <path
-        d={`M${cx} ${cy}L${cx - w} ${cy - w}A3.6 3.6 0 0 1 ${cx + w} ${cy - w}Z`}
-        fill="currentColor"
-        stroke="currentColor"
-        strokeWidth="1"
-        strokeLinejoin="round"
-      />
+    <svg width="17" height="13" viewBox="0 0 17 13" aria-hidden>
+      <g fill="currentColor" stroke="currentColor" strokeWidth={soft} strokeLinejoin="round">
+        <path d={sector(12.51, 10.02)} />
+        <path d={sector(8.25, 5.76)} />
+        <path d={sector(4.0, 0)} />
+      </g>
     </svg>
   );
 }
