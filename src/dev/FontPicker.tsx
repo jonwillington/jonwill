@@ -49,6 +49,9 @@ export function FontPicker() {
   const [index, setIndex] = useState(-1); // -1 = the site's own font
   const [scope, setScope] = useState<"headings" | "all">("headings");
   const [open, setOpen] = useState(true);
+  // Don't save anything until the saved choice has been read back, or the first render
+  // (no font yet) would overwrite it.
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     fetch("/__fonts")
@@ -63,13 +66,15 @@ export function FontPicker() {
         } catch {
           // Nothing saved.
         }
+        setReady(true);
       })
-      .catch(() => {});
+      .catch(() => setReady(true));
   }, []);
 
   const current = index > -1 ? families[index] : null;
 
   useEffect(() => {
+    if (!ready) return;
     const root = document.documentElement;
     if (!current) {
       root.style.removeProperty("--font-heading");
@@ -86,7 +91,7 @@ export function FontPicker() {
     } catch {
       // Not remembered.
     }
-  }, [current, scope]);
+  }, [current, scope, ready]);
 
   const step = (d: number) => setIndex((i) => ((i + 1 + d + families.length + 1) % (families.length + 1)) - 1);
 
