@@ -60,7 +60,7 @@ export type AppEntry = {
     scheme: "light" | "dark";
     light: string[];
     dark?: string[];
-    /** Short labels shown under video clips (screen recordings that aren't full-screen). */
+    /** One short line per screen, shown under the phone while that screen is up. */
     captions?: string[];
   };
   /** Where the app is available, by market and platform. */
@@ -202,6 +202,11 @@ export const APPS: AppEntry[] = [
     screens: {
       scheme: "dark",
       light: ["/screens/ddbx-deals.webp", "/screens/ddbx-performance.webp", "/screens/ddbx-company.webp"],
+      captions: [
+        "Today's director dealings, each one rated",
+        "How the rated buys have done against the market",
+        "A single dealing: the rating, the numbers and the checklist",
+      ],
     },
   },
   {
@@ -370,6 +375,10 @@ export const APPS: AppEntry[] = [
     screens: {
       scheme: "light",
       light: ["/screens/gabridge-home.webp", "/screens/gabridge-detail.webp"],
+      captions: [
+        "Every property on one screen, with a fair trend",
+        "One property: live users, today's curve and countries",
+      ],
       dark: ["/screens/gabridge-home-dark.webp", "/screens/gabridge-detail-dark.webp"],
     },
   },
@@ -462,6 +471,12 @@ export const APPS: AppEntry[] = [
         "/screens/istanbrew-map.webp",
         "/screens/istanbrew-areas.webp",
         "/screens/istanbrew-shop.webp",
+      ],
+      captions: [
+        "Start with the city's best roasters and cafés",
+        "Every shop on one map, clustered by area",
+        "Neighbourhoods on both sides of the Bosphorus",
+        "A shop's page: hours, roaster and the story behind it",
       ],
     },
   },

@@ -109,7 +109,6 @@ export function AppScreens({
           {isVideo(screens[index]) ? (
             <Clip
               src={screens[index]}
-              caption={entry.screens?.captions?.[index]}
               playing={launched}
               onEnded={() => !paused && screens.length > 1 && onIndex((index + 1) % screens.length)}
             />
@@ -124,19 +123,9 @@ export function AppScreens({
 
 /**
  * A screen recording that isn't full-screen (4:5 clips): shown as a card
- * under the status bar with a caption, like an App Store preview.
+ * under the status bar, like an App Store preview. Its caption sits under the phone.
  */
-function Clip({
-  src,
-  caption,
-  playing,
-  onEnded,
-}: {
-  src: string;
-  caption?: string;
-  playing: boolean;
-  onEnded: () => void;
-}) {
+function Clip({ src, playing, onEnded }: { src: string; playing: boolean; onEnded: () => void }) {
   const ref = useRef<HTMLVideoElement>(null);
   useEffect(() => {
     const v = ref.current;
@@ -157,7 +146,6 @@ function Clip({
         onEnded={onEnded}
         className="w-full rounded-[22px] shadow-[0_0_0_1px_rgba(0,0,0,0.06),0_12px_32px_rgba(0,0,0,0.12)]"
       />
-      {caption && <p className="text-center text-[17px] font-semibold tracking-[-0.3px] text-neutral-900">{caption}</p>}
     </div>
   );
 }

@@ -38,7 +38,7 @@ function useDeviceScale() {
   const fit = () =>
     Math.max(
       0.5,
-      Math.min(1.15, (window.innerHeight - 200) / DEVICE.height, (window.innerWidth * 0.36) / DEVICE.width),
+      Math.min(1.15, (window.innerHeight - 230) / DEVICE.height, (window.innerWidth * 0.36) / DEVICE.width),
     );
   const [scale, setScale] = useState(fit);
   useEffect(() => {
@@ -247,10 +247,34 @@ export function App() {
                 )
               }
             />
-            <div className="flex h-5 items-center">
+            {/* A caption-sized line under the phone saying what the current screen shows. */}
+            <div className="flex h-[52px] flex-col items-center justify-start gap-2.5">
               <AnimatePresence mode="wait">
                 {screens && screens.length > 1 ? (
-                  <ScreenDots key="dots" count={screens.length} index={screen} onSelect={setScreen} />
+                  <motion.div
+                    key={`screens-${open?.id}`}
+                    className="flex flex-col items-center gap-2.5"
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 4 }}
+                  >
+                    <div className="relative h-5 w-[min(380px,32vw)] overflow-hidden text-center">
+                      <AnimatePresence mode="popLayout" initial={false}>
+                        <motion.p
+                          key={screen}
+                          aria-live="polite"
+                          className="absolute inset-x-0 truncate text-[13px] leading-5 text-foreground/65"
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -8 }}
+                          transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
+                        >
+                          {open?.screens?.captions?.[screen] ?? ""}
+                        </motion.p>
+                      </AnimatePresence>
+                    </div>
+                    <ScreenDots count={screens.length} index={screen} onSelect={setScreen} />
+                  </motion.div>
                 ) : (
                   <motion.p
                     key="hint"
@@ -332,14 +356,7 @@ export function App() {
 /** Which real app screen is showing; click to jump. */
 function ScreenDots({ count, index, onSelect }: { count: number; index: number; onSelect: (i: number) => void }) {
   return (
-    <motion.div
-      className="flex items-center gap-2"
-      initial={{ opacity: 0, y: 4 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 4 }}
-      role="tablist"
-      aria-label="App screens"
-    >
+    <div className="flex items-center gap-2" role="tablist" aria-label="App screens">
       {Array.from({ length: count }, (_, i) => (
         <button
           key={i}
@@ -357,7 +374,7 @@ function ScreenDots({ count, index, onSelect }: { count: number; index: number; 
           />
         </button>
       ))}
-    </motion.div>
+    </div>
   );
 }
 
