@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, type PanInfo } from "motion/react";
 
 import type { AppEntry } from "../../content/apps";
-import { Splash } from "./Splash";
 
 const ADVANCE_MS = 3800;
 const isVideo = (src: string) => src.endsWith(".mp4");
@@ -23,8 +22,8 @@ const push = {
 };
 
 /**
- * An opened app: a brief launch screen, then real screenshots that advance
- * on their own (paused on hover). Click or swipe to move between them.
+ * An opened app: its real screenshots, straight away, advancing on their own
+ * (paused on hover). Click or swipe to move between them.
  */
 export function AppScreens({
   entry,
@@ -59,6 +58,7 @@ export function AppScreens({
     });
   }, [screens]);
 
+  // Wait for the zoom-open before the first auto-advance or video play, but show the screen straight away.
   useEffect(() => {
     const id = window.setTimeout(() => setLaunched(true), LAUNCH_MS);
     return () => window.clearTimeout(id);
@@ -94,7 +94,7 @@ export function AppScreens({
       aria-label={`${entry.name}, screen ${index + 1} of ${screens.length}`}
     >
       <AnimatePresence initial={false} custom={direction.current}>
-        {/* The first screen sits under the launch screen from the start, so nothing slides in on launch. */}
+        {/* initial={false} on the presence: the first screen is simply there, nothing slides in on open. */}
         <motion.div
           key={screens[index]}
           custom={direction.current}
@@ -117,19 +117,6 @@ export function AppScreens({
             <img src={screens[index]} alt="" draggable={false} className="size-full object-cover" />
           )}
         </motion.div>
-      </AnimatePresence>
-
-      {/* The launch screen fades away once the first screen is in place. */}
-      <AnimatePresence>
-        {!launched && (
-          <motion.div
-            className="absolute inset-0"
-            style={{ background: entry.accent }}
-            exit={{ opacity: 0, transition: { duration: 0.25 } }}
-          >
-            <Splash entry={entry} />
-          </motion.div>
-        )}
       </AnimatePresence>
     </motion.div>
   );
