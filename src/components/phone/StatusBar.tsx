@@ -5,7 +5,6 @@ import { ISLAND } from "./constants";
 /** `activity`: a Live Activity is using the island, so the signal bars give way, as on iOS. */
 export function StatusBar({ light, activity = false }: { light: boolean; activity?: boolean }) {
   const time = formatTime(useNow());
-  const right = ISLAND.left + ISLAND.width;
 
   return (
     <div
@@ -17,27 +16,59 @@ export function StatusBar({ light, activity = false }: { light: boolean; activit
       >
         {time}
       </span>
-      <span
-        className="absolute top-[21px] flex h-[22px] items-center justify-center gap-[6px]"
-        style={{ left: right, width: 402 - right }}
-      >
-        {!activity && (
-          <svg width="19" height="12" viewBox="0 0 19 12" fill="currentColor" aria-hidden>
-            <rect x="0" y="7.5" width="3.2" height="4.5" rx="1" />
-            <rect x="5.2" y="5" width="3.2" height="7" rx="1" />
-            <rect x="10.4" y="2.5" width="3.2" height="9.5" rx="1" />
-            <rect x="15.6" y="0" width="3.2" height="12" rx="1" />
-          </svg>
-        )}
-        <svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor" aria-hidden>
-          <path d="M8.5 2.3c2.4 0 4.6.9 6.2 2.5l1.2-1.2A10.4 10.4 0 0 0 8.5.6 10.4 10.4 0 0 0 1.1 3.6l1.2 1.2a8.7 8.7 0 0 1 6.2-2.5Zm0 3.5c1.4 0 2.7.5 3.7 1.4l1.2-1.2a6.9 6.9 0 0 0-9.8 0l1.2 1.2c1-.9 2.3-1.4 3.7-1.4Zm0 3.5c-.5 0-1 .2-1.3.6l1.3 1.3 1.3-1.3c-.3-.4-.8-.6-1.3-.6Z" />
-        </svg>
-        <svg width="27" height="13" viewBox="0 0 27 13" fill="none" aria-hidden>
-          <rect x="0.5" y="0.5" width="23" height="12" rx="4" stroke="currentColor" opacity="0.35" />
-          <rect x="2" y="2" width="17" height="9" rx="2.5" fill="currentColor" />
-          <path d="M25 4.5v4c.8-.3 1.4-1.1 1.4-2s-.6-1.7-1.4-2Z" fill="currentColor" opacity="0.4" />
-        </svg>
+      {/* Signal, Wi-Fi and battery, measured from a real iPhone 17 status bar (points). */}
+      <span className="absolute left-[288px] top-[26px] flex h-[13px] items-end gap-[7px]">
+        {!activity && <Signal />}
+        <WiFi />
+        <Battery />
       </span>
     </div>
+  );
+}
+
+function Signal() {
+  // Four bars, bottom-aligned, 20pt across.
+  const bars = [4.7, 7.2, 9.7, 12.3];
+  return (
+    <svg width="20" height="13" viewBox="0 0 20 13" fill="currentColor" aria-hidden>
+      {bars.map((h, i) => (
+        <rect key={i} x={i * 5.4} y={13 - h} width="3.6" height={h} rx="1.1" />
+      ))}
+    </svg>
+  );
+}
+
+function WiFi() {
+  // Two arcs and a wedge sharing one centre at the bottom tip, ±45° from vertical.
+  const cx = 8.5;
+  const cy = 12.4;
+  const arc = (r: number) => {
+    const d = r * Math.SQRT1_2;
+    return `M${cx - d} ${cy - d}A${r} ${r} 0 0 1 ${cx + d} ${cy - d}`;
+  };
+  const w = 3.6 * Math.SQRT1_2;
+  return (
+    <svg width="17" height="12.5" viewBox="0 0 17 12.5" fill="none" aria-hidden>
+      <path d={arc(10.6)} stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" />
+      <path d={arc(6.4)} stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" />
+      <path
+        d={`M${cx} ${cy}L${cx - w} ${cy - w}A3.6 3.6 0 0 1 ${cx + w} ${cy - w}Z`}
+        fill="currentColor"
+        stroke="currentColor"
+        strokeWidth="1"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function Battery() {
+  // 24.5pt body with a thin translucent outline, the level inset inside it, and the nub.
+  return (
+    <svg width="27" height="13" viewBox="0 0 27 13" fill="none" aria-hidden>
+      <rect x="0.5" y="0.5" width="23.5" height="12" rx="3.8" stroke="currentColor" strokeOpacity="0.4" />
+      <rect x="2" y="2" width="17.5" height="9" rx="2.3" fill="currentColor" />
+      <path d="M25.5 4.5v4c.75-.25 1.25-1 1.25-2s-.5-1.75-1.25-2Z" fill="currentColor" fillOpacity="0.4" />
+    </svg>
   );
 }
