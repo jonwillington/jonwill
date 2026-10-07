@@ -69,6 +69,8 @@ export function AppIcon({
         aria-label={editing ? `${entry.name}, drag to move` : `Open ${entry.name}`}
         className="relative size-[64px] shrink-0 cursor-pointer outline-none [filter:drop-shadow(0_2px_5px_rgba(0,0,0,0.12))] focus-visible:[filter:drop-shadow(0_0_2px_white)]"
         whileTap={editing ? undefined : { scale: 1.1 }}
+        // A soft, non-bouncy press: overshooting on release reads as a jolt.
+        transition={{ scale: { type: "spring", stiffness: 380, damping: 34 } }}
         animate={
           editing && !dragging
             ? { rotate: [-2.2, 2.2, -2.2], transition: { repeat: Infinity, duration: 0.26, delay: (index % 3) * 0.06 } }

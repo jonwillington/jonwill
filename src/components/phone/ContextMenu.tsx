@@ -114,10 +114,11 @@ export function ContextMenu({
       <motion.div
         className="absolute [filter:drop-shadow(0_10px_24px_rgba(0,0,0,0.35))]"
         style={{ left: anchor.x, top: anchor.y, width: anchor.width, height: anchor.height }}
+        // `anchor` was measured mid-press, already at AppIcon's 1.1 tap scale, so it starts
+        // at exactly that size and eases back to rest (1 / 1.1) on close without overshooting.
         initial={{ scale: 1 }}
-        animate={{ scale: 1.08 }}
-        exit={{ scale: 1 }}
-        transition={{ type: "spring", stiffness: 400, damping: 22 }}
+        animate={{ scale: 1 }}
+        exit={{ scale: 1 / 1.1, transition: { duration: 0.22, ease: [0.32, 0.72, 0, 1] } }}
       >
         <IconArt entry={entry} size={anchor.width} />
       </motion.div>
