@@ -51,6 +51,8 @@ export type AppEntry = {
   body: string[];
   highlights?: string[];
   links: AppLink[];
+  /** The app's App Store page: shows Apple's "Download on the App Store" badge. */
+  appStore?: string;
   /**
    * Real screenshots (804×1748, in /public/screens) shown inside the phone
    * when the app opens, in order. `scheme` is the screens' own look, which
@@ -419,10 +421,8 @@ export const APPS: AppEntry[] = [
         ],
       },
     ],
-    links: [
-      { label: "istanbrew.com", href: "https://istanbrew.com" },
-      { label: "App Store", href: "https://apps.apple.com/gb/app/istanbrew/id6814183189" },
-    ],
+    links: [{ label: "istanbrew.com", href: "https://istanbrew.com" }],
+    appStore: "https://apps.apple.com/gb/app/istanbrew/id6814183189",
     network: {
       title: "The coffee map network",
       intro: "The first of a network of the best coffee maps in the world, one city at a time.",

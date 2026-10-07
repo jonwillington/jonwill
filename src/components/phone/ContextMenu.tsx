@@ -60,7 +60,9 @@ export function ContextMenu({
   }, [onClose]);
 
   const website = entry.links.find((l) => l.href.startsWith("http") && !/app store/i.test(l.label));
-  const appStore = entry.links.find((l) => /app store/i.test(l.label));
+  const appStore = entry.appStore
+    ? { label: "App Store", href: entry.appStore }
+    : entry.links.find((l) => /app store/i.test(l.label));
 
   const own: (Item | "divider")[] = actions
     ? [...actions.map((a) => ({ label: a.label, icon: <Glyph d={GLYPHS[a.glyph]} />, onPress: a.onPress })), "divider"]

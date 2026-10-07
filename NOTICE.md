@@ -19,6 +19,8 @@ Please replace these with your own.
   Apple product images are provided under Apple's own terms
   ([Apple Design Resources](https://developer.apple.com/design/resources/)) and
   are not relicensed here.
+- **"Download on the App Store" badge** (`public/badges/app-store.svg`): Apple Inc., used under
+  Apple's [App Store marketing guidelines](https://developer.apple.com/app-store/marketing/guidelines/).
 - **Deel, LinkedIn, WhatsApp, Mail and GitHub icons** (`public/icons/`): trademarks
   of their respective owners, used here only to link to those services.
 - **Map images** (`public/*-map*.jpg`): map data © OpenStreetMap contributors

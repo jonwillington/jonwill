@@ -93,7 +93,7 @@ export function DetailContent({
         {entry.body[0]}
       </motion.p>
 
-      <motion.div variants={item} className={`flex flex-wrap gap-2 ${left}`}>
+      <motion.div variants={item} className={`flex flex-wrap items-center gap-2 ${left}`}>
         {entry.links[0] && <LinkButton link={entry.links[0]} primary />}
         <button
           type="button"
@@ -114,6 +114,7 @@ export function DetailContent({
             <path d="M4.5 3 7.5 6l-3 3" />
           </svg>
         </button>
+        {entry.appStore && <AppStoreBadge href={entry.appStore} />}
       </motion.div>
     </motion.div>
   );
@@ -417,5 +418,25 @@ function Destinations({ title, intro, items }: { title: string; intro: string; i
         ))}
       </ol>
     </section>
+  );
+}
+
+/** Apple's "Download on the App Store" badge, at the buttons' height. */
+export function AppStoreBadge({ href }: { href: string }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex rounded-[10px] outline-none transition-transform duration-200 hover:scale-[1.03] active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-foreground/40"
+    >
+      <img
+        src="/badges/app-store.svg"
+        alt="Download on the App Store"
+        width={144}
+        height={48}
+        className="h-12 w-auto"
+      />
+    </a>
   );
 }

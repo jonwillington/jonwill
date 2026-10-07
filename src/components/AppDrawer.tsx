@@ -4,7 +4,7 @@ import { Drawer } from "vaul";
 import type { AppEntry } from "../content/apps";
 import { IconArt } from "./AppIcon";
 import { CloseX } from "./CloseX";
-import { EYEBROW, LinkButton, Tags } from "./DetailPanel";
+import { AppStoreBadge, EYEBROW, LinkButton, Tags } from "./DetailPanel";
 import { entryName } from "../content/site";
 
 /**
@@ -104,10 +104,11 @@ export function AppDrawer({
                 <Tags tags={entry.tags} />
               </section>
 
-              <div className="mt-8 flex flex-wrap gap-2">
+              <div className="mt-8 flex flex-wrap items-center gap-2">
                 {entry.links.map((l, i) => (
                   <LinkButton key={l.href} link={l} primary={i === 0} />
                 ))}
+                {entry.appStore && <AppStoreBadge href={entry.appStore} />}
               </div>
             </div>
           )}

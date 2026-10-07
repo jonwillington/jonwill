@@ -64,6 +64,7 @@ One entry per icon. Each has:
 | `accent`, `scheme`, `glow` | The page colour when the app is open (use the icon's background colour), whether text on it is dark or light, and an optional coloured glow. |
 | `tagline`, `tags`, `body` | The summary panel: one line, a few mono tags, one sentence. |
 | `links` | Buttons. The first is the main one. |
+| `appStore` | Your app's App Store URL: adds Apple's "Download on the App Store" badge. |
 | `screens` | What plays in the phone: screenshots (804×1748 webp) or `.mp4` clips with `captions`. Optional `dark` screenshots for dark mode. |
 | `article` | The drawer's long read. Keep the same section titles across apps. |
 | `highlights` | "At a glance" bullets in the drawer. |
