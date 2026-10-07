@@ -100,6 +100,14 @@ export function App() {
   // from the previous app (Istanbrew's 4th) can't be used for the next (GA Bridge has 2).
   const [screenState, setScreenState] = useState<{ id: string | null; index: number }>({ id: null, index: 0 });
   const [drawer, setDrawer] = useState(false);
+  // Mirrors the phone's lock screen; starts as the phone will (see Phone's `locked`).
+  const [phoneLocked, setPhoneLocked] = useState(() => {
+    try {
+      return !window.location.hash && sessionStorage.getItem("jonwill:unlocked") !== "1";
+    } catch {
+      return !window.location.hash;
+    }
+  });
   const drawerRef = useRef(false);
   drawerRef.current = drawer;
 
@@ -242,18 +250,21 @@ export function App() {
             transition={{ type: "spring", stiffness: 200, damping: 26 }}
             className="flex flex-col items-center gap-5"
           >
-            {/* The entrance: the phone starts close up, overflowing the window with its top in
-                view (the page clips it), then pulls back to its resting size. */}
+            {/* The entrance: while the lock screen is up, the phone is huge and pinned by its top
+                edge, running off the bottom of the window (the page clips it). Swiping up to
+                unlock pulls it back to its resting size. It never moves on its own. */}
             <motion.div
               className="relative z-10"
-              initial={{ scale: 1.75, y: "34%" }}
-              animate={{ scale: 1, y: "0%" }}
-              transition={{ delay: 0.35, duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
+              style={{ transformOrigin: "50% 0%" }}
+              initial={false}
+              animate={phoneLocked ? { scale: 2.1 } : { scale: 1 }}
+              transition={{ duration: 1.15, ease: [0.16, 1, 0.3, 1] }}
             >
               <Phone
                 {...phoneProps}
                 framed
                 scale={scale}
+                onLockedChange={setPhoneLocked}
                 renderOpen={(entry) =>
                   screensFor(entry, dark) ? (
                     <AppScreens entry={entry} dark={dark} index={screen} onIndex={setScreen} />

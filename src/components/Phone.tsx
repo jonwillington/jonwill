@@ -34,6 +34,8 @@ type Props = {
   scale?: number;
   /** What to show inside an opened app. */
   renderOpen: (entry: AppEntry) => ReactNode;
+  /** Told when the lock screen is dismissed (or isn't shown at all). */
+  onLockedChange?: (locked: boolean) => void;
   /** Whether the opened app draws its own status bar (real screenshots do). */
   ownStatusBar: boolean;
   /** Whether the opened app is light, so the home indicator and status bar go dark. */
@@ -70,8 +72,15 @@ function initialOrder() {
   const ids = APPS.map((a) => a.id);
   try {
     const saved = JSON.parse(storage.get(localStorage, ORDER_KEY) ?? "[]") as string[];
-    const kept = saved.filter((id) => ids.includes(id));
-    return [...kept, ...ids.filter((id) => !kept.includes(id))];
+    const order = saved.filter((id) => ids.includes(id));
+    // A new app goes next to its neighbour in the content order (so ddbx.us lands beside
+    // ddbx.uk), not on the end of a visitor's saved arrangement.
+    ids.forEach((id, i) => {
+      if (order.includes(id)) return;
+      const before = ids.slice(0, i).reverse().find((x) => order.includes(x));
+      order.splice(before ? order.indexOf(before) + 1 : 0, 0, id);
+    });
+    return order;
   } catch {
     return ids;
   }
@@ -89,6 +98,7 @@ export function Phone({
   renderOpen,
   ownStatusBar,
   lightApp,
+  onLockedChange,
 }: Props) {
   const screenRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
@@ -106,6 +116,7 @@ export function Phone({
     () => !window.location.hash && storage.get(sessionStorage, UNLOCKED_KEY) !== "1",
   );
   const [unlockCount, setUnlockCount] = useState(0);
+  useEffect(() => onLockedChange?.(locked), [locked, onLockedChange]);
   const [activity, setActivity] = useState(false);
 
   const apps = order.map((id) => APPS.find((a) => a.id === id)!);
