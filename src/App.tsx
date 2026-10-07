@@ -248,17 +248,18 @@ export function App() {
               }
             />
             {/* A caption-sized line under the phone saying what the current screen shows. */}
-            <div className="flex h-[52px] flex-col items-center justify-start gap-2.5">
+            <div className="flex h-[52px] w-full flex-col items-center justify-start gap-2.5">
               <AnimatePresence mode="wait">
                 {screens && screens.length > 1 ? (
                   <motion.div
                     key={`screens-${open?.id}`}
-                    className="flex flex-col items-center gap-2.5"
+                    className="flex w-full flex-col items-center gap-2.5"
                     initial={{ opacity: 0, y: 4 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 4 }}
                   >
-                    <div className="relative h-5 w-[min(380px,32vw)] overflow-hidden text-center">
+                    {/* As wide as the phone, never wider: a wider caption widened the column and nudged the panel. */}
+                    <div className="relative h-5 w-full overflow-hidden text-center">
                       <AnimatePresence mode="popLayout" initial={false}>
                         <motion.p
                           key={screen}
@@ -294,10 +295,11 @@ export function App() {
             {open && (
               <motion.aside
                 key={open.id}
-                initial={{ opacity: 0, x: 60 }}
+                initial={{ opacity: 0, x: 40 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 30, transition: { duration: 0.15 } }}
-                transition={{ type: "spring", stiffness: 220, damping: 26 }}
+                exit={{ opacity: 0, x: 20, transition: { duration: 0.15 } }}
+                // Eases in and stops dead: a spring here overshot and settled back, a visible wobble.
+                transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
                 className={`w-[min(440px,40vw)] ${open.markets || open.network || open.destinations ? "2xl:w-[min(860px,50vw)]" : ""}`}
               >
                 <DetailContent

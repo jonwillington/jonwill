@@ -8,9 +8,11 @@ import { IconArt } from "./AppIcon";
 import { CloseX } from "./CloseX";
 import { entryName } from "../content/site";
 
+// Items only fade in: the panel itself slides, and a second vertical drift on each
+// item read as the text still moving after the panel had arrived.
 const item = {
-  hidden: { opacity: 0, y: 10 },
-  show: { opacity: 1, y: 0 },
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { duration: 0.35 } },
 };
 
 /** The panel's call-to-action buttons: tall, easy to hit. */
