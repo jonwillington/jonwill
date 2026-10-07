@@ -210,7 +210,7 @@ export function App() {
       >
         <Ambient entry={open} accent={pageAccent} dark={dark} />
 
-        <header className="flex h-[72px] shrink-0 items-center justify-between px-6 text-sm font-medium">
+        <header className="relative z-20 flex h-[72px] shrink-0 items-center justify-between px-6 text-sm font-medium">
           <span data-heading>{SITE.name}</span>
           <LiveStrip live={live} />
           <div className="flex items-center">
@@ -250,12 +250,13 @@ export function App() {
             transition={{ type: "spring", stiffness: 200, damping: 26 }}
             className="flex flex-col items-center gap-5"
           >
-            {/* The entrance: while the lock screen is up, the phone is huge and pinned by its top
-                edge, running off the bottom of the window (the page clips it). Swiping up to
-                unlock pulls it back to its resting size. It never moves on its own. */}
+            {/* The entrance: while the lock screen is up, the phone is huge and pinned by its bottom
+                edge, so the home bar and "Swipe up to open" are right there and the top runs off
+                the window (the page clips it). Swiping up to unlock pulls it back to its resting
+                size. It never moves on its own. */}
             <motion.div
               className="relative z-10"
-              style={{ transformOrigin: "50% 0%" }}
+              style={{ transformOrigin: "50% 100%" }}
               initial={false}
               animate={phoneLocked ? { scale: 2.1 } : { scale: 1 }}
               transition={{ duration: 1.15, ease: [0.16, 1, 0.3, 1] }}
@@ -311,7 +312,7 @@ export function App() {
                     exit={{ opacity: 0 }}
                     className="text-sm text-muted"
                   >
-                    Tap an app. Press and hold for more.
+                    {phoneLocked ? "Swipe up on the phone to unlock." : "Tap an app. Press and hold for more."}
                   </motion.p>
                 )}
               </AnimatePresence>
