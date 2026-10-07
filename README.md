@@ -142,6 +142,10 @@ In `npm run dev` there's a font picker in the bottom-left corner. Put each typef
 own folder under `public/fonts/` (e.g. `public/fonts/Basier/*.otf`); the picker finds them,
 and `[` / `]` step through them on the headings or on all text. It never ships.
 
+`node scripts/fetch-fontshare.mjs` fills the picker with every [Fontshare](https://www.fontshare.com)
+family (free for commercial and web use) in three weights; add a category such as `Serif` to
+fetch just those.
+
 ## Deploy
 
 ```bash

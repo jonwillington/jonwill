@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 type Family = { family: string; files: string[] };
 
 const KEY = "jonwill:font-picker";
+const label = (family: string) => family.replace(/^fs-/, "");
 const SYSTEM = "System";
 
 /** Guess a file's weight and style from its name, e.g. "Basier-SemiBoldItalic.otf". */
@@ -56,7 +57,12 @@ export function FontPicker() {
   useEffect(() => {
     fetch("/__fonts")
       .then((r) => r.json() as Promise<Family[]>)
-      .then((list) => {
+      .then((raw) => {
+        const list = [...raw].sort(
+          (a, b) =>
+            Number(a.family.startsWith("fs-")) - Number(b.family.startsWith("fs-")) ||
+            label(a.family).localeCompare(label(b.family)),
+        );
         setFamilies(list);
         try {
           const saved = JSON.parse(localStorage.getItem(KEY) ?? "{}");
@@ -120,7 +126,14 @@ export function FontPicker() {
   return (
     <div className="fixed bottom-3 left-3 z-[100] flex w-[280px] flex-col gap-2 rounded-2xl bg-black/85 p-3 font-mono text-[11px] text-white shadow-2xl backdrop-blur">
       <div className="flex items-center justify-between">
-        <span className="uppercase tracking-[0.08em] text-white/50">Fonts · [ ]</span>
+        <span className="uppercase tracking-[0.08em] text-white/50">
+          Fonts · [ ]{" "}
+          {current && (
+            <span className="text-white/80">
+              {index + 1}/{families.length}
+            </span>
+          )}
+        </span>
         <button type="button" onClick={() => setOpen(false)} className="cursor-pointer text-white/50 hover:text-white">
           hide
         </button>
@@ -135,10 +148,17 @@ export function FontPicker() {
           className="min-w-0 flex-1 rounded bg-white/10 px-2 py-1 text-white outline-none"
         >
           <option value={-1}>{SYSTEM} (site default)</option>
-          {families.map((f, i) => (
-            <option key={f.family} value={i}>
-              {f.family} ({f.files.length})
-            </option>
+          {/* Folders named fs-<Family> came from Fontshare; group them so yours stay on top. */}
+          {[false, true].map((fontshare) => (
+            <optgroup key={String(fontshare)} label={fontshare ? "Fontshare" : "Yours"}>
+              {families.map((f, i) =>
+                f.family.startsWith("fs-") === fontshare ? (
+                  <option key={f.family} value={i}>
+                    {label(f.family)} ({f.files.length})
+                  </option>
+                ) : null,
+              )}
+            </optgroup>
           ))}
         </select>
         <button type="button" onClick={() => step(1)} className="cursor-pointer rounded bg-white/10 px-2 py-1">
@@ -158,7 +178,9 @@ export function FontPicker() {
         ))}
       </div>
       {families.length === 0 && (
-        <p className="leading-relaxed text-white/60">Add folders of .otf/.woff2 files to public/fonts/&lt;Family&gt;/.</p>
+        <p className="leading-relaxed text-white/60">
+          Add folders of .otf/.woff2 files to public/fonts/&lt;Family&gt;/.
+        </p>
       )}
     </div>
   );
