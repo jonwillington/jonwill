@@ -86,7 +86,7 @@ function DockLink({
       <motion.button
         type="button"
         aria-label={label}
-        whileTap={{ scale: 0.88 }}
+        whileTap={{ scale: 1.1 }}
         onClick={onPress}
         className={className}
       >
@@ -100,7 +100,7 @@ function DockLink({
       aria-label={label}
       target={external ? "_blank" : undefined}
       rel={external ? "noopener noreferrer" : undefined}
-      whileTap={{ scale: 0.88 }}
+      whileTap={{ scale: 1.1 }}
       className={className}
     >
       {art}
