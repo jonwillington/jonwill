@@ -40,7 +40,7 @@ export function DetailContent({
   /** On desktop the page's top-right close does this job, so the panel hides its own. */
   showClose?: boolean;
 }) {
-  const hasData = !!(entry.markets || entry.network || entry.destinations);
+  const hasData = !!(entry.markets || entry.network || entry.destinations || entry.compare);
   const left = "2xl:col-start-1";
   const right = "2xl:col-start-2 2xl:row-span-5 2xl:row-start-1";
   return (
@@ -90,6 +90,11 @@ export function DetailContent({
       {entry.destinations && (
         <motion.div variants={item} className={right}>
           <Destinations {...entry.destinations} />
+        </motion.div>
+      )}
+      {entry.compare && (
+        <motion.div variants={item} className={right}>
+          <Compare {...entry.compare} />
         </motion.div>
       )}
       {/* The one-line description: always when there's no data; beside it on wide screens. */}
@@ -462,5 +467,67 @@ function NewTabArrow() {
     >
       ↗
     </span>
+  );
+}
+
+/** Two editions side by side: a row per difference, then what they share across both columns. */
+function Compare({ title, intro, columns, rows, shared }: NonNullable<AppEntry["compare"]>) {
+  return (
+    <section aria-label={title}>
+      <p className={`mb-2 ${EYEBROW}`}>{title}</p>
+      <p className="mb-3 text-foreground/75">{intro}</p>
+      <div className="overflow-hidden rounded-[10px] border border-foreground/10">
+        <table className="w-full table-fixed border-collapse text-left text-[13px] leading-snug">
+          <colgroup>
+            <col className="w-[26%]" />
+            <col />
+            <col />
+          </colgroup>
+          <thead>
+            <tr className="bg-foreground/[0.04]">
+              <th scope="col" className="px-3 py-2" />
+              {columns.map((c) => (
+                <th key={c.label} scope="col" className="px-3 py-2 font-medium">
+                  <span className="flex items-center gap-2">
+                    <Flag code={c.code} />
+                    {c.label}
+                  </span>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.label} className="border-t border-foreground/10 align-top">
+                <th scope="row" className={`px-3 py-2.5 ${EYEBROW}`}>
+                  {r.label}
+                </th>
+                {r.values.map((v, i) => (
+                  <td key={i} className="px-3 py-2.5">
+                    {v}
+                  </td>
+                ))}
+              </tr>
+            ))}
+            {/* What's the same for both: one cell across the two columns. */}
+            <tr className="border-t border-foreground/10 bg-foreground/[0.03]">
+              <th scope="row" className={`px-3 pb-1 pt-2.5 ${EYEBROW}`} colSpan={3}>
+                Shared
+              </th>
+            </tr>
+            {shared.map((r) => (
+              <tr key={r.label} className="bg-foreground/[0.03] align-top">
+                <th scope="row" className={`px-3 py-1.5 ${EYEBROW}`}>
+                  {r.label}
+                </th>
+                <td colSpan={2} className="px-3 py-1.5 last:pb-2.5">
+                  {r.value}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 }

@@ -307,7 +307,7 @@ export function App() {
                 exit={{ opacity: 0, x: 20, transition: { duration: 0.15 } }}
                 // Eases in and stops dead: a spring here overshot and settled back, a visible wobble.
                 transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-                className={`w-[min(440px,40vw)] ${open.markets || open.network || open.destinations ? "2xl:w-[min(860px,50vw)]" : ""}`}
+                className={`w-[min(440px,40vw)] ${open.markets || open.network || open.destinations || open.compare ? "2xl:w-[min(860px,50vw)]" : ""}`}
               >
                 <DetailContent
                   entry={open}

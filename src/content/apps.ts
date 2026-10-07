@@ -75,6 +75,15 @@ export type AppEntry = {
    * order for every app (What is it? / Why I made it / How I built it / What's next).
    */
   article?: { title: string; body: string[] }[];
+  /** A side-by-side of two related products: what differs and what's shared. */
+  compare?: {
+    title: string;
+    intro: string;
+    columns: [{ label: string; code: Market["code"] }, { label: string; code: Market["code"] }];
+    rows: { label: string; values: [string, string] }[];
+    /** Rows that are the same for both, shown once across both columns. */
+    shared: { label: string; value: string }[];
+  };
   /** Top-rated places, highest overall first. */
   destinations?: { title: string; intro: string; items: Destination[] };
   /** A wider family of sites this app belongs to. */
@@ -145,13 +154,15 @@ export const APPS: AppEntry[] = [
   },
   {
     id: "ddbx",
-    name: "ddbx",
+    name: "ddbx.uk",
     icon: "/icons/ddbx-glass.png",
     accent: "#ede8e2",
     scheme: "light",
-    tagline: "Director dealings, rated as they happen.",
+    tagline: "UK director dealings, rated as they happen.",
     tags: ["iOS", "Web", "Android", "Cloudflare"],
-    body: ["Tracks director share dealings as they are filed and rates each one, from routine to significant."],
+    body: [
+      "Tracks share dealings by directors of UK-listed companies as they are filed, and rates each one from routine to significant.",
+    ],
     highlights: [
       "Live push alerts for new filings",
       "Ratings from routine to significant",
@@ -162,7 +173,7 @@ export const APPS: AppEntry[] = [
         title: "What is it?",
         body: [
           "ddbx follows what company directors do with their own money. When a director buys or sells shares in their company, they have to say so publicly. ddbx picks up those filings within minutes, screens out the routine ones and rates the rest from minor to significant, with a written analysis of why.",
-          "It covers UK and US listed companies, with Sweden and the Netherlands on the data side, and tracks how each deal performs against the market afterwards.",
+          "This is the UK edition, built on the RNS announcements directors and senior managers (PDMRs) have to make. It tracks how each deal performs against the FTSE afterwards, and Sweden and the Netherlands run on the same platform in preview.",
         ],
       },
       {
@@ -181,7 +192,7 @@ export const APPS: AppEntry[] = [
       {
         title: "What's next",
         body: [
-          "Shipping the Android app to the Play Store, taking Sweden and the Netherlands from preview to full markets, and adding more countries on the same pattern.",
+          "Shipping the Android app to the Play Store, taking Sweden and the Netherlands from preview to full markets, and adding more countries on the same pattern. The US has its own edition: ddbx.us.",
         ],
       },
     ],
@@ -211,6 +222,93 @@ export const APPS: AppEntry[] = [
         "Today's director dealings, each one rated",
         "How the rated buys have done against the market",
         "A single dealing: the rating, the numbers and the checklist",
+      ],
+    },
+  },
+  {
+    id: "ddbx-us",
+    name: "ddbx.us",
+    icon: "/icons/ddbx-us.jpg",
+    accent: "#000000",
+    scheme: "dark",
+    tagline: "US insider and Congress trades, rated as they happen.",
+    tags: ["iOS", "Web", "SEC Form 4", "STOCK Act"],
+    body: [
+      "The US edition: company insiders through their SEC Form 4 filings, and members of Congress through the trades the STOCK Act makes them disclose.",
+    ],
+    highlights: [
+      "Congress feed: who bought what, and how it's done since",
+      "Members ranked by how their trades have performed",
+      "Insider buys rated from routine to significant",
+      "Performance against the S&P 500 and Nasdaq",
+    ],
+    article: [
+      {
+        title: "What is it?",
+        body: [
+          "ddbx.us is the American edition of ddbx. It reads two kinds of public filing. Company insiders (directors, officers and big shareholders) file a Form 4 with the SEC within two business days of trading their own company's stock. Members of Congress, and their spouses, report their stock trades under the STOCK Act, usually within 45 days.",
+          "Insider buys go through the same checklist as the UK and get a rating from routine to significant. The Congress feed keeps to open-market buys of stocks and options, the trades you could actually follow, and leaves out sales, bonds and account reshuffles.",
+        ],
+      },
+      {
+        title: "Why Congress",
+        body: [
+          "Members of Congress vote on the laws that move whole industries, so what they buy in their own accounts is worth a look. A buy reads stronger when the member sits on a committee that oversees the company, when several members move into the same stock at once, or when the size is too big to ignore, and those are the trades ddbx flags.",
+          "The data has its quirks: amounts come as wide dollar bands rather than exact figures, and a filing can trail the trade by weeks. ddbx shows what's disclosed and no more.",
+        ],
+      },
+      {
+        title: "How I built it",
+        body: [
+          "The US runs on the same platform as the UK: one Cloudflare Worker, one database, one API. Each market is its own module, so the US added a Form 4 reader and a Congress reader rather than a second product. The iOS app is the same codebase too, built as a separate US app.",
+        ],
+      },
+      {
+        title: "What's next",
+        body: [
+          "Following members and committees, alerts when several members buy the same stock, and an Android release alongside the UK one.",
+        ],
+      },
+    ],
+    links: [
+      { label: "ddbx.us", href: "https://ddbx.us" },
+      { label: "Congress", href: "https://ddbx.us/congress" },
+    ],
+    appStore: "https://apps.apple.com/us/app/ddbx-us/id6772091960",
+    compare: {
+      title: "UK and US",
+      intro: "One platform, two editions. Same idea, different rules.",
+      columns: [
+        { label: "ddbx.uk", code: "gb" },
+        { label: "ddbx.us", code: "us" },
+      ],
+      rows: [
+        { label: "Who", values: ["Directors and senior managers", "Company insiders and members of Congress"] },
+        { label: "Filing", values: ["RNS announcement (UK MAR)", "SEC Form 4 and STOCK Act reports"] },
+        { label: "Deadline", values: ["3 business days", "2 business days; Congress up to 45"] },
+        { label: "Amounts", values: ["Exact", "Exact; Congress in dollar bands"] },
+        { label: "Flagged by", values: ["Rating checklist", "Checklist; Congress on committee, cluster and size"] },
+        { label: "Benchmark", values: ["FTSE All-Share, FTSE 100", "S&P 500, Nasdaq"] },
+      ],
+      shared: [
+        { label: "Platform", value: "One Worker, database and API" },
+        { label: "Ratings", value: "Routine to significant, with a written analysis" },
+        { label: "Apps", value: "One iOS codebase, two App Store apps" },
+      ],
+    },
+    screens: {
+      scheme: "dark",
+      light: [
+        "/screens/ddbx-us-directors.webp",
+        "/screens/ddbx-us-congress.webp",
+        "/screens/ddbx-us-trade.webp",
+        "/screens/ddbx-us-performance.webp",
+      ],
+      captions: [
+        "Today's insider buys at US companies, each one rated",
+        "Members of Congress ranked by how their trades have done",
+        "One trade, and the members of Congress who bought too",
+        "How the flagged buys have done against the S&P 500",
       ],
     },
   },
