@@ -12,6 +12,7 @@ import { LiveStrip } from "./components/LiveStrip";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { AppScreens, screensFor } from "./components/phone/AppScreens";
 import { Splash } from "./components/phone/Splash";
+import { trackApp } from "./lib/analytics";
 import { useLive } from "./lib/live";
 import { useTheme } from "./lib/theme";
 import { SITE } from "./content/site";
@@ -105,7 +106,10 @@ export function App() {
   const [seen, markSeen] = useSeen();
   // However an app was opened (tap, link or notification), its badge clears.
   useEffect(() => {
-    if (open) markSeen(open.id);
+    if (open) {
+      markSeen(open.id);
+      trackApp(open.id, open.name);
+    }
     setDrawer(false);
   }, [open, markSeen]);
 

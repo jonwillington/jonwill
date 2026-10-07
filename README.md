@@ -48,7 +48,8 @@ Then work through this list.
 
 ### 1. You: `src/content/site.ts`
 
-Your name, email, domain, LinkedIn, GitHub, photo and city. The city sets the
+Your name, email, domain, LinkedIn, GitHub, photo and city, and your Google Analytics ID
+(`googleAnalytics`, or `null` for none; it only loads in production builds). The city sets the
 phone's clock, when Auto dark mode switches, and the Find My widget. Set
 `whatsapp` or `github` to `null` to drop them from the dock.
 

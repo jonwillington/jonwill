@@ -3,8 +3,11 @@ import ReactDOM from "react-dom/client";
 import { MotionConfig } from "motion/react";
 
 import { App } from "./App";
+import { initAnalytics } from "./lib/analytics";
 import { FontPicker } from "./dev/FontPicker";
 import "./globals.css";
+
+initAnalytics();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

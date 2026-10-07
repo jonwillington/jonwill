@@ -12,6 +12,8 @@ export const SITE = {
     url: "https://www.linkedin.com/in/jonathanwillington/",
     label: "linkedin.com/in/jonathanwillington",
   },
+  /** Google Analytics 4 measurement ID. Only loaded in production builds; null to turn it off. */
+  googleAnalytics: "G-EMNHHE6DSJ" as string | null,
   /** The code for this site; shown in the dock. Set to null to hide it. */
   github: "https://github.com/jonwillington/jonwill" as string | null,
   /** WhatsApp in the dock opens a polite "no" instead of a chat. Set to null to hide it. */
