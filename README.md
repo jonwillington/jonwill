@@ -127,6 +127,15 @@ Run it locally with `npm run dev:full` (builds, then serves with Wrangler).
   and check Apple's terms, or swap in a different frame. The screen sits at
   (24, 23)pt in a 450×920pt device; see `src/components/phone/constants.ts`.
 
+## Typeface
+
+The page around the phone is set in [PP Neue Montreal](https://pangrampangram.com/products/neue-montreal)
+when its font files are in `public/fonts/neue-montreal/` (Book, Medium, Bold, Italic as `.otf`).
+That folder is git-ignored and `npm run deploy` strips it, because the free licence doesn't
+allow use on a website. Without the files, everything falls back to the system font. To ship
+it, buy a web licence, add the files and remove the `rm -rf dist/fonts` from the deploy
+script. The phone always uses the system font, as iOS does.
+
 ## Deploy
 
 ```bash

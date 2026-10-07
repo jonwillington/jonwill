@@ -11,7 +11,7 @@
     "build": "tsc && vite build && mv dist/index.html dist/ton.html",
     "preview": "vite preview",
     "dev:full": "npm run build && wrangler pages dev --port 8788",
-    "deploy": "npm run build && wrangler pages deploy dist --project-name jonwill --branch main"
+    "deploy": "npm run build && rm -rf dist/fonts && wrangler pages deploy dist --project-name jonwill --branch main"
   },
   "dependencies": {
     "@heroui/react": "^3.0.1",
