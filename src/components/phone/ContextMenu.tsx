@@ -139,7 +139,7 @@ export function ContextMenu({
           radius={34}
           smoothing={0.6}
           rim
-          glass="bg-[rgba(255,255,255,0.62)] backdrop-blur-[34px] backdrop-saturate-[2]"
+          glass="bg-[rgba(255,255,255,0.86)] backdrop-blur-[34px] backdrop-saturate-[1.6]"
           className="relative py-[8px] text-black"
         >
           <div className="relative">
