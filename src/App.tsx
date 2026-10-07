@@ -17,6 +17,9 @@ import { useLive } from "./lib/live";
 import { useTheme } from "./lib/theme";
 import { SITE } from "./content/site";
 
+/** Expo-out: quick to start, long gentle landing. Shared by the phone's moves. */
+const PHONE_EASE = [0.16, 1, 0.3, 1] as const;
+
 const fromHash = () => ALL_ENTRIES.find((e) => e.id === window.location.hash.slice(1)) ?? null;
 
 function useIsDesktop() {
@@ -247,7 +250,9 @@ export function App() {
         <main className="flex min-h-0 flex-1 items-center justify-center gap-16 px-6 2xl:gap-20">
           <motion.div
             layout
-            transition={{ type: "spring", stiffness: 200, damping: 26 }}
+            // One curve for every move the phone makes (sliding aside for the panel, settling
+            // after unlock), so when they happen together they read as a single motion.
+            transition={{ duration: 0.9, ease: PHONE_EASE }}
             className="flex flex-col items-center gap-5"
           >
             {/* The entrance: while the lock screen is up, the phone is huge and pinned by its bottom
@@ -259,7 +264,7 @@ export function App() {
               style={{ transformOrigin: "50% 100%" }}
               initial={false}
               animate={phoneLocked ? { scale: 2.1 } : { scale: 1 }}
-              transition={{ duration: 1.15, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.9, ease: PHONE_EASE }}
             >
               <Phone
                 {...phoneProps}
@@ -327,7 +332,8 @@ export function App() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20, transition: { duration: 0.15 } }}
                 // Eases in and stops dead: a spring here overshot and settled back, a visible wobble.
-                transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                // Follows the phone out of the way: a beat behind it, on the same curve.
+                transition={{ duration: 0.65, delay: 0.12, ease: PHONE_EASE }}
                 className={`w-[min(440px,40vw)] ${open.markets || open.network || open.destinations || open.compare ? "2xl:w-[min(860px,50vw)]" : ""}`}
               >
                 <DetailContent

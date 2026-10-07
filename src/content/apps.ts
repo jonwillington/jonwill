@@ -39,6 +39,8 @@ export type NetworkSite = { name: string; city: string; url: string; icon: strin
 export type AppEntry = {
   id: string;
   name: string;
+  /** The big heading on its page, when it should differ from the name (e.g. "Welcome!"). */
+  title?: string;
   /** Path under /public, or null to draw a monogram instead. */
   icon: string | null;
   /** Background colour for the splash screen and the page when open. */
@@ -93,13 +95,14 @@ export type AppEntry = {
 export const ABOUT: AppEntry = {
   id: "about",
   name: "Jon",
+  title: "Welcome!",
   icon: "/me.jpg",
   accent: "#cfcbd7",
   scheme: "light",
-  tagline: "Product design lead, currently in Istanbul.",
+  tagline: "I'm Jon. Make yourself at home.",
   tags: ["Design leadership", "Product design", "Side projects"],
   body: [
-    "Group Product Design Manager at Deel, based in Istanbul. Outside work I design and build my own apps, end to end.",
+    "I'm a Group Product Design Manager at Deel, living in Istanbul. Outside work I design and build my own apps, end to end. They're all on this phone: tap one to see it running.",
   ],
   article: [
     {

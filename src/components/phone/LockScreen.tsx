@@ -69,7 +69,7 @@ export function LockScreen({
 }: {
   live: Live | null;
   framed: boolean;
-  onUnlock: (open?: AppEntry) => void;
+  onUnlock: (open?: AppEntry, from?: DOMRect) => void;
 }) {
   const now = useNow();
   const y = useMotionValue(0);
@@ -81,12 +81,18 @@ export function LockScreen({
   const root = useRef<HTMLDivElement>(null);
   const notes = notifications(live, now);
 
-  const unlock = (open?: AppEntry) => {
+  const unlock = () => {
     if (leaving.current) return;
     leaving.current = true;
-    animate(y, -SCREEN.height, { type: "spring", stiffness: 260, damping: 32, velocity: -1200 }).then(() =>
-      onUnlock(open),
-    );
+    animate(y, -SCREEN.height, { type: "spring", stiffness: 260, damping: 32, velocity: -1200 }).then(() => onUnlock());
+  };
+
+  // A notification opens its app straight away, as on iOS: no slide up, no home screen.
+  // The lock screen fades (its exit, in Phone) while the app grows out of the notification.
+  const openFrom = (entry: AppEntry, rect: DOMRect) => {
+    if (leaving.current) return;
+    leaving.current = true;
+    onUnlock(entry, rect);
   };
 
   useEffect(() => {
@@ -105,6 +111,7 @@ export function LockScreen({
       role="dialog"
       aria-label="Lock screen. Press Enter or swipe up to unlock."
       className="absolute inset-0 z-[48] cursor-grab touch-none select-none overflow-hidden outline-none active:cursor-grabbing"
+      exit={{ opacity: 0, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
       style={{ y }}
       drag="y"
       dragConstraints={{ top: -SCREEN.height, bottom: 0 }}
@@ -154,7 +161,7 @@ export function LockScreen({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ delay: 0.6 + i * 0.45, type: "spring", stiffness: 320, damping: 26 }}
               whileTap={{ scale: 0.97 }}
-              onClick={() => unlock(n.entry)}
+              onClick={(e) => openFrom(n.entry, e.currentTarget.getBoundingClientRect())}
               className="relative w-full cursor-pointer text-left"
             >
               <Squircle

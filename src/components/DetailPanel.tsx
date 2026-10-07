@@ -65,7 +65,7 @@ export function DetailContent({
           <h2
             className={`font-semibold leading-[1.05] tracking-[-0.03em] ${showClose ? "text-[26px]" : "text-[44px] 2xl:text-[52px]"}`}
           >
-            {entryName(entry)}
+            {entry.title ?? entryName(entry)}
           </h2>
           <p className={`text-foreground/65 ${showClose ? "mt-0.5" : "mt-2 text-[17px]"}`}>{entry.tagline}</p>
         </div>

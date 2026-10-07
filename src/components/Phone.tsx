@@ -77,7 +77,10 @@ function initialOrder() {
     // ddbx.uk), not on the end of a visitor's saved arrangement.
     ids.forEach((id, i) => {
       if (order.includes(id)) return;
-      const before = ids.slice(0, i).reverse().find((x) => order.includes(x));
+      const before = ids
+        .slice(0, i)
+        .reverse()
+        .find((x) => order.includes(x));
       order.splice(before ? order.indexOf(before) + 1 : 0, 0, id);
     });
     return order;
@@ -116,6 +119,12 @@ export function Phone({
     () => !window.location.hash && storage.get(sessionStorage, UNLOCKED_KEY) !== "1",
   );
   const [unlockCount, setUnlockCount] = useState(0);
+  // Opening an app from a notification goes lock screen → app with no home screen in between
+  // (as on iOS). The home screen stays hidden until you leave that app.
+  const [homeHidden, setHomeHidden] = useState(false);
+  useEffect(() => {
+    if (!open) setHomeHidden(false);
+  }, [open]);
   useEffect(() => onLockedChange?.(locked), [locked, onLockedChange]);
   const [activity, setActivity] = useState(false);
 
@@ -272,11 +281,18 @@ export function Phone({
   };
   const cancelEmptyPress = () => window.clearTimeout(emptyPress.current);
 
-  const unlock = (into?: AppEntry) => {
+  const unlock = (into?: AppEntry, from?: DOMRect) => {
     storage.set(sessionStorage, UNLOCKED_KEY, "1");
     setLocked(false);
-    setUnlockCount((n) => n + 1);
-    if (into) window.setTimeout(() => handleOpen(into), 380);
+    if (into) {
+      setHomeHidden(true);
+      // Straight into the app, growing from the notification, in the same frame the lock
+      // screen starts to fade, so the page settles in one move rather than home-then-app.
+      handleOpen(into, from);
+    } else {
+      // Swiped up: the home screen's icons fly in.
+      setUnlockCount((n) => n + 1);
+    }
   };
 
   // The brew-timer Live Activity: once per session, a few seconds after reaching the home screen.
@@ -382,7 +398,7 @@ export function Phone({
       {/* The home screen. Re-keyed on unlock so the icons fly in like iOS. */}
       <motion.div
         key={unlockCount}
-        className="relative flex h-full flex-col"
+        className={`relative flex h-full flex-col ${homeHidden ? "invisible" : ""}`}
         initial={unlockCount ? { scale: 1.12, opacity: 0 } : false}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: "spring", stiffness: 220, damping: 26 }}
@@ -452,8 +468,11 @@ export function Phone({
         )}
       </motion.div>
 
-      <SearchPill onPress={() => setSpotlight(true)} hidden={spotlight} />
-      <Dock framed={framed} hidden={spotlight} onWhatsApp={showWhatsApp} onMenu={openDockMenu} />
+      {/* Hidden instantly (not faded) on the notification path, so it never flashes up. */}
+      <div className={homeHidden ? "invisible" : undefined} style={{ display: "contents" }}>
+        <SearchPill onPress={() => setSpotlight(true)} hidden={spotlight} />
+        <Dock framed={framed} hidden={spotlight} onWhatsApp={showWhatsApp} onMenu={openDockMenu} />
+      </div>
 
       <AnimatePresence>
         {editing && (
@@ -551,7 +570,7 @@ export function Phone({
         )}
       </AnimatePresence>
 
-      {locked && <LockScreen live={live} framed={framed} onUnlock={unlock} />}
+      <AnimatePresence>{locked && <LockScreen live={live} framed={framed} onUnlock={unlock} />}</AnimatePresence>
 
       <AnimatePresence>
         {activity && framed && (
