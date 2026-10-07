@@ -8,6 +8,21 @@ import { SCREEN } from "./constants";
 
 export type MenuAnchor = { x: number; y: number; width: number; height: number };
 
+/** The symbols menus can use, drawn in the SF Symbols style. */
+const GLYPHS = {
+  compose:
+    "M13.5 4.5H6.25A2.25 2.25 0 0 0 4 6.75v11A2.25 2.25 0 0 0 6.25 20h11a2.25 2.25 0 0 0 2.25-2.25V10.5M18.4 3.6a1.9 1.9 0 0 1 2.7 2.7L12.5 15l-3.5.9.9-3.5Z",
+  copy: "M9 9.75A1.75 1.75 0 0 1 10.75 8h7.5A1.75 1.75 0 0 1 20 9.75v8.5A1.75 1.75 0 0 1 18.25 20h-7.5A1.75 1.75 0 0 1 9 18.25ZM15 8V5.75A1.75 1.75 0 0 0 13.25 4h-7.5A1.75 1.75 0 0 0 4 5.75v8.5A1.75 1.75 0 0 0 5.75 16H9",
+  person: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4.5 20.25c.9-3.4 3.9-5.5 7.5-5.5s6.6 2.1 7.5 5.5",
+  chat: "M20.5 11.6c0 4.4-3.8 7.9-8.5 7.9-1.3 0-2.6-.3-3.7-.8L3.5 20l1.4-3.8a7.6 7.6 0 0 1-1.4-4.6c0-4.4 3.8-7.9 8.5-7.9s8.5 3.5 8.5 7.9Z",
+  mail: "M3.75 6.75A1.75 1.75 0 0 1 5.5 5h13a1.75 1.75 0 0 1 1.75 1.75v10.5A1.75 1.75 0 0 1 18.5 19h-13a1.75 1.75 0 0 1-1.75-1.75ZM4.5 6.5l7.5 6 7.5-6",
+  code: "M8.5 7.5 4 12l4.5 4.5M15.5 7.5 20 12l-4.5 4.5M13.5 5l-3 14",
+  star: "m12 3.75 2.5 5.1 5.6.8-4.05 3.95.96 5.6L12 16.55 6.99 19.2l.96-5.6L3.9 9.65l5.6-.8Z",
+} as const;
+
+/** A menu row supplied by the caller (dock icons), shown above Edit Home Screen / Remove App. */
+export type MenuAction = { label: string; glyph: keyof typeof GLYPHS; onPress: () => void };
+
 const MENU_WIDTH = 250;
 const ROW = 44;
 
@@ -22,8 +37,11 @@ export function ContextMenu({
   onShare,
   onEdit,
   onRemove,
+  actions,
 }: {
   entry: AppEntry;
+  /** Replaces the app's own website / App Store / Share rows. */
+  actions?: MenuAction[];
   anchor: MenuAnchor;
   onClose: () => void;
   onShare: () => void;
@@ -44,9 +62,14 @@ export function ContextMenu({
   const website = entry.links.find((l) => l.href.startsWith("http") && !/app store/i.test(l.label));
   const appStore = entry.links.find((l) => /app store/i.test(l.label));
 
+  const own: (Item | "divider")[] = actions
+    ? [...actions.map((a) => ({ label: a.label, icon: <Glyph d={GLYPHS[a.glyph]} />, onPress: a.onPress })), "divider"]
+    : [];
+
   // iOS 26's home-screen menu: the app's own actions, then Share / Edit / Remove.
   const items: (Item | "divider")[] = [
-    ...(website
+    ...own,
+    ...(!actions && website
       ? [
           {
             label: `Visit ${website.label}`,
@@ -55,7 +78,7 @@ export function ContextMenu({
           },
         ]
       : []),
-    ...(appStore
+    ...(!actions && appStore
       ? [
           {
             label: "View on App Store",
@@ -64,14 +87,18 @@ export function ContextMenu({
           },
         ]
       : []),
-    ...(website || appStore ? ["divider" as const] : []),
-    {
-      label: "Share App",
-      icon: (
-        <Glyph d="M12 3.5v11M8.3 7.2 12 3.5l3.7 3.7M8.5 10.5H7a1.5 1.5 0 0 0-1.5 1.5v7A1.5 1.5 0 0 0 7 20.5h10a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5h-1.5" />
-      ),
-      onPress: onShare,
-    },
+    ...(!actions && (website || appStore) ? ["divider" as const] : []),
+    ...(actions
+      ? []
+      : [
+          {
+            label: "Share App",
+            icon: (
+              <Glyph d="M12 3.5v11M8.3 7.2 12 3.5l3.7 3.7M8.5 10.5H7a1.5 1.5 0 0 0-1.5 1.5v7A1.5 1.5 0 0 0 7 20.5h10a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5h-1.5" />
+            ),
+            onPress: onShare,
+          },
+        ]),
     {
       label: "Edit Home Screen",
       icon: (

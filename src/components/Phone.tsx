@@ -5,9 +5,9 @@ import { ABOUT, APPS, INTERESTS, SHOW_INTERESTS, type AppEntry } from "../conten
 import type { Live } from "../lib/live";
 import { AppIcon } from "./AppIcon";
 import { InterestsWidget } from "./InterestsWidget";
-import { ContextMenu, type MenuAnchor } from "./phone/ContextMenu";
+import { ContextMenu, type MenuAction, type MenuAnchor } from "./phone/ContextMenu";
 import { DEVICE, GLASS, GLASS_EDGE, GRID, SCREEN, WIDGET } from "./phone/constants";
-import { Dock, SearchPill } from "./phone/Dock";
+import { DOCK_ICONS, Dock, SearchPill, type DockId } from "./phone/Dock";
 import { DynamicIsland } from "./phone/DynamicIsland";
 import { DdbxWidget, IstanbrewWidget, MeWidget } from "./phone/HomeWidgets";
 import { IOSAlert, type AlertAction } from "./phone/IOSAlert";
@@ -97,7 +97,7 @@ export function Phone({
   const [editing, setEditing] = useState(false);
   const [order, setOrder] = useState(initialOrder);
   const [draggingId, setDraggingId] = useState<string | null>(null);
-  const [menu, setMenu] = useState<{ entry: AppEntry; anchor: MenuAnchor } | null>(null);
+  const [menu, setMenu] = useState<{ entry: AppEntry; anchor: MenuAnchor; actions?: MenuAction[] } | null>(null);
   const [alert, setAlert] = useState<Alert | null>(null);
   const [spotlight, setSpotlight] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -133,6 +133,71 @@ export function Phone({
     }
     setOrigin(rect ? toScreen(rect.left + rect.width / 2, rect.top + rect.height / 2) : null);
     onOpen(entry);
+  };
+
+  const copy = async (text: string, done: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast(done);
+    } catch {
+      // Clipboard blocked; nothing to do.
+    }
+  };
+  const openUrl = (url: string) => window.open(url, url.startsWith("http") ? "_blank" : "_self", "noopener");
+
+  const showWhatsApp = () =>
+    setAlert({
+      title: SITE.whatsapp!.title,
+      message: SITE.whatsapp!.message,
+      actions: [{ label: "OK" }, { label: "Email me", primary: true, href: `mailto:${SITE.email}` }],
+    });
+
+  // Dock icons get menus too: each one's own quick actions, then Edit Home Screen / Remove App.
+  const dockActions = (id: DockId): MenuAction[] => {
+    switch (id) {
+      case "mail":
+        return [
+          { label: "New Message", glyph: "compose", onPress: () => openUrl(`mailto:${SITE.email}`) },
+          { label: "Copy Address", glyph: "copy", onPress: () => copy(SITE.email, "Email address copied") },
+        ];
+      case "linkedin":
+        return [
+          { label: "View Profile", glyph: "person", onPress: () => openUrl(SITE.linkedin.url) },
+          { label: "Copy Link", glyph: "copy", onPress: () => copy(SITE.linkedin.url, "Link copied") },
+        ];
+      case "whatsapp":
+        return [
+          { label: "New Chat", glyph: "chat", onPress: showWhatsApp },
+          { label: "Email Instead", glyph: "mail", onPress: () => openUrl(`mailto:${SITE.email}`) },
+        ];
+      case "github":
+        return [
+          { label: "View the Code", glyph: "code", onPress: () => openUrl(SITE.github!) },
+          { label: "Star on GitHub", glyph: "star", onPress: () => openUrl(SITE.github!) },
+          { label: "Copy Link", glyph: "copy", onPress: () => copy(SITE.github!, "Link copied") },
+        ];
+    }
+  };
+
+  const openDockMenu = (id: DockId, rect: DOMRect) => {
+    const a = toScreen(rect.left, rect.top);
+    const { label, icon } = DOCK_ICONS[id];
+    // A minimal entry so the menu can draw the lifted icon and name it.
+    const entry = {
+      id: `dock-${id}`,
+      name: label,
+      icon,
+      accent: "#000",
+      tagline: "",
+      tags: [],
+      body: [],
+      links: [],
+    } as AppEntry;
+    setMenu({
+      entry,
+      actions: dockActions(id),
+      anchor: { x: a.x, y: a.y, width: rect.width / a.k, height: rect.height / a.k },
+    });
   };
 
   const openMenu = (entry: AppEntry, rect: DOMRect) => {
@@ -377,17 +442,7 @@ export function Phone({
       </motion.div>
 
       <SearchPill onPress={() => setSpotlight(true)} hidden={spotlight} />
-      <Dock
-        framed={framed}
-        hidden={spotlight}
-        onWhatsApp={() =>
-          setAlert({
-            title: SITE.whatsapp!.title,
-            message: SITE.whatsapp!.message,
-            actions: [{ label: "OK" }, { label: "Email me", primary: true, href: `mailto:${SITE.email}` }],
-          })
-        }
-      />
+      <Dock framed={framed} hidden={spotlight} onWhatsApp={showWhatsApp} onMenu={openDockMenu} />
 
       <AnimatePresence>
         {editing && (
@@ -451,6 +506,7 @@ export function Phone({
           <ContextMenu
             entry={menu.entry}
             anchor={menu.anchor}
+            actions={menu.actions}
             onClose={() => setMenu(null)}
             onShare={() => share(menu.entry)}
             onEdit={() => setEditing(true)}

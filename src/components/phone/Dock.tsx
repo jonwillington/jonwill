@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { motion } from "motion/react";
 
 import { SHAPE, Squircle, iconClip } from "../../lib/squircle";
@@ -32,14 +33,27 @@ export function SearchGlyph({ size = 13 }: { size?: number }) {
 }
 
 /** The dock; `hidden` fades it away while Spotlight is open, as iOS does. */
+export type DockId = "mail" | "linkedin" | "whatsapp" | "github";
+
+/** Each dock icon's name and image, also used to draw its long-press menu. */
+export const DOCK_ICONS: Record<DockId, { label: string; icon: string }> = {
+  mail: { label: "Mail", icon: "/icons/mail-glass.png" },
+  linkedin: { label: "LinkedIn", icon: "/icons/linkedin.png" },
+  whatsapp: { label: "WhatsApp", icon: "/icons/whatsapp.png" },
+  github: { label: "GitHub", icon: "/icons/github.png" },
+};
+
 export function Dock({
   framed,
   hidden = false,
   onWhatsApp,
+  onMenu,
 }: {
   framed: boolean;
   hidden?: boolean;
   onWhatsApp: () => void;
+  /** Long-press or right-click on a dock icon. */
+  onMenu: (id: DockId, rect: DOMRect) => void;
 }) {
   return (
     <Squircle
@@ -49,26 +63,80 @@ export function Dock({
       glass={GLASS}
       className={`absolute inset-x-[17px] z-10 flex h-[101.5px] items-center justify-center gap-[23.7px] transition-[opacity,transform] duration-300 ${hidden ? "pointer-events-none translate-y-[20px] opacity-0" : ""} ${framed ? "bottom-[18px]" : "bottom-[max(18px,env(safe-area-inset-bottom))]"}`}
     >
-      <DockLink href={`mailto:${SITE.email}`} label="Email" icon="/icons/mail-glass.png" />
-      <DockLink href={SITE.linkedin.url} label="LinkedIn" icon="/icons/linkedin.png" />
-      {SITE.whatsapp && <DockLink onPress={onWhatsApp} label="WhatsApp" icon="/icons/whatsapp.png" />}
-      {SITE.github && <DockLink href={SITE.github} label="This site on GitHub" icon="/icons/github.png" />}
+      <DockLink
+        href={`mailto:${SITE.email}`}
+        label="Email"
+        icon={DOCK_ICONS.mail.icon}
+        onMenu={(r) => onMenu("mail", r)}
+      />
+      <DockLink
+        href={SITE.linkedin.url}
+        label="LinkedIn"
+        icon={DOCK_ICONS.linkedin.icon}
+        onMenu={(r) => onMenu("linkedin", r)}
+      />
+      {SITE.whatsapp && (
+        <DockLink
+          onPress={onWhatsApp}
+          label="WhatsApp"
+          icon={DOCK_ICONS.whatsapp.icon}
+          onMenu={(r) => onMenu("whatsapp", r)}
+        />
+      )}
+      {SITE.github && (
+        <DockLink
+          href={SITE.github}
+          label="This site on GitHub"
+          icon={DOCK_ICONS.github.icon}
+          onMenu={(r) => onMenu("github", r)}
+        />
+      )}
     </Squircle>
   );
 }
 
-/** A dock icon: a link, or a button when `onPress` is given. */
+/** A dock icon: a link, or a button when `onPress` is given. Hold or right-click for its menu. */
 function DockLink({
   href,
   onPress,
   label,
   icon,
+  onMenu,
 }: {
   href?: string;
   onPress?: () => void;
   label: string;
   icon: string;
+  onMenu: (rect: DOMRect) => void;
 }) {
+  const timer = useRef<number | undefined>(undefined);
+  const held = useRef(false);
+  const cancel = () => window.clearTimeout(timer.current);
+  const press = {
+    onPointerDown: (e: React.PointerEvent<HTMLElement>) => {
+      held.current = false;
+      const el = e.currentTarget;
+      timer.current = window.setTimeout(() => {
+        held.current = true;
+        onMenu(el.getBoundingClientRect());
+      }, 500);
+    },
+    onPointerUp: cancel,
+    onPointerLeave: cancel,
+    onContextMenu: (e: React.MouseEvent<HTMLElement>) => {
+      e.preventDefault();
+      cancel();
+      onMenu(e.currentTarget.getBoundingClientRect());
+    },
+    // A hold opens the menu; don't also follow the link or press the button.
+    onClickCapture: (e: React.MouseEvent) => {
+      if (held.current) {
+        e.preventDefault();
+        e.stopPropagation();
+        held.current = false;
+      }
+    },
+  };
   const external = href?.startsWith("http");
   const art = (
     <img
@@ -88,6 +156,7 @@ function DockLink({
         aria-label={label}
         whileTap={{ scale: 1.1 }}
         onClick={onPress}
+        {...press}
         className={className}
       >
         {art}
@@ -101,6 +170,7 @@ function DockLink({
       target={external ? "_blank" : undefined}
       rel={external ? "noopener noreferrer" : undefined}
       whileTap={{ scale: 1.1 }}
+      {...press}
       className={className}
     >
       {art}
