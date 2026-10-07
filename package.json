@@ -2,6 +2,9 @@
   "name": "jonwill",
   "private": true,
   "version": "0.0.0",
+  "description": "A personal site that is an iPhone: lock screen, home screen of your apps, and a panel and drawer for each.",
+  "license": "MIT",
+  "repository": "github:jonwillington/jonwill",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -25,6 +28,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^4.7.0",
+    "puppeteer-core": "^23.11.1",
     "tailwindcss": "^4.1.11",
     "typescript": "^7.0.2",
     "vite": "^6.0.11",

@@ -5,6 +5,7 @@ import type { AppEntry } from "../content/apps";
 import { IconArt } from "./AppIcon";
 import { CloseX } from "./CloseX";
 import { EYEBROW, LinkButton, Tags } from "./DetailPanel";
+import { entryName } from "../content/site";
 
 /**
  * "Learn more": a Vaul side drawer with everything that doesn't fit in the
@@ -62,7 +63,7 @@ export function AppDrawer({
                     <Drawer.Title
                       className={`truncate font-semibold leading-tight tracking-[-0.02em] transition-[font-size] duration-200 ${scrolled ? "text-[16px]" : "text-[19px]"}`}
                     >
-                      {entry.id === "about" ? "Jon Willington" : entry.name}
+                      {entryName(entry)}
                     </Drawer.Title>
                     {!scrolled && <p className="truncate text-[14px] text-foreground/65">{entry.tagline}</p>}
                   </div>

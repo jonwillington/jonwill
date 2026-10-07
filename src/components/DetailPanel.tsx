@@ -6,6 +6,7 @@ import type { AppEntry, Destination, Market, MarketCell, NetworkSite } from "../
 import type { Live } from "../lib/live";
 import { IconArt } from "./AppIcon";
 import { CloseX } from "./CloseX";
+import { entryName } from "../content/site";
 
 const item = {
   hidden: { opacity: 0, y: 10 },
@@ -58,7 +59,7 @@ export function DetailContent({
           <h2
             className={`font-semibold leading-[1.05] tracking-[-0.03em] ${showClose ? "text-[26px]" : "text-[44px] 2xl:text-[52px]"}`}
           >
-            {entry.id === "about" ? "Jon Willington" : entry.name}
+            {entryName(entry)}
           </h2>
           <p className={`text-foreground/65 ${showClose ? "mt-0.5" : "mt-2 text-[17px]"}`}>{entry.tagline}</p>
         </div>

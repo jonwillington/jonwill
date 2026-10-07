@@ -2,6 +2,7 @@ import { motion } from "motion/react";
 
 import { ABOUT, APPS, type AppEntry } from "../content/apps";
 import { IconArt } from "./AppIcon";
+import { entryName } from "../content/site";
 
 /**
  * A row of every app along the bottom of the page, so visitors can jump
@@ -15,7 +16,7 @@ export function AppSwitcher({ open, onOpen }: { open: AppEntry | null; onOpen: (
     >
       {[ABOUT, ...APPS].map((e) => {
         const active = open?.id === e.id;
-        const label = e.id === "about" ? "Jon Willington" : e.name;
+        const label = entryName(e);
         return (
           <motion.button
             key={e.id}

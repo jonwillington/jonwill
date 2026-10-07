@@ -5,6 +5,7 @@ import { formatGbp, type Live } from "../../lib/live";
 import { SHAPE, Squircle } from "../../lib/squircle";
 import { timeAgo } from "../../lib/time";
 import { GRID, LABEL, WIDGET } from "./constants";
+import { SITE } from "../../content/site";
 
 type OpenFrom = (rect: DOMRect) => void;
 
@@ -47,37 +48,44 @@ function WidgetButton({
 
 /**
  * The "me" entry: a medium Maps-style widget with my photo pinned over
- * Istanbul. The maps are static renders (public/istanbul-map*.jpg).
+ * your city. The maps are static renders set in content/site.ts.
  */
 export function MeWidget({ onOpen, dark }: { onOpen: OpenFrom; dark: boolean }) {
   return (
     <Slot label="Find My" width="100%">
-      <WidgetButton label="Jon Willington, currently in Istanbul" onOpen={onOpen} height={WIDGET.medium.height}>
-        <img src="/istanbul-map.jpg" alt="" draggable={false} className="absolute inset-0 size-full object-cover" />
+      <WidgetButton
+        label={`${SITE.name}, currently in ${SITE.city.name}`}
+        onOpen={onOpen}
+        height={WIDGET.medium.height}
+      >
+        <img src={SITE.city.map.light} alt="" draggable={false} className="absolute inset-0 size-full object-cover" />
         <img
-          src="/istanbul-map-dark.jpg"
+          src={SITE.city.map.dark}
           alt=""
           draggable={false}
           className={`absolute inset-0 size-full object-cover transition-opacity duration-700 ${dark ? "opacity-100" : "opacity-0"}`}
         />
 
-        {/* Photo pin over Beyoğlu, Find My style */}
-        <span className="absolute left-[37%] top-[44%] -translate-x-1/2 -translate-y-full">
+        {/* Photo pin, Find My style */}
+        <span
+          className="absolute -translate-x-1/2 -translate-y-full"
+          style={{ left: SITE.city.pin.left, top: SITE.city.pin.top }}
+        >
           <span className="location-pulse absolute bottom-[-12px] left-1/2 size-[44px] -translate-x-1/2 rounded-full bg-[#0a84ff]/25" />
           <span className="relative block size-[50px] overflow-hidden rounded-full border-[3px] border-white bg-white shadow-[0_3px_10px_rgba(0,0,0,0.35)]">
-            <img src="/me.jpg" alt="" draggable={false} className="size-full object-cover" />
+            <img src={SITE.photo} alt="" draggable={false} className="size-full object-cover" />
           </span>
           <span className="relative mx-auto -mt-[3px] block size-0 border-x-[7px] border-t-[9px] border-x-transparent border-t-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.2)]" />
         </span>
 
         <span className="absolute inset-x-0 bottom-0 h-[78px] bg-gradient-to-t from-black/50 to-transparent" />
         <span className="absolute bottom-[12px] left-[14px] text-white">
-          <span className="block text-[20px] font-bold leading-tight tracking-[-0.4px]">Jon Willington</span>
+          <span className="block text-[20px] font-bold leading-tight tracking-[-0.4px]">{SITE.name}</span>
           <span className="flex items-center gap-[5px] text-[13px] font-medium text-white/85">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
               <path d="M21.7 2.3a1 1 0 0 0-1.1-.2L2.9 9.8a1 1 0 0 0 .1 1.9l7.6 1.7 1.7 7.6a1 1 0 0 0 1.9.1l7.7-17.7a1 1 0 0 0-.2-1.1Z" />
             </svg>
-            Currently in Istanbul
+            Currently in {SITE.city.name}
           </span>
         </span>
         <span className="absolute bottom-[6px] right-[10px] text-[7px] text-white/70">© OpenStreetMap</span>

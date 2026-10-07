@@ -14,6 +14,7 @@ import { AppScreens, screensFor } from "./components/phone/AppScreens";
 import { Splash } from "./components/phone/Splash";
 import { useLive } from "./lib/live";
 import { useTheme } from "./lib/theme";
+import { SITE } from "./content/site";
 
 const fromHash = () => ALL_ENTRIES.find((e) => e.id === window.location.hash.slice(1)) ?? null;
 
@@ -195,7 +196,7 @@ export function App() {
         <Ambient entry={open} accent={pageAccent} dark={dark} />
 
         <header className="flex h-[72px] shrink-0 items-center justify-between px-6 text-sm font-medium">
-          <span>Jon Willington</span>
+          <span>{SITE.name}</span>
           <LiveStrip live={live} />
           <div className="flex items-center">
             <ThemeToggle mode={mode} onChange={setMode} />
@@ -288,8 +289,8 @@ export function App() {
         </main>
 
         <footer className="grid h-16 shrink-0 grid-cols-[1fr_auto_1fr] items-center px-6 text-sm">
-          <Link href="mailto:hey@jonwill.ing" className="justify-self-start text-muted">
-            hey@jonwill.ing
+          <Link href={`mailto:${SITE.email}`} className="justify-self-start text-muted">
+            {SITE.email}
           </Link>
           {/* Only inside an app: hop to another without going home. The footer has a fixed
               height, so it arriving or leaving never shifts anything. */}
@@ -308,7 +309,7 @@ export function App() {
             )}
           </AnimatePresence>
           <Link
-            href="https://www.linkedin.com/in/jonathanwillington/"
+            href={SITE.linkedin.url}
             target="_blank"
             rel="noopener noreferrer"
             className="justify-self-end text-muted"

@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 
-export const TIME_ZONE = "Europe/Istanbul";
-// Central Istanbul, for sunrise and sunset.
-const LAT = 41.01;
-const LON = 28.98;
+import { SITE } from "../content/site";
+
+export const TIME_ZONE = SITE.city.timeZone;
+// For sunrise and sunset.
+const LAT = SITE.city.lat;
+const LON = SITE.city.lon;
 
 /** Re-renders every `ms` with the current time. */
 export function useNow(ms = 5_000) {
@@ -31,7 +33,7 @@ export function timeAgo(iso: string, now = new Date()) {
 }
 
 /**
- * Sunrise and sunset in Istanbul for the given day, as Dates. NOAA's
+ * Sunrise and sunset in your city for the given day, as Dates. NOAA's
  * simplified solar equations: accurate to a minute or two, plenty here.
  */
 export function sunTimes(date: Date) {
@@ -65,7 +67,7 @@ export function sunTimes(date: Date) {
   };
 }
 
-export function isNightInIstanbul(now = new Date()) {
+export function isNightInCity(now = new Date()) {
   const { sunrise, sunset } = sunTimes(now);
   return now < sunrise || now >= sunset;
 }

@@ -2,6 +2,7 @@ import { motion } from "motion/react";
 
 import { SHAPE, Squircle, iconClip } from "../../lib/squircle";
 import { GLASS, GLASS_EDGE } from "./constants";
+import { SITE } from "../../content/site";
 
 export function SearchPill({ onPress, hidden }: { onPress: () => void; hidden: boolean }) {
   return (
@@ -48,9 +49,10 @@ export function Dock({
       glass={GLASS}
       className={`absolute inset-x-[17px] z-10 flex h-[101.5px] items-center justify-center gap-[23.7px] transition-[opacity,transform] duration-300 ${hidden ? "pointer-events-none translate-y-[20px] opacity-0" : ""} ${framed ? "bottom-[18px]" : "bottom-[max(18px,env(safe-area-inset-bottom))]"}`}
     >
-      <DockLink href="mailto:hey@jonwill.ing" label="Email" icon="/icons/mail-glass.png" />
-      <DockLink href="https://www.linkedin.com/in/jonathanwillington/" label="LinkedIn" icon="/icons/linkedin.png" />
-      <DockLink onPress={onWhatsApp} label="WhatsApp" icon="/icons/whatsapp.png" />
+      <DockLink href={`mailto:${SITE.email}`} label="Email" icon="/icons/mail-glass.png" />
+      <DockLink href={SITE.linkedin.url} label="LinkedIn" icon="/icons/linkedin.png" />
+      {SITE.whatsapp && <DockLink onPress={onWhatsApp} label="WhatsApp" icon="/icons/whatsapp.png" />}
+      {SITE.github && <DockLink href={SITE.github} label="This site on GitHub" icon="/icons/github.png" />}
     </Squircle>
   );
 }

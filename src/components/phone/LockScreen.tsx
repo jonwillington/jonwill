@@ -7,6 +7,7 @@ import { Squircle } from "../../lib/squircle";
 import { formatLockDate, formatTime, timeAgo, useNow } from "../../lib/time";
 import { IconArt } from "../AppIcon";
 import { GLASS, GLASS_EDGE, SCREEN } from "./constants";
+import { SITE } from "../../content/site";
 
 type Note = { entry: AppEntry; title: string; body: string; when: string };
 
@@ -50,7 +51,7 @@ function notifications(live: Live | null, now: Date): Note[] {
   );
   notes.push({
     entry: byId("ga-bridge"),
-    title: "jonwill.ing",
+    title: SITE.domain,
     body: "1 person on the site right now. That's you.",
     when: "now",
   });

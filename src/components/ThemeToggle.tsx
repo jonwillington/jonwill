@@ -1,6 +1,7 @@
 import { motion } from "motion/react";
 
 import type { ThemeMode } from "../lib/theme";
+import { SITE } from "../content/site";
 
 const OPTIONS: { mode: ThemeMode; label: string; icon: React.ReactNode }[] = [
   {
@@ -24,7 +25,7 @@ const OPTIONS: { mode: ThemeMode; label: string; icon: React.ReactNode }[] = [
   },
   {
     mode: "auto",
-    label: "Auto: dark after sunset in Istanbul",
+    label: `Auto: dark after sunset in ${SITE.city.name}`,
     icon: (
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
         <circle cx="12" cy="12" r="8.5" />

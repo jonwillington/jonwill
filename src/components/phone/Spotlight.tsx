@@ -5,6 +5,7 @@ import { ABOUT, APPS, type AppEntry } from "../../content/apps";
 import { IconArt } from "../AppIcon";
 import { GLASS, GLASS_EDGE } from "./constants";
 import { SearchGlyph } from "./Dock";
+import { SITE, entryName } from "../../content/site";
 
 type Result =
   | { kind: "app"; entry: AppEntry; score: number }
@@ -13,15 +14,15 @@ type Result =
 
 const CONTACT = [
   {
-    label: "Email Jon",
-    detail: "hey@jonwill.ing",
-    href: "mailto:hey@jonwill.ing",
+    label: `Email ${SITE.name.split(" ")[0]}`,
+    detail: SITE.email,
+    href: `mailto:${SITE.email}`,
     words: "email mail contact hello hire",
   },
   {
     label: "LinkedIn",
-    detail: "linkedin.com/in/jonathanwillington",
-    href: "https://www.linkedin.com/in/jonathanwillington/",
+    detail: SITE.linkedin.label,
+    href: SITE.linkedin.url,
     words: "linkedin cv career work profile",
   },
 ];
@@ -40,7 +41,7 @@ function search(query: string): Result[] {
   const results: Result[] = [];
 
   for (const entry of [ABOUT, ...APPS]) {
-    const name = norm(entry.id === "about" ? "Jon Willington about me" : entry.name);
+    const name = norm(entry.id === "about" ? `${SITE.name} about me` : entry.name);
     const meta = [entry.tagline, ...entry.tags].join(" ");
     if (name.startsWith(q)) results.push({ kind: "app", entry, score: 100 });
     else if (hasAll(name)) results.push({ kind: "app", entry, score: 80 });
@@ -321,7 +322,7 @@ function ResultRow({
         }
       >
         <Title>
-          <Highlight text={r.entry.id === "about" ? "Jon Willington" : r.entry.name} query={query} />
+          <Highlight text={entryName(r.entry)} query={query} />
         </Title>
         <Detail>{r.entry.tagline}</Detail>
       </Row>
@@ -347,7 +348,7 @@ function ResultRow({
         </span>
       }
     >
-      <Title>{r.entry.id === "about" ? "Jon Willington" : r.entry.name}</Title>
+      <Title>{entryName(r.entry)}</Title>
       <Detail>
         <Highlight text={r.snippet} query={query} />
       </Detail>

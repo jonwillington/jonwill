@@ -2,6 +2,7 @@ import { motion } from "motion/react";
 
 import type { AppEntry } from "../../content/apps";
 import { IconArt } from "../AppIcon";
+import { entryName } from "../../content/site";
 
 /** A launch screen: the icon and name on the app's colour. */
 export function Splash({ entry }: { entry: AppEntry }) {
@@ -20,7 +21,7 @@ export function Splash({ entry }: { entry: AppEntry }) {
         <IconArt entry={entry} size={112} round={about} />
       </motion.div>
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-        <p className="text-[28px] font-bold tracking-tight">{about ? "Jon Willington" : entry.name}</p>
+        <p className="text-[28px] font-bold tracking-tight">{entryName(entry)}</p>
         <p className={`mt-1 text-[16px] ${light ? "text-neutral-900/70" : "text-white/70"}`}>{entry.tagline}</p>
       </motion.div>
     </div>

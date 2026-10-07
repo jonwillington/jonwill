@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { isNightInIstanbul, useNow } from "./time";
+import { isNightInCity, useNow } from "./time";
 
-/** "auto" follows Istanbul: dark from sunset to sunrise. */
+/** "auto" follows your city (content/site.ts): dark from sunset to sunrise. */
 export type ThemeMode = "light" | "auto" | "dark";
 
 const KEY = "jonwill:theme";
@@ -23,7 +23,7 @@ function readMode(): ThemeMode {
 export function useTheme() {
   const [mode, setModeState] = useState<ThemeMode>(readMode);
   const now = useNow(60_000);
-  const dark = mode === "dark" || (mode === "auto" && isNightInIstanbul(now));
+  const dark = mode === "dark" || (mode === "auto" && isNightInCity(now));
 
   const setMode = useCallback((next: ThemeMode) => {
     setModeState(next);

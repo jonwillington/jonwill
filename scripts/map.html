@@ -1,0 +1,42 @@
+<!doctype html>
+<!--
+  Renders the Find My widget's map: an Apple Maps-style view of your city from
+  OpenFreeMap (free, OpenStreetMap data). Use scripts/render-map.mjs to save it,
+  or open this file in a browser to preview:
+    scripts/map.html?lat=41.03&lon=29.0&zoom=11.35&theme=dark
+-->
+<html>
+<head>
+<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<style>html,body,#m{margin:0;width:728px;height:340px;overflow:hidden}.maplibregl-ctrl-attrib{display:none}</style>
+</head>
+<body><div id="m"></div><script>
+const q = new URLSearchParams(location.search);
+const lat = +(q.get('lat') ?? 41.03), lon = +(q.get('lon') ?? 29.0), zoom = +(q.get('zoom') ?? 11.35);
+const dark = q.get('theme') === 'dark';
+// Apple Maps-ish palettes.
+const P = dark
+  ? { bg:'#242426', water:'#1d3b5a', park:'#22382a', residential:'#2a2a2c', building:'#333336', road:'#46464a', casing:'#2e2e31', motorway:'#8a6d2f', motorwayCasing:'#5e4a20', waterLabel:'#6f93b8', label:'#9a9a9f', halo:'rgba(0,0,0,0.6)' }
+  : { bg:'#f4f1ea', water:'#a9d4f5', park:'#cfe7bd', residential:'#efebe2', building:'#e6e1d7', road:'#ffffff', casing:'#dcd6cb', motorway:'#fbd474', motorwayCasing:'#e7b84f', waterLabel:'#5a8fbf', label:'#7a766e', halo:'rgba(255,255,255,0.8)' };
+fetch('https://tiles.openfreemap.org/styles/positron').then(r=>r.json()).then(style=>{
+  const set=(id,prop,val)=>{const l=style.layers.find(l=>l.id===id); if(l){l.paint=l.paint||{}; l.paint[prop]=val;}};
+  const hide=(re)=>style.layers.forEach(l=>{ if(re.test(l.id)){ l.layout=l.layout||{}; l.layout.visibility='none'; }});
+  set('background','background-color',P.bg);
+  set('water','fill-color',P.water);
+  set('waterway','line-color',P.water);
+  set('park','fill-color',P.park); set('park','fill-opacity',1);
+  set('landcover_wood','fill-color',P.park); set('landcover_wood','fill-opacity',0.8);
+  set('landuse_residential','fill-color',P.residential);
+  set('building','fill-color',P.building);
+  ['highway_minor','highway_path','highway_major_inner','highway_major_subtle'].forEach(id=>set(id,'line-color',P.road));
+  set('highway_major_casing','line-color',P.casing);
+  ['highway_motorway_inner','highway_motorway_bridge_inner','highway_motorway_subtle'].forEach(id=>set(id,'line-color',P.motorway));
+  ['highway_motorway_casing','highway_motorway_bridge_casing'].forEach(id=>set(id,'line-color',P.motorwayCasing));
+  style.layers.forEach(l=>{ if(l['source-layer']==='transportation' && l.type==='line'){ l.filter=['all', l.filter||true, ['!=',['get','class'],'ferry']]; }});
+  hide(/^(label_other|railway|boundary|aeroway|highway-name|highway-shield|road_shield|airport|label_country|label_state|label_city|waterway_line_label)/);
+  style.layers.filter(l=>l.type==='symbol').forEach(l=>{l.paint=l.paint||{}; l.paint['text-color']= /water/.test(l.id)?P.waterLabel:P.label; l.paint['text-halo-color']=P.halo;});
+  const map=new maplibregl.Map({container:'m',style,center:[lon,lat],zoom,interactive:false,attributionControl:false,fadeDuration:0});
+  map.once('idle',()=>{document.title='READY'});
+});
+</script></body></html>

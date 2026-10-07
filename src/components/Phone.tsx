@@ -14,6 +14,7 @@ import { IOSAlert, type AlertAction } from "./phone/IOSAlert";
 import { LockScreen } from "./phone/LockScreen";
 import { Spotlight } from "./phone/Spotlight";
 import { StatusBar } from "./phone/StatusBar";
+import { SITE } from "../content/site";
 
 export { DEVICE };
 
@@ -142,7 +143,7 @@ export function Phone({
     const url = `${window.location.origin}/ton#${entry.id}`;
     try {
       if (navigator.share) {
-        await navigator.share({ title: `${entry.name} by Jon Willington`, url });
+        await navigator.share({ title: `${entry.name} by ${SITE.name}`, url });
         return;
       }
       await navigator.clipboard.writeText(url);
@@ -365,9 +366,9 @@ export function Phone({
         hidden={spotlight}
         onWhatsApp={() =>
           setAlert({
-            title: "I'm not that crazy",
-            message: "My number stays off the internet. Send me an email and I'll get back to you.",
-            actions: [{ label: "OK" }, { label: "Email me", primary: true, href: "mailto:hey@jonwill.ing" }],
+            title: SITE.whatsapp!.title,
+            message: SITE.whatsapp!.message,
+            actions: [{ label: "OK" }, { label: "Email me", primary: true, href: `mailto:${SITE.email}` }],
           })
         }
       />
