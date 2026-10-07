@@ -5,6 +5,7 @@ import type { AppEntry } from "../../content/apps";
 import { Squircle } from "../../lib/squircle";
 import { IconArt } from "../AppIcon";
 import { SCREEN } from "./constants";
+import { track } from "../../lib/analytics";
 
 export type MenuAnchor = { x: number; y: number; width: number; height: number };
 
@@ -184,6 +185,7 @@ export function ContextMenu({
                   autoFocus={i === 0}
                   onClick={() => {
                     onClose();
+                    track("context_menu_action", { target: entry.id, action: item.label });
                     item.onPress();
                   }}
                   whileTap={{ scale: 0.98 }}

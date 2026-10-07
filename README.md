@@ -49,11 +49,58 @@ Then work through this list.
 ### 1. You: `src/content/site.ts`
 
 Your name, email, domain, LinkedIn, GitHub, photo and city, and your Google Analytics ID
-(`googleAnalytics`, or `null` for none; it only loads in production builds). The city sets the
+(see [Analytics](#analytics-google-analytics-4) below). The city sets the
 phone's clock, when Auto dark mode switches, and the Find My widget. Set
 `whatsapp` or `github` to `null` to drop them from the dock.
 
 Replace `public/me.jpg` with a square photo of you (about 360px).
+
+### Analytics (Google Analytics 4)
+
+Put your GA4 measurement ID in `src/content/site.ts`:
+
+```ts
+googleAnalytics: "G-XXXXXXXXXX", // or null for no analytics
+```
+
+You'll find the ID in Google Analytics under **Admin → Data streams → (your web stream) →
+Measurement ID**. That's all: no snippet to paste into `index.html`. It only loads in production
+builds (`npm run build` / `npm run deploy`), so local development never pollutes your stats.
+
+Every app a visitor opens is counted as its own page view (`/ton#<app>`), and the site sends
+these events. In GA they appear under **Reports → Engagement → Events**; to filter or chart by a
+parameter (for example which app, or how it was opened), register it under **Admin → Custom
+definitions → Create custom dimension** with the parameter name below.
+
+| Event | When | Parameters |
+| --- | --- | --- |
+| `unlock` | The lock screen is dismissed | `method` (swipe, click, keyboard, notification), `app` |
+| `app_open` | An app opens | `app`, `source` (icon, widget, notification, switcher, spotlight, live_activity, deep_link, hash), `first_time` |
+| `app_close` | An app closes | `app`, `method` (close_button, escape, home_indicator, switched_app), `seconds_open` |
+| `app_screen` | The screen inside an app changes | `app`, `screen`, `method` (auto, tap, swipe, dots, video_end) |
+| `video_complete` | A screen recording plays to the end | `app`, `video` |
+| `learn_more` / `learn_more_close` | The drawer opens / closes | `app` |
+| `article_read` | The drawer closes | `app`, `depth_pct` (0–100 in 25s), `seconds` |
+| `outbound_click` / `email_click` | Any link off the site | `link_url`, `link_domain`, `link_text`, `area` (panel, drawer, footer, phone, market_grid, network, destinations, app_store_badge, …), `app` |
+| `context_menu_trigger` | An app icon is held or right-clicked | `app`, `trigger` |
+| `context_menu_open` / `context_menu_action` | A long-press menu opens / an item is chosen | `target`, `action` |
+| `spotlight_open` | Spotlight opens | `trigger` (search_pill, cmd_k, slash) |
+| `search` | A Spotlight search (after a pause in typing) | `search_term`, `results` |
+| `spotlight_select` | A Spotlight result is chosen | `query`, `kind`, `result`, `position` |
+| `alert_shown` / `alert_action` | An iOS alert appears / a button is pressed | `alert` (whatsapp, template_offer, undo_typing, remove_…), `action` |
+| `edit_mode`, `icon_reorder` | Edit mode starts / an icon is moved | `source` / `app`, `position` |
+| `dock_tap`, `copy`, `share` | WhatsApp in the dock, copy actions, sharing an app | `app` / `what` / `method` |
+| `theme_change` | Light / Auto / Dark | `mode`, `from` |
+| `live_activity_shown`, `live_activity_tap` | The Dynamic Island timer | `action` |
+| `lock_screen_control` | Flashlight or camera on the lock screen | `control`, `on` |
+| `undo_typing` | ⌘Z or a shake | `trigger` |
+
+To check events while developing, run `localStorage.setItem("jonwill:debug-analytics", "1")`
+in the browser console and reload: `npm run dev` then logs every event to the console instead of
+sending it. Add `data-track="your-name"` to any element to label the links inside it in
+`outbound_click`.
+
+GA sets cookies, so in the UK and EU you'll normally want a consent prompt before it loads.
 
 ### 2. Your apps: `src/content/apps.ts`
 
@@ -130,7 +177,9 @@ Run it locally with `npm run dev:full` (builds, then serves with Wrangler).
 
 ## Typeface
 
-The page around the phone is set in [PP Neue Montreal](https://pangrampangram.com/products/neue-montreal)
+Headings use [General Sans](https://www.fontshare.com/fonts/general-sans) at weight 500, loaded
+from Fontshare in `index.html` (free for commercial use); change `--font-heading` in
+`src/globals.css` to swap it. The rest of the page around the phone is set in [PP Neue Montreal](https://pangrampangram.com/products/neue-montreal)
 when its font files are in `public/fonts/neue-montreal/` (Book, Medium, Bold, Italic as `.otf`).
 That folder is git-ignored and `npm run deploy` strips it, because the free licence doesn't
 allow use on a website. Without the files, everything falls back to the system font. To ship

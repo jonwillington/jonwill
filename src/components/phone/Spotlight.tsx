@@ -6,6 +6,7 @@ import { IconArt } from "../AppIcon";
 import { GLASS, GLASS_EDGE } from "./constants";
 import { SearchGlyph } from "./Dock";
 import { SITE, entryName } from "../../content/site";
+import { track } from "../../lib/analytics";
 
 type Result =
   | { kind: "app"; entry: AppEntry; score: number }
@@ -100,6 +101,14 @@ export function Spotlight({ onClose, onOpenEntry }: { onClose: () => void; onOpe
   const input = useRef<HTMLInputElement>(null);
   const results = useMemo(() => search(query), [query]);
 
+  // What people search for: sent once they pause typing, with how many results it found.
+  useEffect(() => {
+    const q = query.trim().toLowerCase();
+    if (q.length < 2) return;
+    const id = window.setTimeout(() => track("search", { search_term: q, results: results.length }), 800);
+    return () => window.clearTimeout(id);
+  }, [query, results.length]);
+
   useEffect(() => {
     // Focus after the pill has morphed into the field.
     const id = window.setTimeout(() => input.current?.focus({ preventScroll: true }), 120);
@@ -108,6 +117,12 @@ export function Spotlight({ onClose, onOpenEntry }: { onClose: () => void; onOpe
   useEffect(() => setActive(0), [query]);
 
   const run = (r: Result) => {
+    track("spotlight_select", {
+      query: query.trim().toLowerCase() || undefined,
+      kind: r.kind,
+      result: r.kind === "link" ? r.label : r.entry.id,
+      position: results.indexOf(r) + 1 || undefined,
+    });
     onClose();
     if (r.kind === "link") window.open(r.href, r.href.startsWith("http") ? "_blank" : "_self", "noopener");
     else onOpenEntry(r.entry);

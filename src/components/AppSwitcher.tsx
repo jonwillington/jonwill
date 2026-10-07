@@ -8,7 +8,13 @@ import { entryName } from "../content/site";
  * A row of every app along the bottom of the page, so visitors can jump
  * between them without going back to the home screen. The open one lifts.
  */
-export function AppSwitcher({ open, onOpen }: { open: AppEntry | null; onOpen: (e: AppEntry) => void }) {
+export function AppSwitcher({
+  open,
+  onOpen,
+}: {
+  open: AppEntry | null;
+  onOpen: (e: AppEntry, source: string) => void;
+}) {
   return (
     <nav
       aria-label="Apps"
@@ -24,7 +30,7 @@ export function AppSwitcher({ open, onOpen }: { open: AppEntry | null; onOpen: (
             aria-label={label}
             aria-current={active ? "page" : undefined}
             title={label}
-            onClick={() => onOpen(e)}
+            onClick={() => onOpen(e, "switcher")}
             whileHover={{ y: -3, scale: 1.08 }}
             whileTap={{ scale: 0.92 }}
             animate={{ y: active ? -4 : 0, scale: active ? 1.12 : 1 }}

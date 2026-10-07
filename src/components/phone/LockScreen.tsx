@@ -8,6 +8,7 @@ import { formatLockDate, formatTime, timeAgo, useNow } from "../../lib/time";
 import { IconArt } from "../AppIcon";
 import { GLASS, GLASS_EDGE, SCREEN } from "./constants";
 import { SITE } from "../../content/site";
+import { track } from "../../lib/analytics";
 
 type Note = { entry: AppEntry; title: string; body: string; when: string };
 
@@ -69,7 +70,7 @@ export function LockScreen({
 }: {
   live: Live | null;
   framed: boolean;
-  onUnlock: (open?: AppEntry, from?: DOMRect) => void;
+  onUnlock: (open?: AppEntry, from?: DOMRect, method?: string) => void;
 }) {
   const now = useNow();
   const y = useMotionValue(0);
@@ -81,10 +82,12 @@ export function LockScreen({
   const root = useRef<HTMLDivElement>(null);
   const notes = notifications(live, now);
 
-  const unlock = () => {
+  const unlock = (method = "swipe") => {
     if (leaving.current) return;
     leaving.current = true;
-    animate(y, -SCREEN.height, { type: "spring", stiffness: 260, damping: 32, velocity: -1200 }).then(() => onUnlock());
+    animate(y, -SCREEN.height, { type: "spring", stiffness: 260, damping: 32, velocity: -1200 }).then(() =>
+      onUnlock(undefined, undefined, method),
+    );
   };
 
   // A notification opens its app straight away, as on iOS: no slide up, no home screen.
@@ -100,7 +103,7 @@ export function LockScreen({
   }, []);
 
   const onDragEnd = (_: unknown, info: PanInfo) => {
-    if (info.offset.y < -110 || info.velocity.y < -500) unlock();
+    if (info.offset.y < -110 || info.velocity.y < -500) unlock("swipe");
     else animate(y, 0, { type: "spring", stiffness: 400, damping: 34 });
   };
 
@@ -121,12 +124,12 @@ export function LockScreen({
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " " || e.key === "ArrowUp") {
           e.preventDefault();
-          unlock();
+          unlock("keyboard");
         }
       }}
       onTap={(e) => {
         // A plain click anywhere that isn't a control also unlocks.
-        if (!(e.target as HTMLElement).closest("button")) unlock();
+        if (!(e.target as HTMLElement).closest("button")) unlock("click");
       }}
     >
       <div className="wallpaper-layer absolute inset-0" />
@@ -197,14 +200,17 @@ export function LockScreen({
           <QuickButton
             label={torch ? "Turn flashlight off" : "Turn flashlight on"}
             active={torch}
-            onPress={() => setTorch((t) => !t)}
+            onPress={() => {
+              track("lock_screen_control", { control: "flashlight", on: !torch });
+              setTorch((t) => !t);
+            }}
           >
             <svg width="16" height="24" viewBox="0 0 16 24" fill="currentColor" aria-hidden>
               <path d="M2 0h12a1 1 0 0 1 1 1v4c0 1.5-1 3-2.2 4.4L12 10.5V23a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V10.5l-.8-1.1C2 8 1 6.5 1 5V1a1 1 0 0 1 1-1Zm6 13a1.5 1.5 0 0 0-1.5 1.5v2a1.5 1.5 0 0 0 3 0v-2A1.5 1.5 0 0 0 8 13Z" />
             </svg>
           </QuickButton>
           <span className="lock-hint text-[15px] font-medium tracking-[-0.2px]">Swipe up to open</span>
-          <QuickButton label="Camera" onPress={() => {}}>
+          <QuickButton label="Camera" onPress={() => track("lock_screen_control", { control: "camera" })}>
             <svg width="24" height="19" viewBox="0 0 24 19" fill="currentColor" aria-hidden>
               <path d="M8.5 0h7l1.6 2.5H21a3 3 0 0 1 3 3V16a3 3 0 0 1-3 3H3a3 3 0 0 1-3-3V5.5a3 3 0 0 1 3-3h3.9L8.5 0ZM12 5.5a5 5 0 1 0 0 10 5 5 0 0 0 0-10Zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6Z" />
             </svg>

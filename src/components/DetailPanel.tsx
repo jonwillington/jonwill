@@ -63,7 +63,7 @@ export function DetailContent({
             </div>
           )}
           <h2
-            className={`font-semibold leading-[1.05] tracking-[-0.03em] ${showClose ? "text-[26px]" : "text-[44px] 2xl:text-[52px]"}`}
+            className={`font-medium leading-[1.05] tracking-[-0.03em] ${showClose ? "text-[26px]" : "text-[44px] 2xl:text-[52px]"}`}
           >
             {entry.title ?? entryName(entry)}
           </h2>
@@ -198,7 +198,7 @@ function PlatformIcon({ platform }: { platform: (typeof PLATFORMS)[number][0] })
 /** Markets down the side, platforms across the top; each cell links out or shows its status. */
 export function MarketGrid({ markets }: { markets: Market[] }) {
   return (
-    <section aria-label="Availability by market and platform">
+    <section aria-label="Availability by market and platform" data-track="market_grid">
       <p className={`mb-2 ${EYEBROW}`}>Markets</p>
       <div className="overflow-hidden rounded-[10px] border border-foreground/10">
         <table className="w-full border-collapse text-left text-[13px]">
@@ -280,7 +280,7 @@ export function Network({
   counts?: Live["network"];
 }) {
   return (
-    <section aria-label={title}>
+    <section aria-label={title} data-track="network">
       <p className={`mb-2 ${EYEBROW}`}>{title}</p>
       <p className="mb-3 text-foreground/75">{intro}</p>
       <ul className="overflow-hidden rounded-[10px] border border-foreground/10">
@@ -385,7 +385,7 @@ const SCORES = [
 function Destinations({ title, intro, items }: { title: string; intro: string; items: Destination[] }) {
   const overall = (d: Destination) => Math.round((d.scores.work + d.scores.stay + d.scores.value + d.scores.fun) / 4);
   return (
-    <section aria-label={title}>
+    <section aria-label={title} data-track="destinations">
       <p className={`mb-2 ${EYEBROW}`}>{title}</p>
       <p className="mb-3 text-foreground/75">{intro}</p>
       {/* Fixed height: about four rows show, the rest scroll inside the box. */}
@@ -445,6 +445,7 @@ export function AppStoreBadge({ href, size = "lg" }: { href: string; size?: "lg"
       href={href}
       target="_blank"
       rel="noopener noreferrer"
+      data-track="app_store_badge"
       className="inline-flex rounded-[10px] outline-none transition-transform duration-200 hover:scale-[1.03] active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-foreground/40"
     >
       <img

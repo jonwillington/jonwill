@@ -33,7 +33,7 @@
   --font-system: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", Roboto, sans-serif;
   --font-sans: "PP Neue Montreal", var(--font-system);
   /* Headings only; the dev font picker can override it. */
-  --font-heading: "Work Sans", var(--font-system);
+  --font-heading: "General Sans", var(--font-system);
 }
 
 body {

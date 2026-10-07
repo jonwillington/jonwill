@@ -4,6 +4,7 @@ import { AnimatePresence, motion, type PanInfo } from "motion/react";
 import type { AppEntry } from "../content/apps";
 import { iconClip } from "../lib/squircle";
 import { InterestsIcon } from "./InterestsWidget";
+import { track } from "../lib/analytics";
 
 const LONG_PRESS_MS = 500;
 
@@ -82,6 +83,7 @@ export function AppIcon({
           if (editing) return;
           timer.current = window.setTimeout(() => {
             longPressed.current = true;
+            track("context_menu_trigger", { app: entry.id, trigger: "hold" });
             onMenu(entry, rect());
           }, LONG_PRESS_MS);
         }}
@@ -90,7 +92,10 @@ export function AppIcon({
         onContextMenu={(e) => {
           e.preventDefault();
           cancelPress();
-          if (!editing) onMenu(entry, rect());
+          if (!editing) {
+            track("context_menu_trigger", { app: entry.id, trigger: "right_click" });
+            onMenu(entry, rect());
+          }
         }}
         onClick={() => {
           if (longPressed.current || moved.current || editing) return;

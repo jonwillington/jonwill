@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Drawer } from "vaul";
 
 import type { AppEntry } from "../content/apps";
+import { track } from "../lib/analytics";
 import { IconArt } from "./AppIcon";
 import { CloseX } from "./CloseX";
 import { AppStoreBadge, EYEBROW, LinkButton, Tags } from "./DetailPanel";
@@ -31,6 +32,23 @@ export function AppDrawer({
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => setScrolled(false), [entry?.id, open]);
 
+  // Analytics: how far down the article each visitor got, sent when the drawer closes.
+  const depth = useRef(0);
+  const openedAt = useRef(0);
+  useEffect(() => {
+    if (open && entry) {
+      depth.current = 0;
+      openedAt.current = Date.now();
+      return () => {
+        track("article_read", {
+          app: entry.id,
+          depth_pct: depth.current,
+          seconds: Math.round((Date.now() - openedAt.current) / 1000),
+        });
+      };
+    }
+  }, [open, entry]);
+
   return (
     <Drawer.Root direction="right" open={open && !!entry} onOpenChange={onOpenChange} shouldScaleBackground>
       <Drawer.Portal>
@@ -44,7 +62,12 @@ export function AppDrawer({
           {entry && (
             <div
               className="overflow-y-auto px-7 pb-10 text-[15px] leading-[1.6]"
-              onScroll={(e) => setScrolled(e.currentTarget.scrollTop > 4)}
+              onScroll={(e) => {
+                const el = e.currentTarget;
+                setScrolled(el.scrollTop > 4);
+                const pct = Math.round(((el.scrollTop + el.clientHeight) / el.scrollHeight) * 100);
+                depth.current = Math.max(depth.current, Math.min(100, Math.round(pct / 25) * 25));
+              }}
             >
               {/* Pinned while the article scrolls underneath; it shrinks to a compact bar once scrolled. */}
               <header
@@ -61,7 +84,7 @@ export function AppDrawer({
                   </div>
                   <div className="min-w-0">
                     <Drawer.Title
-                      className={`truncate font-semibold leading-tight tracking-[-0.02em] transition-[font-size] duration-200 ${scrolled ? "text-[16px]" : "text-[19px]"}`}
+                      className={`truncate font-medium leading-tight tracking-[-0.02em] transition-[font-size] duration-200 ${scrolled ? "text-[16px]" : "text-[19px]"}`}
                     >
                       {entryName(entry)}
                     </Drawer.Title>
@@ -89,7 +112,7 @@ export function AppDrawer({
               <article className="mt-8 flex max-w-[62ch] flex-col gap-8 text-[16px] leading-[1.7]">
                 {(entry.article ?? [{ title: "What is it?", body: entry.body }]).map((section) => (
                   <section key={section.title}>
-                    <h3 className="mb-2 text-[19px] font-semibold leading-snug tracking-[-0.015em]">{section.title}</h3>
+                    <h3 className="mb-2 text-[19px] font-medium leading-snug tracking-[-0.015em]">{section.title}</h3>
                     <div className="flex flex-col gap-3 text-foreground/85">
                       {section.body.map((p, i) => (
                         <p key={i}>{p}</p>

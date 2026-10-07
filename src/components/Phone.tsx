@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { AnimatePresence, motion, useDragControls, useMotionValue, useTransform, type PanInfo } from "motion/react";
 
 import { ABOUT, APPS, INTERESTS, SHOW_INTERESTS, type AppEntry } from "../content/apps";
+import { track } from "../lib/analytics";
 import type { Live } from "../lib/live";
 import { AppIcon } from "./AppIcon";
 import { InterestsWidget } from "./InterestsWidget";
@@ -27,7 +28,8 @@ type Props = {
   seen: ReadonlySet<string>;
   live: Live | null;
   dark: boolean;
-  onOpen: (entry: AppEntry) => void;
+  /** `source` says how it was opened, for analytics (icon, widget, notification, spotlight…). */
+  onOpen: (entry: AppEntry, source: string) => void;
   onClose: () => void;
   /** Framed: the photoreal device at `scale`. Unframed (on phones): the page is the screen. */
   framed: boolean;
@@ -146,16 +148,32 @@ export function Phone({
     return () => window.clearTimeout(id);
   }, [toast]);
 
-  const handleOpen = (entry: AppEntry, rect?: DOMRect) => {
+  /** Shows an iOS alert and tags it, and whichever button the visitor presses. */
+  const showAlert = (name: string, a: Alert) => {
+    track("alert_shown", { alert: name });
+    setAlert({
+      ...a,
+      actions: a.actions.map((x) => ({
+        ...x,
+        onPress: () => {
+          track("alert_action", { alert: name, action: x.label });
+          x.onPress?.();
+        },
+      })),
+    });
+  };
+
+  const handleOpen = (entry: AppEntry, rect?: DOMRect, source = "icon") => {
     if (editing) {
       setEditing(false);
       return;
     }
     setOrigin(rect ? toScreen(rect.left + rect.width / 2, rect.top + rect.height / 2) : null);
-    onOpen(entry);
+    onOpen(entry, source);
   };
 
   const copy = async (text: string, done: string) => {
+    track("copy", { what: done.replace(/ copied$/i, "").toLowerCase() });
     try {
       await navigator.clipboard.writeText(text);
       showToast(done);
@@ -166,7 +184,7 @@ export function Phone({
   const openUrl = (url: string) => window.open(url, url.startsWith("http") ? "_blank" : "_self", "noopener");
 
   const showWhatsApp = () =>
-    setAlert({
+    showAlert("whatsapp", {
       title: SITE.whatsapp!.title,
       message: SITE.whatsapp!.message,
       actions: [{ label: "OK" }, { label: "Email me", primary: true, href: `mailto:${SITE.email}` }],
@@ -200,6 +218,7 @@ export function Phone({
   };
 
   const openDockMenu = (id: DockId, rect: DOMRect) => {
+    track("context_menu_open", { target: `dock-${id}` });
     const a = toScreen(rect.left, rect.top);
     const { label, icon } = DOCK_ICONS[id];
     // A minimal entry so the menu can draw the lifted icon and name it.
@@ -221,11 +240,13 @@ export function Phone({
   };
 
   const openMenu = (entry: AppEntry, rect: DOMRect) => {
+    track("context_menu_open", { target: entry.id });
     const a = toScreen(rect.left, rect.top);
     setMenu({ entry, anchor: { x: a.x, y: a.y, width: rect.width / a.k, height: rect.height / a.k } });
   };
 
   const share = async (entry: AppEntry) => {
+    track("share", { app: entry.id, method: "share" in navigator ? "share_sheet" : "copy_link" });
     const url = `${window.location.origin}/ton#${entry.id}`;
     try {
       if (navigator.share) {
@@ -240,7 +261,7 @@ export function Phone({
   };
 
   const askRemove = (entry: AppEntry) =>
-    setAlert({
+    showAlert(`remove_${entry.id}`, {
       title: `Remove “${entry.name}”?`,
       message: "You can't, sorry. I spent far too long on it.",
       actions: [
@@ -269,6 +290,7 @@ export function Phone({
     }
   };
   const onDragEnd = () => {
+    if (draggingId) track("icon_reorder", { app: draggingId, position: order.indexOf(draggingId) + 1 });
     setDraggingId(null);
     storage.set(localStorage, ORDER_KEY, JSON.stringify(order));
   };
@@ -277,18 +299,22 @@ export function Phone({
   const emptyPress = useRef<number | undefined>(undefined);
   const onHomePointerDown = (e: React.PointerEvent) => {
     if (e.target !== e.currentTarget) return;
-    emptyPress.current = window.setTimeout(() => setEditing(true), 600);
+    emptyPress.current = window.setTimeout(() => {
+      track("edit_mode", { source: "home_hold" });
+      setEditing(true);
+    }, 600);
   };
   const cancelEmptyPress = () => window.clearTimeout(emptyPress.current);
 
-  const unlock = (into?: AppEntry, from?: DOMRect) => {
+  const unlock = (into?: AppEntry, from?: DOMRect, method = "swipe") => {
+    track("unlock", { method: into ? "notification" : method, app: into?.id });
     storage.set(sessionStorage, UNLOCKED_KEY, "1");
     setLocked(false);
     if (into) {
       setHomeHidden(true);
       // Straight into the app, growing from the notification, in the same frame the lock
       // screen starts to fade, so the page settles in one move rather than home-then-app.
-      handleOpen(into, from);
+      handleOpen(into, from, "notification");
     } else {
       // Swiped up: the home screen's icons fly in.
       setUnlockCount((n) => n + 1);
@@ -300,6 +326,7 @@ export function Phone({
     if (!framed || locked || open || storage.get(sessionStorage, ACTIVITY_KEY)) return;
     const id = window.setTimeout(() => {
       storage.set(sessionStorage, ACTIVITY_KEY, "1");
+      track("live_activity_shown");
       setActivity(true);
     }, 5000);
     return () => window.clearTimeout(id);
@@ -311,7 +338,7 @@ export function Phone({
     if (storage.get(localStorage, TEMPLATE_KEY)) return;
     const id = window.setTimeout(() => {
       storage.set(localStorage, TEMPLATE_KEY, "1");
-      setAlert({
+      showAlert("template_offer", {
         title: "Want a phone like this?",
         message: "This whole site is a free template. Grab it from my GitHub and make it yours.",
         actions: [{ label: "Not now" }, { label: "Get it", primary: true, href: SITE.github! }],
@@ -327,10 +354,11 @@ export function Phone({
       if (((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") || (e.key === "/" && !typing)) {
         if (locked) return;
         e.preventDefault();
+        track("spotlight_open", { trigger: e.key === "/" ? "slash" : "cmd_k" });
         setSpotlight(true);
       } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "z" && !typing) {
         e.preventDefault();
-        undoTyping();
+        undoTyping("keyboard");
       } else if (e.key === "Escape" && editing) {
         setEditing(false);
       }
@@ -348,19 +376,21 @@ export function Phone({
       const force = Math.abs(a.x ?? 0) + Math.abs(a.y ?? 0) + Math.abs(a.z ?? 0);
       if (force > 38 && Date.now() - last > 2000) {
         last = Date.now();
-        undoTyping();
+        undoTyping("shake");
       }
     };
     window.addEventListener("devicemotion", onMotion);
     return () => window.removeEventListener("devicemotion", onMotion);
   });
 
-  const undoTyping = () =>
-    setAlert({
+  const undoTyping = (trigger = "keyboard") => {
+    track("undo_typing", { trigger });
+    showAlert("undo_typing", {
       title: "Undo Typing",
       message: "There's nothing to undo. Everything on this phone is here on purpose.",
       actions: [{ label: "Cancel" }, { label: "Undo", primary: true, onPress: () => showToast("Nothing to undo") }],
     });
+  };
 
   // Swipe up from the home indicator to close an app, as on iOS.
   const dragControls = useDragControls();
@@ -368,7 +398,10 @@ export function Phone({
   const appScale = useTransform(appY, [0, -320], [1, 0.62]);
   const appRadius = useTransform(appY, [0, -60], [framed ? SCREEN.radius : 0, 44]);
   const onAppDragEnd = (_: unknown, info: PanInfo) => {
-    if (info.offset.y < -70 || info.velocity.y < -400) onClose();
+    if (info.offset.y < -70 || info.velocity.y < -400) {
+      track("app_close_gesture", { app: open?.id, method: "swipe_up" });
+      onClose();
+    }
   };
   useEffect(() => appY.set(0), [open, appY]);
 
@@ -412,7 +445,7 @@ export function Phone({
         onPointerLeave={cancelEmptyPress}
         onClick={(e) => e.target === e.currentTarget && setEditing(false)}
       >
-        <MeWidget dark={dark} onOpen={(rect) => handleOpen(ABOUT, rect)} />
+        <MeWidget dark={dark} onOpen={(rect) => handleOpen(ABOUT, rect, "widget")} />
 
         {/* The Find My widget fills two icon rows; apps start on row three. */}
         <div
@@ -447,6 +480,7 @@ export function Phone({
                 handleOpen(
                   APPS.find((a) => a.id === "ddbx")!,
                   rect,
+                  "widget",
                 )
               }
             />
@@ -456,6 +490,7 @@ export function Phone({
                 handleOpen(
                   APPS.find((a) => a.id === "istanbrew")!,
                   rect,
+                  "widget",
                 )
               }
             />
@@ -470,7 +505,13 @@ export function Phone({
 
       {/* Hidden instantly (not faded) on the notification path, so it never flashes up. */}
       <div className={homeHidden ? "invisible" : undefined} style={{ display: "contents" }}>
-        <SearchPill onPress={() => setSpotlight(true)} hidden={spotlight} />
+        <SearchPill
+          onPress={() => {
+            track("spotlight_open", { trigger: "search_pill" });
+            setSpotlight(true);
+          }}
+          hidden={spotlight}
+        />
         <Dock framed={framed} hidden={spotlight} onWhatsApp={showWhatsApp} onMenu={openDockMenu} />
       </div>
 
@@ -526,7 +567,7 @@ export function Phone({
         {spotlight && (
           <Spotlight
             onClose={() => setSpotlight(false)}
-            onOpenEntry={(e) => window.setTimeout(() => handleOpen(e), 200)}
+            onOpenEntry={(e) => window.setTimeout(() => handleOpen(e, undefined, "spotlight"), 200)}
           />
         )}
       </AnimatePresence>
@@ -539,7 +580,10 @@ export function Phone({
             actions={menu.actions}
             onClose={() => setMenu(null)}
             onShare={() => share(menu.entry)}
-            onEdit={() => setEditing(true)}
+            onEdit={() => {
+              track("edit_mode", { source: "context_menu" });
+              setEditing(true);
+            }}
             onRemove={() => askRemove(menu.entry)}
           />
         )}
@@ -575,7 +619,14 @@ export function Phone({
       <AnimatePresence>
         {activity && framed && (
           <DynamicIsland
-            onOpenIstanbrew={() => handleOpen(APPS.find((a) => a.id === "istanbrew")!)}
+            onOpenIstanbrew={() => {
+              track("live_activity_tap", { action: "open_istanbrew" });
+              handleOpen(
+                APPS.find((a) => a.id === "istanbrew")!,
+                undefined,
+                "live_activity",
+              );
+            }}
             onFinished={() => setActivity(false)}
           />
         )}

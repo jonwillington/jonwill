@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, type PanInfo } from "motion/react";
 
 import type { AppEntry } from "../../content/apps";
+import { track } from "../../lib/analytics";
 
 const ADVANCE_MS = 3800;
 const isVideo = (src: string) => src.endsWith(".mp4");
@@ -34,7 +35,8 @@ export function AppScreens({
   entry: AppEntry;
   dark: boolean;
   index: number;
-  onIndex: (i: number) => void;
+  /** `method`: how the screen changed (auto, tap, swipe, video_end, dots), for analytics. */
+  onIndex: (i: number, method?: string) => void;
 }) {
   const screens = screensFor(entry, dark)!;
   // Belt and braces: never index past this app's screens.
@@ -69,15 +71,15 @@ export function AppScreens({
   useEffect(() => {
     // Videos move on when they finish instead of on a timer.
     if (!launched || paused || screens.length < 2 || isVideo(screens[index])) return;
-    const id = window.setTimeout(() => onIndex((index + 1) % screens.length), ADVANCE_MS);
+    const id = window.setTimeout(() => onIndex((index + 1) % screens.length, "auto"), ADVANCE_MS);
     return () => window.clearTimeout(id);
   }, [launched, paused, index, screens.length, onIndex]);
 
-  const go = (delta: number) => onIndex((index + delta + screens.length) % screens.length);
+  const go = (delta: number, method: string) => onIndex((index + delta + screens.length) % screens.length, method);
 
   const onPanEnd = (_: unknown, info: PanInfo) => {
     if (Math.abs(info.offset.x) < 40 || Math.abs(info.offset.x) < Math.abs(info.offset.y)) return;
-    go(info.offset.x < 0 ? 1 : -1);
+    go(info.offset.x < 0 ? 1 : -1, "swipe");
   };
 
   return (
@@ -89,7 +91,7 @@ export function AppScreens({
       onClick={(e) => {
         // Left third goes back, like tapping a Back button; anywhere else goes forward.
         const box = e.currentTarget.getBoundingClientRect();
-        go(e.clientX - box.left < box.width / 3 ? -1 : 1);
+        go(e.clientX - box.left < box.width / 3 ? -1 : 1, "tap");
       }}
       role="group"
       aria-roledescription="app screens"
@@ -112,7 +114,10 @@ export function AppScreens({
             <Clip
               src={screens[index]}
               playing={launched}
-              onEnded={() => !paused && screens.length > 1 && onIndex((index + 1) % screens.length)}
+              onEnded={() => {
+                track("video_complete", { app: entry.id, video: screens[index].split("/").pop() });
+                if (!paused && screens.length > 1) onIndex((index + 1) % screens.length, "video_end");
+              }}
             />
           ) : (
             <img src={screens[index]} alt="" draggable={false} className="size-full object-cover" />

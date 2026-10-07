@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 
 import { ISLAND } from "./constants";
+import { track } from "../../lib/analytics";
 
 const BREW_SECONDS = 210; // A V60: three and a half minutes.
 const ORANGE = "#ff9f0a";
@@ -91,7 +92,10 @@ export function DynamicIsland({
         borderRadius: ISLAND.height / 2,
       }}
       transition={{ type: "spring", stiffness: 380, damping: 30, mass: 0.9 }}
-      onClick={() => setMode((m) => (m === "compact" ? "expanded" : m === "expanded" ? "compact" : m))}
+      onClick={() => {
+        track("live_activity_tap", { action: mode === "compact" ? "expand" : "collapse" });
+        setMode((m) => (m === "compact" ? "expanded" : m === "expanded" ? "compact" : m));
+      }}
     >
       <AnimatePresence mode="popLayout" initial={false}>
         {mode === "compact" && (

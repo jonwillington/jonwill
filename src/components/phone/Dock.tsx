@@ -4,6 +4,7 @@ import { motion } from "motion/react";
 import { SHAPE, Squircle, iconClip } from "../../lib/squircle";
 import { GLASS, GLASS_EDGE } from "./constants";
 import { SITE } from "../../content/site";
+import { track } from "../../lib/analytics";
 
 export function SearchPill({ onPress, hidden }: { onPress: () => void; hidden: boolean }) {
   return (
@@ -77,7 +78,10 @@ export function Dock({
       />
       {SITE.whatsapp && (
         <DockLink
-          onPress={onWhatsApp}
+          onPress={() => {
+            track("dock_tap", { app: "whatsapp" });
+            onWhatsApp();
+          }}
           label="WhatsApp"
           icon={DOCK_ICONS.whatsapp.icon}
           onMenu={(r) => onMenu("whatsapp", r)}

@@ -12,7 +12,7 @@ import { LiveStrip } from "./components/LiveStrip";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { AppScreens, screensFor } from "./components/phone/AppScreens";
 import { Splash } from "./components/phone/Splash";
-import { trackApp } from "./lib/analytics";
+import { track, trackApp } from "./lib/analytics";
 import { useLive } from "./lib/live";
 import { useTheme } from "./lib/theme";
 import { SITE } from "./content/site";
@@ -115,21 +115,49 @@ export function App() {
   drawerRef.current = drawer;
 
   const [seen, markSeen] = useSeen();
+  // Analytics: how each app was opened and closed, and how long it stayed open.
+  const openSource = useRef<string>(window.location.hash ? "deep_link" : "unknown");
+  const closeMethod = useRef<string>("unknown");
+  const lastOpen = useRef<{ id: string; at: number } | null>(null);
+
   // However an app was opened (tap, link or notification), its badge clears.
   useEffect(() => {
-    if (open) {
+    const prev = lastOpen.current;
+    if (prev && prev.id !== open?.id) {
+      track("app_close", {
+        app: prev.id,
+        method: open ? "switched_app" : closeMethod.current,
+        seconds_open: Math.round((Date.now() - prev.at) / 1000),
+      });
+    }
+    if (open && prev?.id !== open.id) {
+      track("app_open", { app: open.id, source: openSource.current, first_time: !seen.has(open.id) });
       markSeen(open.id);
       trackApp(open.id, open.name);
     }
+    lastOpen.current = open ? { id: open.id, at: prev?.id === open.id ? prev.at : Date.now() } : null;
+    openSource.current = "hash";
+    closeMethod.current = "unknown";
     setDrawer(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, markSeen]);
 
-  const openEntry = useCallback((entry: AppEntry) => {
+  const onDrawerChange = useCallback(
+    (next: boolean) => {
+      if (!next && drawerRef.current) track("learn_more_close", { app: open?.id });
+      setDrawer(next);
+    },
+    [open],
+  );
+
+  const openEntry = useCallback((entry: AppEntry, source = "unknown") => {
+    openSource.current = source;
     setOpen(entry);
     history.replaceState(null, "", `#${entry.id}`);
   }, []);
 
-  const close = useCallback(() => {
+  const close = useCallback((method = "close_button") => {
+    closeMethod.current = method;
     setOpen(null);
     history.replaceState(null, "", window.location.pathname + window.location.search);
   }, []);
@@ -141,7 +169,7 @@ export function App() {
     const onKeyCapture = (e: KeyboardEvent) => {
       if (e.key === "Escape") drawerWasOpen = drawerRef.current;
     };
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && !drawerWasOpen && close();
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && !drawerWasOpen && close("escape");
     const onHash = () => setOpen(fromHash());
     window.addEventListener("keydown", onKeyCapture, true);
     window.addEventListener("keydown", onKey);
@@ -155,7 +183,13 @@ export function App() {
 
   const screens = open ? screensFor(open, dark) : null;
   const screen = open && screenState.id === open.id ? Math.min(screenState.index, (screens?.length ?? 1) - 1) : 0;
-  const setScreen = useCallback((index: number) => setScreenState({ id: open?.id ?? null, index }), [open]);
+  const setScreen = useCallback(
+    (index: number, method = "dots") => {
+      setScreenState({ id: open?.id ?? null, index });
+      track("app_screen", { app: open?.id, screen: index + 1, method });
+    },
+    [open],
+  );
   // In dark mode the page takes a deep tint of the app's colour instead of the colour itself.
   const pageAccent = open ? (dark ? mix(open.accent, "#0e0e10", 0.82) : open.accent) : null;
   const pageScheme = open ? (dark ? "dark" : (open.scheme ?? "dark")) : dark ? "dark" : "light";
@@ -166,7 +200,7 @@ export function App() {
     dark,
     open,
     onOpen: openEntry,
-    onClose: close,
+    onClose: () => close("home_indicator"),
     // Screenshots carry their own status bar; clips are cards, so the phone draws one.
     ownStatusBar: !!screens && desktop && !screens.some((src) => src.endsWith(".mp4")),
     lightApp:
@@ -188,14 +222,22 @@ export function App() {
               className="size-full overflow-y-auto px-5 pb-16 pt-14 text-foreground"
               style={{ background: dark ? mix(entry.accent, "#0e0e10", 0.82) : entry.accent }}
             >
-              <DetailContent entry={entry} live={live} onClose={close} onLearnMore={() => setDrawer(true)} />
+              <DetailContent
+                entry={entry}
+                live={live}
+                onClose={() => close("close_button")}
+                onLearnMore={() => {
+                  track("learn_more", { app: open?.id });
+                  setDrawer(true);
+                }}
+              />
             </div>
           )}
         />
         <AppDrawer
           entry={open}
           open={drawer}
-          onOpenChange={setDrawer}
+          onOpenChange={onDrawerChange}
           dark={dark}
           background={pageAccent ?? (dark ? "#141416" : "#fafafa")}
         />
@@ -217,7 +259,13 @@ export function App() {
           <span data-heading>{SITE.name}</span>
           <LiveStrip live={live} />
           <div className="flex items-center">
-            <ThemeToggle mode={mode} onChange={setMode} />
+            <ThemeToggle
+              mode={mode}
+              onChange={(m) => {
+                track("theme_change", { mode: m, from: mode });
+                setMode(m);
+              }}
+            />
             {/* Closing the app lives top right, where it covers the whole page. Its slot opens and
                 closes with a spring, so the theme toggle glides aside and back rather than jumping. */}
             <AnimatePresence initial={false}>
@@ -239,7 +287,7 @@ export function App() {
                     exit={{ scale: 0.6, rotate: 90 }}
                     transition={{ type: "spring", stiffness: 420, damping: 26 }}
                   >
-                    <CloseX onPress={close} label={`Close ${open.name}`} />
+                    <CloseX onPress={() => close("close_button")} label={`Close ${open.name}`} />
                   </motion.div>
                 </motion.div>
               )}
@@ -340,8 +388,11 @@ export function App() {
                   entry={open}
                   live={live}
                   showClose={false}
-                  onClose={close}
-                  onLearnMore={() => setDrawer(true)}
+                  onClose={() => close("close_button")}
+                  onLearnMore={() => {
+                    track("learn_more", { app: open?.id });
+                    setDrawer(true);
+                  }}
                 />
               </motion.aside>
             )}
@@ -382,7 +433,7 @@ export function App() {
       <AppDrawer
         entry={open}
         open={drawer}
-        onOpenChange={setDrawer}
+        onOpenChange={onDrawerChange}
         dark={dark}
         background={pageAccent ?? (dark ? "#141416" : "#fafafa")}
       />
