@@ -123,6 +123,12 @@ function DockLink({
     },
     onPointerUp: cancel,
     onPointerLeave: cancel,
+    onPointerCancel: cancel,
+    // Links are draggable by default: holding one and moving a pixel starts a native drag,
+    // which cancels the press before the menu opens. Mail, LinkedIn and GitHub are links.
+    // (draggable=false plus -webkit-user-drag:none; Motion owns the onDragStart prop name.)
+    draggable: false,
+    onDragStartCapture: (e: React.DragEvent) => e.preventDefault(),
     onContextMenu: (e: React.MouseEvent<HTMLElement>) => {
       e.preventDefault();
       cancel();
@@ -147,7 +153,8 @@ function DockLink({
       style={{ clipPath: iconClip(64) }}
     />
   );
-  const className = "relative size-[64px] cursor-pointer [filter:drop-shadow(0_2px_5px_rgba(0,0,0,0.12))]";
+  const className =
+    "relative size-[64px] cursor-pointer select-none [-webkit-touch-callout:none] [-webkit-user-drag:none] [filter:drop-shadow(0_2px_5px_rgba(0,0,0,0.12))]";
 
   if (onPress) {
     return (
