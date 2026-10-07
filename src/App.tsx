@@ -242,18 +242,27 @@ export function App() {
             transition={{ type: "spring", stiffness: 200, damping: 26 }}
             className="flex flex-col items-center gap-5"
           >
-            <Phone
-              {...phoneProps}
-              framed
-              scale={scale}
-              renderOpen={(entry) =>
-                screensFor(entry, dark) ? (
-                  <AppScreens entry={entry} dark={dark} index={screen} onIndex={setScreen} />
-                ) : (
-                  <Splash entry={entry} />
-                )
-              }
-            />
+            {/* The entrance: the phone starts close up, overflowing the window with its top in
+                view (the page clips it), then pulls back to its resting size. */}
+            <motion.div
+              className="relative z-10"
+              initial={{ scale: 1.75, y: "34%" }}
+              animate={{ scale: 1, y: "0%" }}
+              transition={{ delay: 0.35, duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <Phone
+                {...phoneProps}
+                framed
+                scale={scale}
+                renderOpen={(entry) =>
+                  screensFor(entry, dark) ? (
+                    <AppScreens entry={entry} dark={dark} index={screen} onIndex={setScreen} />
+                  ) : (
+                    <Splash entry={entry} />
+                  )
+                }
+              />
+            </motion.div>
             {/* A caption-sized line under the phone saying what the current screen shows. */}
             <div className="flex h-[52px] w-full flex-col items-center justify-start gap-2.5">
               <AnimatePresence mode="wait">
