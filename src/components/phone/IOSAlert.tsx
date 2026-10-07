@@ -45,11 +45,14 @@ export function IOSAlert({
 
   return (
     <motion.div
-      className="absolute inset-0 z-[60] flex items-center justify-center bg-black/20"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
+      // No opacity on this wrapper or the panel: Chrome only paints a backdrop-filter once every
+      // ancestor is fully opaque, so fading them made the frosted glass pop in late (a flicker).
+      // The dim animates its own colour, and the glass layers fade themselves (below).
+      className="absolute inset-0 z-[60] flex items-center justify-center"
+      initial={{ backgroundColor: "rgba(0,0,0,0)" }}
+      animate={{ backgroundColor: "rgba(0,0,0,0.2)" }}
+      exit={{ backgroundColor: "rgba(0,0,0,0)", transition: { duration: 0.18 } }}
+      transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
       onClick={onClose}
     >
       <motion.div
@@ -59,23 +62,36 @@ export function IOSAlert({
         aria-modal="true"
         aria-labelledby={`${id}-title`}
         aria-describedby={`${id}-body`}
-        initial={{ scale: 1.1, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
+        initial={{ scale: 1.1 }}
+        animate={{ scale: 1 }}
         exit={{ scale: 0.97, opacity: 0, transition: { duration: 0.15 } }}
+        // Leaving can fade the whole panel: losing the blur on the way out is invisible.
         transition={{ type: "spring", stiffness: 380, damping: 28 }}
         onClick={(e) => e.stopPropagation()}
         className="relative w-[306px] outline-none"
       >
         {/* Shadow as its own layer: a filter on an ancestor would stop the glass blurring what's behind. */}
-        <div className="absolute inset-x-[10px] bottom-[-14px] top-[18px] rounded-[40px] bg-black/25 blur-2xl" />
+        <motion.div
+          className="absolute inset-x-[10px] bottom-[-14px] top-[18px] rounded-[40px] bg-black/25 blur-2xl"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0, transition: { duration: 0.15 } }}
+          transition={{ duration: 0.2 }}
+        />
         <Squircle
           radius={36}
           smoothing={0.6}
           rim
-          glass="bg-[rgba(250,250,252,0.82)] backdrop-blur-[30px] backdrop-saturate-[1.8]"
+          glass="alert-glass bg-[rgba(250,250,252,0.82)] backdrop-saturate-[1.8]"
           className="relative text-left text-black"
         >
-          <div className="relative px-[22px] pb-[18px] pt-[22px]">
+          <motion.div
+            className="relative px-[22px] pb-[18px] pt-[22px]"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, transition: { duration: 0.12 } }}
+            transition={{ duration: 0.2 }}
+          >
             <p id={`${id}-title`} className="text-[17px] font-semibold leading-[22px] tracking-[-0.4px]">
               {title}
             </p>
@@ -121,7 +137,7 @@ export function IOSAlert({
                 );
               })}
             </div>
-          </div>
+          </motion.div>
         </Squircle>
       </motion.div>
     </motion.div>

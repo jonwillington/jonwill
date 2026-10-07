@@ -142,13 +142,19 @@ export function Spotlight({ onClose, onOpenEntry }: { onClose: () => void; onOpe
   return (
     <motion.div
       className="absolute inset-0 z-40 flex flex-col"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
+      // Fades on the way out only: fading in through an ancestor's opacity would hold back the
+      // frost below until the end (a flicker), so the frost animates its own blur instead.
       exit={{ opacity: 0, transition: { duration: 0.2 } }}
       onKeyDown={onKeyDown}
     >
       {/* The home screen, frosted. */}
-      <div className="absolute inset-0 bg-black/35 backdrop-blur-[28px] backdrop-saturate-150" onClick={onClose} />
+      <motion.div
+        className="absolute inset-0"
+        initial={{ backgroundColor: "rgba(0,0,0,0)", backdropFilter: "blur(0px) saturate(1)" }}
+        animate={{ backgroundColor: "rgba(0,0,0,0.35)", backdropFilter: "blur(28px) saturate(1.5)" }}
+        transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
+        onClick={onClose}
+      />
 
       <div className="relative flex-1 overflow-y-auto px-[16px] pb-[16px] pt-[64px] text-white [scrollbar-width:none]">
         {!query.trim() ? (
