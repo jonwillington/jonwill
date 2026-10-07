@@ -321,22 +321,23 @@ export function App() {
           <Link href={`mailto:${SITE.email}`} className="justify-self-start text-muted">
             {SITE.email}
           </Link>
-          {/* Only inside an app: hop to another without going home. The footer has a fixed
-              height, so it arriving or leaving never shifts anything. */}
-          <AnimatePresence>
-            {open ? (
-              <motion.div
-                key="switcher"
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 12 }}
-              >
-                <AppSwitcher open={open} onOpen={openEntry} />
-              </motion.div>
-            ) : (
-              <span key="spacer" />
-            )}
-          </AnimatePresence>
+          {/* Only inside an app: hop to another without going home. It lives in one fixed middle
+              cell: swapping it for a spacer meant both existed while it faded out, the grid got a
+              fourth item, and LinkedIn wrapped onto a new row. */}
+          <div className="flex justify-center">
+            <AnimatePresence>
+              {open && (
+                <motion.div
+                  key="switcher"
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 12 }}
+                >
+                  <AppSwitcher open={open} onOpen={openEntry} />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
           <Link
             href={SITE.linkedin.url}
             target="_blank"
