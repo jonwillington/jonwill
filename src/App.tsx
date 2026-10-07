@@ -95,7 +95,9 @@ export function App() {
   const { mode, setMode, dark } = useTheme();
   const live = useLive();
   const [open, setOpen] = useState<AppEntry | null>(fromHash);
-  const [screen, setScreen] = useState(0);
+  // Which screen is showing, tagged with the app it belongs to: a screen number left over
+  // from the previous app (Istanbrew's 4th) can't be used for the next (GA Bridge has 2).
+  const [screenState, setScreenState] = useState<{ id: string | null; index: number }>({ id: null, index: 0 });
   const [drawer, setDrawer] = useState(false);
   const drawerRef = useRef(false);
   drawerRef.current = drawer;
@@ -104,7 +106,6 @@ export function App() {
   // However an app was opened (tap, link or notification), its badge clears.
   useEffect(() => {
     if (open) markSeen(open.id);
-    setScreen(0);
     setDrawer(false);
   }, [open, markSeen]);
 
@@ -138,6 +139,8 @@ export function App() {
   }, [close]);
 
   const screens = open ? screensFor(open, dark) : null;
+  const screen = open && screenState.id === open.id ? Math.min(screenState.index, (screens?.length ?? 1) - 1) : 0;
+  const setScreen = useCallback((index: number) => setScreenState({ id: open?.id ?? null, index }), [open]);
   // In dark mode the page takes a deep tint of the app's colour instead of the colour itself.
   const pageAccent = open ? (dark ? mix(open.accent, "#0e0e10", 0.82) : open.accent) : null;
   const pageScheme = open ? (dark ? "dark" : (open.scheme ?? "dark")) : dark ? "dark" : "light";

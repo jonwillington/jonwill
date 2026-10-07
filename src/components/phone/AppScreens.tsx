@@ -37,6 +37,8 @@ export function AppScreens({
   onIndex: (i: number) => void;
 }) {
   const screens = screensFor(entry, dark)!;
+  // Belt and braces: never index past this app's screens.
+  index = Math.min(Math.max(index, 0), screens.length - 1);
   const [launched, setLaunched] = useState(false);
   const [paused, setPaused] = useState(false);
   const direction = useRef(1);
