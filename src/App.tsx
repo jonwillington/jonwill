@@ -406,21 +406,18 @@ function Ambient({ entry, accent, dark }: { entry: AppEntry | null; accent: stri
             exit={{ opacity: 0 }}
             transition={{ duration: 0.7, ease: "easeInOut" }}
           >
-            {/* A soft light drifting behind the phone: the icon's colour where it has one, otherwise a highlight. */}
+            {/* A faint wash of the icon's colour across the whole page, not a spotlight behind
+                the phone. It builds up slowly after the colour change. */}
             <motion.div
-              className="absolute left-[32%] top-1/2 aspect-square w-[70vmax] rounded-full will-change-transform"
+              className="absolute inset-0"
               style={{
-                background: `radial-gradient(circle, ${
-                  entry.glow ?? (dark || entry.scheme === "dark" ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.55)")
-                } 0%, transparent 65%)`,
+                background: `radial-gradient(150% 130% at 30% 50%, ${
+                  entry.glow ?? (dark || entry.scheme === "dark" ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.5)")
+                } 0%, transparent 90%)`,
               }}
-              // The colour change is quick; the glow builds up slowly after it.
-              initial={{ x: "-50%", y: "-50%", scale: 0.9, opacity: 0 }}
-              animate={{ x: "-50%", y: "-50%", scale: [1, 1.12, 1], opacity: entry.glow ? (dark ? 0.22 : 0.38) : 1 }}
-              transition={{
-                scale: { duration: 14, repeat: Infinity, ease: "easeInOut" },
-                opacity: { duration: 4, delay: 0.5, ease: [0.4, 0, 0.2, 1] },
-              }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: entry.glow ? (dark ? 0.08 : 0.12) : 1 }}
+              transition={{ duration: 4, delay: 0.5, ease: [0.4, 0, 0.2, 1] }}
             />
             {/* Soft vignette so text at the edges stays readable. */}
             <div
