@@ -99,13 +99,16 @@ export function ContextMenu({
   const origin = `${alignLeft ? "left" : "right"} ${below ? "top" : "bottom"}`;
 
   return (
-    <motion.div
-      className="absolute inset-0 z-[45]"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0, transition: { duration: 0.18 } }}
-    >
-      <div className="absolute inset-0 bg-black/25 backdrop-blur-[22px] backdrop-saturate-150" onClick={onClose} />
+    // iOS 26 doesn't blur the home screen behind this menu, it just dims it.
+    <motion.div className="absolute inset-0 z-[45]" exit={{ transition: { duration: 0.22 } }}>
+      <motion.div
+        className="absolute inset-0 bg-black"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 0.35 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
+        onClick={onClose}
+      />
 
       {/* The icon, lifted out of the blur. */}
       <motion.div
@@ -124,9 +127,10 @@ export function ContextMenu({
         aria-label={`${entry.name} actions`}
         className="absolute"
         style={{ left, top, width: MENU_WIDTH, transformOrigin: origin }}
-        initial={{ scale: 0.5, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.6, opacity: 0, transition: { duration: 0.15 } }}
+        // Grows out of the icon. Scale only, no opacity, so its glass blurs from the first frame.
+        initial={{ scale: 0.2 }}
+        animate={{ scale: 1 }}
+        exit={{ scale: 0, transition: { duration: 0.2, ease: [0.32, 0.72, 0, 1] } }}
         transition={{ type: "spring", stiffness: 420, damping: 30 }}
       >
         <div className="absolute inset-x-[12px] bottom-[-12px] top-[18px] rounded-[34px] bg-black/20 blur-2xl" />
