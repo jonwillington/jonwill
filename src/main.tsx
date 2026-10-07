@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { MotionConfig } from "motion/react";
 
 import { App } from "./App";
+import { FontPicker } from "./dev/FontPicker";
 import "./globals.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
@@ -10,6 +11,8 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     {/* Honour the visitor's reduced-motion setting across every animation. */}
     <MotionConfig reducedMotion="user">
       <App />
+      {/* Dev only: try typefaces from public/fonts. Tree-shaken out of builds. */}
+      {import.meta.env.DEV && <FontPicker />}
     </MotionConfig>
   </React.StrictMode>,
 );

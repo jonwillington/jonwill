@@ -136,6 +136,12 @@ allow use on a website. Without the files, everything falls back to the system f
 it, buy a web licence, add the files and remove the `rm -rf dist/fonts` from the deploy
 script. The phone always uses the system font, as iOS does.
 
+### Trying other typefaces
+
+In `npm run dev` there's a font picker in the bottom-left corner. Put each typeface in its
+own folder under `public/fonts/` (e.g. `public/fonts/Basier/*.otf`); the picker finds them,
+and `[` / `]` step through them on the headings or on all text. It never ships.
+
 ## Deploy
 
 ```bash

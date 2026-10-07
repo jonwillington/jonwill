@@ -35,8 +35,16 @@
 }
 
 body {
-  font-family: var(--font-sans);
+  font-family: var(--font-sans-override, var(--font-sans));
   -webkit-font-smoothing: antialiased;
+}
+
+/* Headings can take their own face (the dev font picker sets --font-heading). */
+h1,
+h2,
+h3,
+[data-heading] {
+  font-family: var(--font-heading, inherit);
 }
 
 /* Inside the phone it's iOS, so it's San Francisco. */

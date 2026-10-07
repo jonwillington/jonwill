@@ -196,7 +196,7 @@ export function App() {
         <Ambient entry={open} accent={pageAccent} dark={dark} />
 
         <header className="flex h-[72px] shrink-0 items-center justify-between px-6 text-sm font-medium">
-          <span>{SITE.name}</span>
+          <span data-heading>{SITE.name}</span>
           <LiveStrip live={live} />
           <div className="flex items-center">
             <ThemeToggle mode={mode} onChange={setMode} />
