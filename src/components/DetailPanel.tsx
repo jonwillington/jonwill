@@ -114,7 +114,6 @@ export function DetailContent({
             <path d="M4.5 3 7.5 6l-3 3" />
           </svg>
         </button>
-        {entry.appStore && <AppStoreBadge href={entry.appStore} />}
       </motion.div>
     </motion.div>
   );
@@ -277,12 +276,15 @@ export function Network({
       <p className="mb-3 text-foreground/75">{intro}</p>
       <ul className="overflow-hidden rounded-[10px] border border-foreground/10">
         {sites.map((s, i) => (
-          <li key={s.url} className={i ? "border-t border-foreground/10" : ""}>
+          <li
+            key={s.url}
+            className={`flex items-center gap-3 pr-3 transition-colors hover:bg-foreground/[0.04] ${i ? "border-t border-foreground/10" : ""} ${i === 0 ? "bg-foreground/[0.03]" : ""}`}
+          >
             <a
               href={s.url}
               target="_blank"
               rel="noopener noreferrer"
-              className={`group flex items-center gap-3 px-3 py-2.5 text-[13px] transition-colors hover:bg-foreground/[0.04] ${i === 0 ? "bg-foreground/[0.03]" : ""}`}
+              className="group flex min-w-0 flex-1 items-center gap-3 py-2.5 pl-3 text-[13px]"
               aria-current={i === 0 ? "page" : undefined}
             >
               <img src={s.icon} alt="" className="size-7 rounded-[7px] shadow-[0_0_0_0.5px_rgba(0,0,0,0.12)]" />
@@ -301,7 +303,12 @@ export function Network({
               <span className="font-mono text-[12px] text-foreground/60 group-hover:text-foreground">
                 {s.url.replace(/^https:\/\//, "")}
               </span>
+              <NewTabArrow />
             </a>
+            {/* A fixed slot, so URLs line up whether or not a city has an app yet. */}
+            <span className="flex w-[84px] shrink-0 justify-end">
+              {s.appStore && <AppStoreBadge href={s.appStore} size="sm" />}
+            </span>
           </li>
         ))}
       </ul>
@@ -413,6 +420,7 @@ function Destinations({ title, intro, items }: { title: string; intro: string; i
               <span className="ml-1 rounded-[5px] bg-foreground/[0.07] px-1.5 py-0.5 font-mono text-[12px] font-medium tabular-nums">
                 {overall(d)}
               </span>
+              <NewTabArrow />
             </a>
           </li>
         ))}
@@ -421,8 +429,8 @@ function Destinations({ title, intro, items }: { title: string; intro: string; i
   );
 }
 
-/** Apple's "Download on the App Store" badge, at the buttons' height. */
-export function AppStoreBadge({ href }: { href: string }) {
+/** Apple's "Download on the App Store" badge: button height, or compact for table rows. */
+export function AppStoreBadge({ href, size = "lg" }: { href: string; size?: "lg" | "sm" }) {
   return (
     <a
       href={href}
@@ -438,5 +446,17 @@ export function AppStoreBadge({ href }: { href: string }) {
         className="h-12 w-auto"
       />
     </a>
+  );
+}
+
+/** A ↗ that fades in on hover of its `group` row: "opens in a new tab". Its slot is always there. */
+function NewTabArrow() {
+  return (
+    <span
+      aria-hidden
+      className="w-3.5 shrink-0 text-[13px] text-foreground/50 opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100"
+    >
+      ↗
+    </span>
   );
 }

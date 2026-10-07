@@ -30,8 +30,11 @@ export type Destination = {
 };
 
 /** A sister site in a network, e.g. the other city coffee maps. */
-/** `cityId` is the Filter API city, for live shop and roaster counts. */
-export type NetworkSite = { name: string; city: string; url: string; icon: string; cityId?: string };
+/**
+ * `cityId` is the Filter API city, for live shop and roaster counts. `appStore` is set when
+ * the city has an iOS app (mirrors `appStoreUrl` in filter-city-web/cities/<city>.ts).
+ */
+export type NetworkSite = { name: string; city: string; url: string; icon: string; cityId?: string; appStore?: string };
 
 export type AppEntry = {
   id: string;
@@ -433,6 +436,7 @@ export const APPS: AppEntry[] = [
           url: "https://istanbrew.com",
           icon: "/icons/network/istanbul.png",
           cityId: "a3ueoba5n0xy0sru1hpw1xr3",
+          appStore: "https://apps.apple.com/gb/app/istanbrew/id6814183189",
         },
         {
           name: "filter",
