@@ -46,6 +46,7 @@ const SHOW_LIVE_WIDGETS = false;
 const ORDER_KEY = "jonwill:order";
 const UNLOCKED_KEY = "jonwill:unlocked";
 const ACTIVITY_KEY = "jonwill:activity";
+const TEMPLATE_KEY = "jonwill:template-offer";
 
 const storage = {
   get(store: Storage, key: string) {
@@ -211,6 +212,21 @@ export function Phone({
     }, 5000);
     return () => window.clearTimeout(id);
   }, [framed, locked, open]);
+
+  // Once a visitor has opened an app and come back home, offer them the template. Once ever.
+  useEffect(() => {
+    if (!SITE.github || locked || open || menu || alert || spotlight || seen.size === 0) return;
+    if (storage.get(localStorage, TEMPLATE_KEY)) return;
+    const id = window.setTimeout(() => {
+      storage.set(localStorage, TEMPLATE_KEY, "1");
+      setAlert({
+        title: "Want a phone like this?",
+        message: "This whole site is a free template. Grab it from my GitHub and make it yours.",
+        actions: [{ label: "Not now" }, { label: "Get it", primary: true, href: SITE.github! }],
+      });
+    }, 1400);
+    return () => window.clearTimeout(id);
+  }, [locked, open, menu, alert, spotlight, seen.size]);
 
   // Keyboard: ⌘K / "/" for Spotlight, ⌘Z for an "Undo Typing" joke.
   useEffect(() => {

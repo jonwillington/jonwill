@@ -28,10 +28,11 @@ export function IOSAlert({
   onClose: () => void;
 }) {
   const id = useId();
-  const firstButton = useRef<HTMLButtonElement | HTMLAnchorElement | null>(null);
+  // Focus the dialog itself, not a button, so no focus ring shows until someone tabs.
+  const dialog = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    firstButton.current?.focus({ preventScroll: true });
+    dialog.current?.focus({ preventScroll: true });
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.stopPropagation();
@@ -52,6 +53,8 @@ export function IOSAlert({
       onClick={onClose}
     >
       <motion.div
+        ref={dialog}
+        tabIndex={-1}
         role="alertdialog"
         aria-modal="true"
         aria-labelledby={`${id}-title`}
@@ -61,7 +64,7 @@ export function IOSAlert({
         exit={{ scale: 0.97, opacity: 0, transition: { duration: 0.15 } }}
         transition={{ type: "spring", stiffness: 380, damping: 28 }}
         onClick={(e) => e.stopPropagation()}
-        className="relative w-[306px]"
+        className="relative w-[306px] outline-none"
       >
         {/* Shadow as its own layer: a filter on an ancestor would stop the glass blurring what's behind. */}
         <div className="absolute inset-x-[10px] bottom-[-14px] top-[18px] rounded-[40px] bg-black/25 blur-2xl" />
@@ -93,14 +96,12 @@ export function IOSAlert({
                   a.onPress?.();
                   onClose();
                 };
-                const ref = (el: HTMLButtonElement | HTMLAnchorElement | null) => {
-                  if (i === 0) firstButton.current = el;
-                };
                 return a.href ? (
                   <motion.a
                     key={a.label}
-                    ref={ref}
                     href={a.href}
+                    target={a.href.startsWith("http") ? "_blank" : undefined}
+                    rel={a.href.startsWith("http") ? "noopener noreferrer" : undefined}
                     whileTap={{ scale: 0.96 }}
                     onClick={press}
                     className={className}
@@ -110,7 +111,6 @@ export function IOSAlert({
                 ) : (
                   <motion.button
                     key={a.label}
-                    ref={ref}
                     type="button"
                     whileTap={{ scale: 0.96 }}
                     onClick={press}
