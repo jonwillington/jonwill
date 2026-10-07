@@ -144,7 +144,9 @@ function Clip({ src, playing, onEnded }: { src: string; playing: boolean; onEnde
         playsInline
         preload="metadata"
         onEnded={onEnded}
-        className="w-full rounded-[22px] shadow-[0_0_0_1px_rgba(0,0,0,0.06),0_12px_32px_rgba(0,0,0,0.12)]"
+        // A fixed 4:5 box: without it the video is 150px tall until its metadata loads, then jumps,
+        // and clips of slightly different heights would resize the card between screens.
+        className="aspect-[4/5] w-full rounded-[22px] bg-neutral-100 object-cover object-top shadow-[0_0_0_1px_rgba(0,0,0,0.06),0_12px_32px_rgba(0,0,0,0.12)]"
       />
     </div>
   );
