@@ -145,6 +145,8 @@ export function DynamicIsland({
                 <motion.span
                   className="block h-full rounded-full"
                   style={{ background: ORANGE }}
+                  // Opens at the brew's progress rather than filling from empty each time.
+                  initial={false}
                   animate={{ width: `${progress * 100}%` }}
                   transition={{ duration: 0.9, ease: "linear" }}
                 />
