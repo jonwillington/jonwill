@@ -25,6 +25,12 @@ export const ABOUT: AppEntry = {
   links: [{ label: "Connect on LinkedIn", href: SITE.linkedin.url }],
 };
 
+/**
+ * Your day job: its own page, opened from the dock rather than sitting with your apps
+ * on the home screen. Give it an entry like the apps below, or leave it null for none.
+ */
+export const WORK: AppEntry | null = null;
+
 /** One placeholder app. Every one has the same sections, so the drawer reads the same way. */
 const placeholder = (n: number, accent: string, scheme: "light" | "dark"): AppEntry => ({
   id: `app-${n}`,
@@ -71,4 +77,4 @@ export const INTERESTS: AppEntry = {
   links: [{ label: "example.com", href: "https://example.com" }],
 };
 
-export const ALL_ENTRIES: AppEntry[] = [ABOUT, ...(SHOW_INTERESTS ? [INTERESTS] : []), ...APPS];
+export const ALL_ENTRIES: AppEntry[] = [ABOUT, ...(WORK ? [WORK] : []), ...(SHOW_INTERESTS ? [INTERESTS] : []), ...APPS];

@@ -7,7 +7,7 @@ export const SITE = {
   /** Your job, shown on the phone's contact card and in the vCard it shares. */
   role: "Product Designer",
   company: { name: "Your Company", url: "https://example.com" },
-  /** The About page's words: the line under "Welcome!" and the paragraph below it. */
+  /** The About page's words: the line under "Welcome!" (empty for none) and the paragraph below it. */
   about: {
     tagline: "Make yourself at home.",
     body: ["A line or two about you and what's on this phone."],
@@ -25,7 +25,7 @@ export const SITE = {
   googleAnalytics: null as string | null,
   /** The code for this site; shown in the dock. Set to null to hide it. */
   github: "https://github.com/jonwillington/jonwill" as string | null,
-  /** WhatsApp in the dock opens a polite "no" instead of a chat. Set to null to hide it. */
+  /** Call and FaceTime on the phone's contact card show this polite "no" instead. Null to skip it. */
   whatsapp: {
     title: "I'm not that crazy",
     message: "My number stays off the internet. Send me an email and I'll get back to you.",

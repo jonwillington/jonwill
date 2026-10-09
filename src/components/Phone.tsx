@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion, useDragControls, useMotionValue, useTransform, type PanInfo } from "motion/react";
 
-import { ABOUT, APPS, INTERESTS, SHOW_INTERESTS, type AppEntry } from "../content/apps";
+import { ABOUT, APPS, INTERESTS, SHOW_INTERESTS, WORK, type AppEntry } from "../content/apps";
 import { track } from "../lib/analytics";
 import type { Live } from "../lib/live";
 import { AppIcon } from "./AppIcon";
@@ -47,6 +47,11 @@ type Props = {
 
 /** The ddbx and Istanbrew home-screen widgets are built but hidden for now. */
 const SHOW_LIVE_WIDGETS = false;
+/**
+ * The brew-timer Live Activity in the Dynamic Island: built, but off for now (it sat
+ * awkwardly over the status bars in the app screenshots).
+ */
+const SHOW_LIVE_ACTIVITY = false;
 
 const ORDER_KEY = "jonwill:order";
 const UNLOCKED_KEY = "jonwill:unlocked";
@@ -183,13 +188,6 @@ export function Phone({
   };
   const openUrl = (url: string) => window.open(url, url.startsWith("http") ? "_blank" : "_self", "noopener");
 
-  const showWhatsApp = () =>
-    showAlert("whatsapp", {
-      title: SITE.whatsapp!.title,
-      message: SITE.whatsapp!.message,
-      actions: [{ label: "OK" }, { label: "Email me", primary: true, href: `mailto:${SITE.email}` }],
-    });
-
   // GitHub in the dock: offers the template rather than jumping straight to the repo.
   const showTemplate = () =>
     showAlert("template_offer", {
@@ -212,11 +210,14 @@ export function Phone({
           { label: "View Profile", glyph: "person", onPress: () => openUrl(SITE.linkedin.url) },
           { label: "Copy Link", glyph: "copy", onPress: () => copy(SITE.linkedin.url, "Link copied") },
         ];
-      case "whatsapp":
-        return [
-          { label: "New Chat", glyph: "chat", onPress: showWhatsApp },
-          { label: "Email Instead", glyph: "mail", onPress: () => openUrl(`mailto:${SITE.email}`) },
+      case "work": {
+        const actions: MenuAction[] = [
+          { label: "Open", glyph: "person", onPress: () => WORK && handleOpen(WORK, undefined, "dock_menu") },
         ];
+        const roles = WORK?.hiring?.cta.href;
+        if (roles) actions.push({ label: "See Open Roles", glyph: "star", onPress: () => openUrl(roles) });
+        return actions;
+      }
       case "github":
         return [
           { label: "View the Code", glyph: "code", onPress: () => openUrl(SITE.github!) },
@@ -334,7 +335,7 @@ export function Phone({
   // It opens Istanbrew, so it only runs on a phone that has it.
   const brewApp = APPS.find((a) => a.id === "istanbrew");
   useEffect(() => {
-    if (!brewApp || !framed || locked || open || storage.get(sessionStorage, ACTIVITY_KEY)) return;
+    if (!SHOW_LIVE_ACTIVITY || !brewApp || !framed || locked || open || storage.get(sessionStorage, ACTIVITY_KEY)) return;
     const id = window.setTimeout(() => {
       storage.set(sessionStorage, ACTIVITY_KEY, "1");
       track("live_activity_shown");
@@ -508,7 +509,13 @@ export function Phone({
           }}
           hidden={spotlight}
         />
-        <Dock framed={framed} hidden={spotlight} onWhatsApp={showWhatsApp} onGitHub={showTemplate} onMenu={openDockMenu} />
+        <Dock
+          framed={framed}
+          hidden={spotlight}
+          onWork={(rect) => WORK && handleOpen(WORK, rect, "dock")}
+          onGitHub={showTemplate}
+          onMenu={openDockMenu}
+        />
       </div>
 
       <AnimatePresence>

@@ -51,7 +51,8 @@ Then work through this list.
 Your name, email, domain, LinkedIn, GitHub, photo and city, and your Google Analytics ID
 (see [Analytics](#analytics-google-analytics-4) below). The city sets the
 phone's clock, when Auto dark mode switches, and the Find My widget. Set
-`whatsapp` or `github` to `null` to drop them from the dock.
+`github` to `null` to drop it from the dock. Your day job (`WORK` in
+`content/apps.ts`) sits in the dock too, opening its own page; leave it `null` for none.
 
 Replace `public/me.jpg` with a square photo of you (about 360px).
 
@@ -90,7 +91,7 @@ definitions → Create custom dimension** with the parameter name below.
 | `spotlight_select` | A Spotlight result is chosen | `query`, `kind`, `result`, `position` |
 | `alert_shown` / `alert_action` | An iOS alert appears / a button is pressed | `alert` (whatsapp, template_offer, undo_typing, remove_…), `action` |
 | `edit_mode`, `icon_reorder` | Edit mode starts / an icon is moved | `source` / `app`, `position` |
-| `dock_tap`, `copy`, `share` | WhatsApp in the dock, copy actions, sharing an app | `app` / `what` / `method` |
+| `dock_tap`, `copy`, `share` | Work or GitHub in the dock, copy actions, sharing an app | `app` / `what` / `method` |
 | `theme_change` | Light / Auto / Dark | `mode`, `from` |
 | `live_activity_shown`, `live_activity_tap` | The Dynamic Island timer | `action` |
 | `lock_screen_control` | Flashlight or camera on the lock screen | `control`, `on` |

@@ -79,7 +79,9 @@ export function DetailContent({
           >
             {entry.title ?? entryName(entry)}
           </h2>
-          <p className={`text-foreground/65 ${showClose ? "mt-0.5" : "mt-2 text-[17px]"}`}>{entry.tagline}</p>
+          {entry.tagline && (
+            <p className={`text-foreground/65 ${showClose ? "mt-0.5" : "mt-2 text-[17px]"}`}>{entry.tagline}</p>
+          )}
         </div>
         {showClose && <CloseX onPress={onClose} />}
       </motion.div>

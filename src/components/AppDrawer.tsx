@@ -82,7 +82,7 @@ export function AppDrawer({
                     >
                       {entryName(entry)}
                     </Drawer.Title>
-                    {!scrolled && <p className="truncate text-[14px] text-foreground/65">{entry.tagline}</p>}
+                    {!scrolled && entry.tagline && <p className="truncate text-[14px] text-foreground/65">{entry.tagline}</p>}
                   </div>
                 </div>
                 <CloseX onPress={() => onOpenChange(false)} />

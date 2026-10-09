@@ -6,6 +6,7 @@ import { GLASS, GLASS_EDGE } from "./constants";
 import { SITE } from "../../content/site";
 import { track } from "../../lib/analytics";
 import { asset } from "../../lib/asset";
+import { WORK } from "../../content/apps";
 
 export function SearchPill({ onPress, hidden }: { onPress: () => void; hidden: boolean }) {
   return (
@@ -35,26 +36,27 @@ export function SearchGlyph({ size = 13 }: { size?: number }) {
 }
 
 /** The dock; `hidden` fades it away while Spotlight is open, as iOS does. */
-export type DockId = "mail" | "linkedin" | "whatsapp" | "github";
+export type DockId = "mail" | "linkedin" | "work" | "github";
 
 /** Each dock icon's name and image, also used to draw its long-press menu. */
 export const DOCK_ICONS: Record<DockId, { label: string; icon: string }> = {
   mail: { label: "Mail", icon: "/icons/mail-glass.png" },
   linkedin: { label: "LinkedIn", icon: "/icons/linkedin.png" },
-  whatsapp: { label: "WhatsApp", icon: "/icons/whatsapp.png" },
+  work: { label: WORK?.name ?? "", icon: WORK?.icon ?? "" },
   github: { label: "GitHub", icon: "/icons/github.png" },
 };
 
 export function Dock({
   framed,
   hidden = false,
-  onWhatsApp,
+  onWork,
   onGitHub,
   onMenu,
 }: {
   framed: boolean;
   hidden?: boolean;
-  onWhatsApp: () => void;
+  /** Your day job (content WORK), which lives in the dock rather than on the home screen. */
+  onWork: (rect: DOMRect) => void;
   /** GitHub opens an offer of the template first, not the repo. */
   onGitHub: () => void;
   /** Long-press or right-click on a dock icon. */
@@ -80,15 +82,15 @@ export function Dock({
         icon={DOCK_ICONS.linkedin.icon}
         onMenu={(r) => onMenu("linkedin", r)}
       />
-      {SITE.whatsapp && (
+      {WORK && (
         <DockLink
-          onPress={() => {
-            track("dock_tap", { app: "whatsapp" });
-            onWhatsApp();
+          onPress={(rect) => {
+            track("dock_tap", { app: WORK!.id });
+            onWork(rect);
           }}
-          label="WhatsApp"
-          icon={DOCK_ICONS.whatsapp.icon}
-          onMenu={(r) => onMenu("whatsapp", r)}
+          label={WORK.name}
+          icon={DOCK_ICONS.work.icon}
+          onMenu={(r) => onMenu("work", r)}
         />
       )}
       {SITE.github && (
@@ -115,7 +117,7 @@ function DockLink({
   onMenu,
 }: {
   href?: string;
-  onPress?: () => void;
+  onPress?: (rect: DOMRect) => void;
   label: string;
   icon: string;
   onMenu: (rect: DOMRect) => void;
@@ -173,7 +175,7 @@ function DockLink({
         type="button"
         aria-label={label}
         whileTap={{ scale: 1.1 }}
-        onClick={onPress}
+        onClick={(e) => onPress(e.currentTarget.getBoundingClientRect())}
         {...press}
         className={className}
       >

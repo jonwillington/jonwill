@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { motion } from "motion/react";
 
-import { ABOUT, APPS, type AppEntry } from "../../content/apps";
+import { ABOUT, APPS, WORK, type AppEntry } from "../../content/apps";
 import { IconArt } from "../AppIcon";
 import { GLASS, GLASS_EDGE } from "./constants";
 import { SearchGlyph } from "./Dock";
@@ -42,7 +42,7 @@ function search(query: string): Result[] {
   const hasAll = (text: string) => words.every((w) => norm(text).includes(w));
   const results: Result[] = [];
 
-  for (const entry of [ABOUT, ...APPS]) {
+  for (const entry of [ABOUT, ...(WORK ? [WORK] : []), ...APPS]) {
     const name = norm(entry.id === "about" ? `${SITE.name} about me` : entry.name);
     const meta = [entry.tagline, ...entry.tags].join(" ");
     if (name.startsWith(q)) results.push({ kind: "app", entry, score: 100 });
