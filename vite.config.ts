@@ -64,5 +64,7 @@ export default defineConfig({
   // Served from the root (Cloudflare Pages) unless told otherwise: GitHub Pages sets
   // BASE_PATH=/<repo>/ (see .github/workflows/pages.yml in the template).
   base: process.env.BASE_PATH || "/",
+  // Stamped on /public file URLs (lib/asset.ts) so replaced images aren't served from cache.
+  define: { __BUILD__: JSON.stringify(Date.now().toString(36)) },
   plugins: [react(), tailwindcss(), fontManifest(), linkPreviews()],
 });
