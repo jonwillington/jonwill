@@ -1,7 +1,8 @@
 # Builds the site and publishes it to GitHub Pages on every push to main, so the
 # template can be tried before you fork it. Served from /<repo>/, hence BASE_PATH.
 # Live data (/api/live) and sign-ups (/api/waitlist) need Cloudflare Pages Functions,
-# so on GitHub Pages those parts quietly stay off.
+# so on GitHub Pages those parts quietly stay off. 404.html is the page again, so a shared
+# /<repo>/<app> link still opens that app (with the site's preview, not the app's own).
 name: Deploy to GitHub Pages
 
 on:
@@ -31,9 +32,12 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx tsc && npx vite build
+      - run: npx tsc && npx vite build && cp dist/index.html dist/404.html
         env:
           BASE_PATH: /${{ github.event.repository.name }}/
+          # Link previews point at the Pages URL (one page, served from the root of the repo's path).
+          SITE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
+          PAGE_PATH: ""
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

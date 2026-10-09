@@ -4,6 +4,9 @@ import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 
+import { META_BLOCK, metaTags, siteMeta } from "./src/content/meta";
+import { SITE } from "./src/content/site";
+
 const FONT_FILE = /\.(woff2?|otf|ttf)$/i;
 
 /**
@@ -37,6 +40,19 @@ function fontManifest(): Plugin {
   };
 }
 
+/**
+ * Writes the title and link-preview tags into index.html from content/site.ts.
+ * SITE_URL and PAGE_PATH say where the site is served: by default your domain with the
+ * page at /ton; the GitHub Pages workflow points them at the repo's Pages URL.
+ */
+function linkPreviews(): Plugin {
+  const where = { origin: process.env.SITE_URL || `https://${SITE.domain}`, page: process.env.PAGE_PATH ?? "/ton" };
+  return {
+    name: "link-previews",
+    transformIndexHtml: (html) => html.replace(META_BLOCK, metaTags(siteMeta(where))),
+  };
+}
+
 function walk(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {
     const path = join(dir, name);
@@ -48,5 +64,5 @@ export default defineConfig({
   // Served from the root (Cloudflare Pages) unless told otherwise: GitHub Pages sets
   // BASE_PATH=/<repo>/ (see .github/workflows/pages.yml in the template).
   base: process.env.BASE_PATH || "/",
-  plugins: [react(), tailwindcss(), fontManifest()],
+  plugins: [react(), tailwindcss(), fontManifest(), linkPreviews()],
 });

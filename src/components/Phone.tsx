@@ -258,7 +258,9 @@ export function Phone({
 
   const share = async (entry: AppEntry) => {
     track("share", { app: entry.id, method: "share" in navigator ? "share_sheet" : "copy_link" });
-    const url = `${window.location.origin}/ton#${entry.id}`;
+    // A path, not a #hash: link previews never see the hash, so /ton/<id> is what gets that
+    // app's own preview (functions/ton/[id].ts). The page opens it like the #link.
+    const url = `${window.location.origin}${window.location.pathname.replace(/\/$/, "")}/${entry.id}`;
     try {
       if (navigator.share) {
         await navigator.share({ title: `${entry.name} by ${SITE.name}`, url });

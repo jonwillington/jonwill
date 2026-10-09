@@ -12,6 +12,8 @@ export const SITE = {
     tagline: "Make yourself at home.",
     body: ["A line or two about you and what's on this phone."],
   },
+  /** The one-line summary link previews show (Open Graph, search results). */
+  description: "A personal site that's an iPhone: the apps I've made, one tap away.",
   email: "you@example.com",
   /** Shown as the domain in links and the lock-screen notification. */
   domain: "example.com",

@@ -169,6 +169,21 @@ and add your app names to `APPS` in the function. Deploy the Worker first
 `npx wrangler dev` in `mailer/` alongside `npm run dev:full`; the email is
 written to a local `.eml` file rather than sent.
 
+### 7. Link previews
+
+Shared links get a proper card on WhatsApp, LinkedIn, Slack, iMessage and the rest. The
+tags come from `content/site.ts` (`description` is the one-liner). Each app's Share button
+gives a link like `/ton/<app>`, and `functions/ton/[id].ts` serves that page with the app's
+own tags, so it previews as that app.
+
+The cards themselves (1200×630, in `public/og`) are drawn from the real site: the phone
+showing the app's first screen, with its icon, name and line. Re-render them after changing
+any of those, then deploy:
+
+```bash
+node scripts/render-og.mjs
+```
+
 ## Keep or change
 
 **Please keep:**
