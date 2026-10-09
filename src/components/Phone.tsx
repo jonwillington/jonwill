@@ -53,7 +53,8 @@ const SHOW_LIVE_WIDGETS = false;
  */
 const SHOW_LIVE_ACTIVITY = false;
 
-const ORDER_KEY = "jonwill:order";
+// Versioned: bump it when the set of apps changes enough that saved arrangements should reset.
+const ORDER_KEY = "jonwill:order:v2";
 const UNLOCKED_KEY = "jonwill:unlocked";
 const ACTIVITY_KEY = "jonwill:activity";
 
