@@ -5,6 +5,7 @@ import type { AppEntry } from "../content/apps";
 import { iconClip } from "../lib/squircle";
 import { InterestsIcon } from "./InterestsWidget";
 import { track } from "../lib/analytics";
+import { asset } from "../lib/asset";
 
 const LONG_PRESS_MS = 500;
 
@@ -168,19 +169,26 @@ export function IconArt({ entry, size = 64, round = false }: { entry: AppEntry; 
   }
 
   if (!entry.icon || failed) {
+    // A monogram from the name: "App 1" is A1, "Holdall" is H.
+    const initials = entry.name
+      .split(/\s+/)
+      .map((w) => w[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase();
     return (
       <span
         className="flex size-full items-center justify-center bg-gradient-to-br from-amber-300 via-rose-400 to-violet-500 font-semibold text-white"
-        style={shape}
+        style={{ ...shape, fontSize: Math.round(size * 0.34) }}
       >
-        JW
+        {initials}
       </span>
     );
   }
 
   return (
     <img
-      src={entry.icon}
+      src={asset(entry.icon)}
       alt=""
       draggable={false}
       onError={() => setFailed(true)}

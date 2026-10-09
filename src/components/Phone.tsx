@@ -16,6 +16,7 @@ import { LockScreen } from "./phone/LockScreen";
 import { Spotlight } from "./phone/Spotlight";
 import { StatusBar } from "./phone/StatusBar";
 import { SITE } from "../content/site";
+import { asset } from "../lib/asset";
 
 export { DEVICE };
 
@@ -322,15 +323,17 @@ export function Phone({
   };
 
   // The brew-timer Live Activity: once per session, a few seconds after reaching the home screen.
+  // It opens Istanbrew, so it only runs on a phone that has it.
+  const brewApp = APPS.find((a) => a.id === "istanbrew");
   useEffect(() => {
-    if (!framed || locked || open || storage.get(sessionStorage, ACTIVITY_KEY)) return;
+    if (!brewApp || !framed || locked || open || storage.get(sessionStorage, ACTIVITY_KEY)) return;
     const id = window.setTimeout(() => {
       storage.set(sessionStorage, ACTIVITY_KEY, "1");
       track("live_activity_shown");
       setActivity(true);
     }, 5000);
     return () => window.clearTimeout(id);
-  }, [framed, locked, open]);
+  }, [brewApp, framed, locked, open]);
 
   // Once a visitor has opened an app and come back home, offer them the template. Once ever.
   useEffect(() => {
@@ -617,15 +620,11 @@ export function Phone({
       <AnimatePresence>{locked && <LockScreen live={live} framed={framed} onUnlock={unlock} />}</AnimatePresence>
 
       <AnimatePresence>
-        {activity && framed && (
+        {activity && framed && brewApp && (
           <DynamicIsland
             onOpenIstanbrew={() => {
               track("live_activity_tap", { action: "open_istanbrew" });
-              handleOpen(
-                APPS.find((a) => a.id === "istanbrew")!,
-                undefined,
-                "live_activity",
-              );
+              handleOpen(brewApp, undefined, "live_activity");
             }}
             onFinished={() => setActivity(false)}
           />
@@ -644,7 +643,7 @@ export function Phone({
       >
         {screen}
         <img
-          src="/device/iphone-17-black.png"
+          src={asset("/device/iphone-17-black.png")}
           alt=""
           draggable={false}
           className="pointer-events-none absolute inset-0 size-full select-none transition-[filter] duration-700"

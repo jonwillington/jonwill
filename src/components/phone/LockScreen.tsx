@@ -12,7 +12,8 @@ import { track } from "../../lib/analytics";
 
 type Note = { entry: AppEntry; title: string; body: string; when: string };
 
-const byId = (id: string) => APPS.find((a) => a.id === id)!;
+// Notifications come from particular apps; one that isn't on this phone is skipped.
+const byId = (id: string) => APPS.find((a) => a.id === id) as AppEntry;
 
 function notifications(live: Live | null, now: Date): Note[] {
   const notes: Note[] = [];
@@ -56,7 +57,7 @@ function notifications(live: Live | null, now: Date): Note[] {
     body: "1 person on the site right now. That's you.",
     when: "now",
   });
-  return notes;
+  return notes.filter((n) => n.entry);
 }
 
 /**

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
 
 import { track } from "../../lib/analytics";
+import { asset } from "../../lib/asset";
 
 const LAUNCH_MS = 1200;
 /** Points per second for the slow scroll that shows the page off until someone takes over. */
@@ -79,7 +80,7 @@ export function Safari({ url, page, appId }: { url: string; page: string; appId:
         onScroll={onScroll}
         className="size-full overflow-y-auto overscroll-contain pt-[54px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
-        <img src={page} alt={`${host} on an iPhone`} draggable={false} className="block w-full" />
+        <img src={asset(page)} alt={`${host} on an iPhone`} draggable={false} className="block w-full" />
         {/* Room to scroll the end of the page clear of the toolbar. */}
         <div className="h-[110px]" />
       </div>

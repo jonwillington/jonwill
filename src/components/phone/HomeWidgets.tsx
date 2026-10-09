@@ -6,6 +6,7 @@ import { SHAPE, Squircle } from "../../lib/squircle";
 import { timeAgo } from "../../lib/time";
 import { GRID, LABEL, WIDGET } from "./constants";
 import { SITE } from "../../content/site";
+import { asset } from "../../lib/asset";
 
 type OpenFrom = (rect: DOMRect) => void;
 
@@ -58,9 +59,9 @@ export function MeWidget({ onOpen, dark }: { onOpen: OpenFrom; dark: boolean }) 
         onOpen={onOpen}
         height={WIDGET.medium.height}
       >
-        <img src={SITE.city.map.light} alt="" draggable={false} className="absolute inset-0 size-full object-cover" />
+        <img src={asset(SITE.city.map.light)} alt="" draggable={false} className="absolute inset-0 size-full object-cover" />
         <img
-          src={SITE.city.map.dark}
+          src={asset(SITE.city.map.dark)}
           alt=""
           draggable={false}
           className={`absolute inset-0 size-full object-cover transition-opacity duration-700 ${dark ? "opacity-100" : "opacity-0"}`}
@@ -73,7 +74,7 @@ export function MeWidget({ onOpen, dark }: { onOpen: OpenFrom; dark: boolean }) 
         >
           <span className="location-pulse absolute bottom-[-12px] left-1/2 size-[44px] -translate-x-1/2 rounded-full bg-[#0a84ff]/25" />
           <span className="relative block size-[50px] overflow-hidden rounded-full border-[3px] border-white bg-white shadow-[0_3px_10px_rgba(0,0,0,0.35)]">
-            <img src={SITE.photo} alt="" draggable={false} className="size-full object-cover" />
+            <img src={asset(SITE.photo)} alt="" draggable={false} className="size-full object-cover" />
           </span>
           <span className="relative mx-auto -mt-[3px] block size-0 border-x-[7px] border-t-[9px] border-x-transparent border-t-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.2)]" />
         </span>

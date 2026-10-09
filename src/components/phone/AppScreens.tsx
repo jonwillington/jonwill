@@ -3,6 +3,7 @@ import { AnimatePresence, motion, type PanInfo } from "motion/react";
 
 import type { AppEntry } from "../../content/apps";
 import { track } from "../../lib/analytics";
+import { asset } from "../../lib/asset";
 
 const ADVANCE_MS = 3800;
 const isVideo = (src: string) => src.endsWith(".mp4");
@@ -58,7 +59,7 @@ export function AppScreens({
     screens.forEach((src) => {
       if (isVideo(src)) return;
       const img = new Image();
-      img.src = src;
+      img.src = asset(src);
     });
   }, [screens]);
 
@@ -112,7 +113,7 @@ export function AppScreens({
         >
           {isVideo(screens[index]) ? (
             <Clip
-              src={screens[index]}
+              src={asset(screens[index])}
               playing={launched}
               onEnded={() => {
                 track("video_complete", { app: entry.id, video: screens[index].split("/").pop() });
@@ -120,7 +121,7 @@ export function AppScreens({
               }}
             />
           ) : (
-            <img src={screens[index]} alt="" draggable={false} className="size-full object-cover" />
+            <img src={asset(screens[index])} alt="" draggable={false} className="size-full object-cover" />
           )}
         </motion.div>
       </AnimatePresence>
@@ -145,8 +146,8 @@ function Clip({ src, playing, onEnded }: { src: string; playing: boolean; onEnde
     <div className="flex size-full flex-col items-center justify-center gap-5 px-5 pt-10">
       <video
         ref={ref}
-        src={src}
-        poster={src.replace(/\.mp4$/, ".jpg")}
+        src={asset(src)}
+        poster={asset(src.replace(/\.mp4$/, ".jpg"))}
         muted
         playsInline
         preload="metadata"

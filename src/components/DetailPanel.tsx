@@ -9,6 +9,7 @@ import { CloseX } from "./CloseX";
 import { Rich } from "../lib/rich";
 import { ComingSoonButton } from "./ComingSoon";
 import { entryName } from "../content/site";
+import { asset } from "../lib/asset";
 
 // Items only fade in: the panel itself slides, and a second vertical drift on each
 // item read as the text still moving after the panel had arrived.
@@ -357,7 +358,7 @@ export function Network({
               className="group flex min-w-0 flex-1 items-center gap-3 py-2.5 pl-3 text-[13px]"
               aria-current={i === 0 ? "page" : undefined}
             >
-              <img src={s.icon} alt="" className="size-7 rounded-[7px] shadow-[0_0_0_0.5px_rgba(0,0,0,0.12)]" />
+              <img src={asset(s.icon)} alt="" className="size-7 rounded-[7px] shadow-[0_0_0_0.5px_rgba(0,0,0,0.12)]" />
               <span className="min-w-0 flex-1">
                 <span className="block font-medium">{s.name}</span>
                 <span className="block text-foreground/55">
@@ -465,7 +466,7 @@ function Destinations({ title, intro, items }: { title: string; intro: string; i
             >
               <span className="w-4 font-mono text-[11px] text-foreground/40 tabular-nums">{i + 1}</span>
               <img
-                src={`/flags/${d.code}.svg`}
+                src={asset(`/flags/${d.code}.svg`)}
                 alt=""
                 className="size-6 shrink-0 rounded-full shadow-[0_0_0_0.5px_rgba(0,0,0,0.15)]"
               />
@@ -510,7 +511,7 @@ export function AppStoreBadge({ href, size = "lg" }: { href: string; size?: "lg"
       className="inline-flex rounded-[10px] outline-none transition-transform duration-200 hover:scale-[1.03] active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-foreground/40"
     >
       <img
-        src="/badges/app-store.svg"
+        src={asset("/badges/app-store.svg")}
         alt="Download on the App Store"
         width={144}
         height={48}

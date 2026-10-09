@@ -5,6 +5,7 @@ import { SHAPE, Squircle, iconClip } from "../../lib/squircle";
 import { GLASS, GLASS_EDGE } from "./constants";
 import { SITE } from "../../content/site";
 import { track } from "../../lib/analytics";
+import { asset } from "../../lib/asset";
 
 export function SearchPill({ onPress, hidden }: { onPress: () => void; hidden: boolean }) {
   return (
@@ -150,7 +151,7 @@ function DockLink({
   const external = href?.startsWith("http");
   const art = (
     <img
-      src={icon}
+      src={asset(icon)}
       alt=""
       draggable={false}
       className="size-full select-none object-cover"

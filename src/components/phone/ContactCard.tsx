@@ -8,6 +8,7 @@ import { plain } from "../../lib/rich";
 import { formatTime, useNow } from "../../lib/time";
 import { IconArt } from "../AppIcon";
 import { IOSAlert } from "./IOSAlert";
+import { asset } from "../../lib/asset";
 
 /**
  * The phone's own glass: translucent white, a bright top rim and a faint edge, as on the
@@ -66,7 +67,7 @@ export function ContactCard({ onBack }: { onBack: () => void }) {
           transition={{ delay: 0.12, type: "spring", stiffness: 260, damping: 24 }}
           className="mx-auto size-[188px] rounded-full p-[3px] shadow-[0_10px_40px_rgba(20,10,50,0.35),inset_0_1px_0_rgba(255,255,255,0.5)] ring-1 ring-white/25"
         >
-          <img src={SITE.photo} alt={SITE.name} draggable={false} className="size-full rounded-full object-cover" />
+          <img src={asset(SITE.photo)} alt={SITE.name} draggable={false} className="size-full rounded-full object-cover" />
         </motion.div>
 
         <p className="mt-6 flex items-center justify-center gap-1.5 text-[15px] text-white/85">
@@ -146,14 +147,14 @@ export function ContactCard({ onBack }: { onBack: () => void }) {
                   <p className="text-[17px]">{SITE.city.name}, {SITE.city.country.name}</p>
                 </div>
                 <div className="relative mx-4 mb-4 aspect-[1092/510] overflow-hidden rounded-[16px]">
-                  <img src={SITE.city.map.dark} alt={`Map of ${SITE.city.name}`} draggable={false} className="size-full object-cover" />
+                  <img src={asset(SITE.city.map.dark)} alt={`Map of ${SITE.city.name}`} draggable={false} className="size-full object-cover" />
                   <span
                     className="absolute -translate-x-1/2 -translate-y-full"
                     style={{ left: SITE.city.pin.left, top: SITE.city.pin.top }}
                   >
                     <span className="location-pulse absolute bottom-[-10px] left-1/2 size-[36px] -translate-x-1/2 rounded-full bg-[#0a84ff]/30" />
                     <span className="relative block size-[38px] overflow-hidden rounded-full border-[3px] border-white shadow-[0_3px_10px_rgba(0,0,0,0.45)]">
-                      <img src={SITE.photo} alt="" draggable={false} className="size-full object-cover" />
+                      <img src={asset(SITE.photo)} alt="" draggable={false} className="size-full object-cover" />
                     </span>
                   </span>
                   <span className="absolute bottom-1 right-2 text-[7px] text-white/60">© OpenStreetMap</span>

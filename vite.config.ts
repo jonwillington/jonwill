@@ -45,5 +45,8 @@ function walk(dir: string): string[] {
 }
 
 export default defineConfig({
+  // Served from the root (Cloudflare Pages) unless told otherwise: GitHub Pages sets
+  // BASE_PATH=/<repo>/ (see .github/workflows/pages.yml in the template).
+  base: process.env.BASE_PATH || "/",
   plugins: [react(), tailwindcss(), fontManifest()],
 });
