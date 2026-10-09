@@ -51,7 +51,6 @@ const SHOW_LIVE_WIDGETS = false;
 const ORDER_KEY = "jonwill:order";
 const UNLOCKED_KEY = "jonwill:unlocked";
 const ACTIVITY_KEY = "jonwill:activity";
-const TEMPLATE_KEY = "jonwill:template-offer";
 
 const storage = {
   get(store: Storage, key: string) {
@@ -189,6 +188,15 @@ export function Phone({
       title: SITE.whatsapp!.title,
       message: SITE.whatsapp!.message,
       actions: [{ label: "OK" }, { label: "Email me", primary: true, href: `mailto:${SITE.email}` }],
+    });
+
+  // GitHub in the dock: offers the template rather than jumping straight to the repo.
+  const showTemplate = () =>
+    showAlert("template_offer", {
+      title: "Replicate this project",
+      message:
+        "If you've got apps you want to share in a portfolio, feel free to fork and adapt the code from the GitHub repo.",
+      actions: [{ label: "Not now" }, { label: "Open GitHub", primary: true, href: SITE.github! }],
     });
 
   // Dock icons get menus too: each one's own quick actions, then Edit Home Screen / Remove App.
@@ -334,21 +342,6 @@ export function Phone({
     }, 5000);
     return () => window.clearTimeout(id);
   }, [brewApp, framed, locked, open]);
-
-  // Once a visitor has opened an app and come back home, offer them the template. Once ever.
-  useEffect(() => {
-    if (!SITE.github || locked || open || menu || alert || spotlight || seen.size === 0) return;
-    if (storage.get(localStorage, TEMPLATE_KEY)) return;
-    const id = window.setTimeout(() => {
-      storage.set(localStorage, TEMPLATE_KEY, "1");
-      showAlert("template_offer", {
-        title: "Want a phone like this?",
-        message: "This whole site is a free template. Grab it from my GitHub and make it yours.",
-        actions: [{ label: "Not now" }, { label: "Get it", primary: true, href: SITE.github! }],
-      });
-    }, 1400);
-    return () => window.clearTimeout(id);
-  }, [locked, open, menu, alert, spotlight, seen.size]);
 
   // Keyboard: ⌘K / "/" for Spotlight, ⌘Z for an "Undo Typing" joke.
   useEffect(() => {
@@ -515,7 +508,7 @@ export function Phone({
           }}
           hidden={spotlight}
         />
-        <Dock framed={framed} hidden={spotlight} onWhatsApp={showWhatsApp} onMenu={openDockMenu} />
+        <Dock framed={framed} hidden={spotlight} onWhatsApp={showWhatsApp} onGitHub={showTemplate} onMenu={openDockMenu} />
       </div>
 
       <AnimatePresence>

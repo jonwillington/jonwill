@@ -49,11 +49,14 @@ export function Dock({
   framed,
   hidden = false,
   onWhatsApp,
+  onGitHub,
   onMenu,
 }: {
   framed: boolean;
   hidden?: boolean;
   onWhatsApp: () => void;
+  /** GitHub opens an offer of the template first, not the repo. */
+  onGitHub: () => void;
   /** Long-press or right-click on a dock icon. */
   onMenu: (id: DockId, rect: DOMRect) => void;
 }) {
@@ -90,7 +93,10 @@ export function Dock({
       )}
       {SITE.github && (
         <DockLink
-          href={SITE.github}
+          onPress={() => {
+            track("dock_tap", { app: "github" });
+            onGitHub();
+          }}
           label="This site on GitHub"
           icon={DOCK_ICONS.github.icon}
           onMenu={(r) => onMenu("github", r)}
