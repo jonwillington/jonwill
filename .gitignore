@@ -6,3 +6,6 @@ dist
 # Licensed fonts: the free Neue Montreal licence forbids web use and public upload.
 # Drop the files in locally to try them; buy a web licence before shipping.
 public/fonts/
+
+# Raw simulator captures (scripts/capture-screens.py)
+build
