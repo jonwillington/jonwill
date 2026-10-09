@@ -368,11 +368,12 @@ export function App() {
                   <motion.p
                     key="hint"
                     initial={{ opacity: 0 }}
-                    animate={{ opacity: open ? 0 : 1 }}
+                    // Hidden while locked: the lock screen says "Swipe up to open" itself.
+                    animate={{ opacity: open || phoneLocked ? 0 : 1 }}
                     exit={{ opacity: 0 }}
                     className="text-sm text-muted"
                   >
-                    {phoneLocked ? "Swipe up on the phone to unlock." : "Tap an app. Press and hold for more."}
+                    Tap an app. Press and hold for more.
                   </motion.p>
                 )}
               </AnimatePresence>

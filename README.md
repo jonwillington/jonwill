@@ -5,7 +5,7 @@ home screen of the apps I've made, and tap one to open it: the phone plays the
 real app, and a panel beside it explains what it is, with live data and a
 long-form write-up in a drawer.
 
-**Live:** [jonwill.ing](https://jonwill.ing)
+**Live:** [jonwill.ing](https://jonwill.ing) · **The blank template:** [jonwillington.github.io/jonwill](https://jonwillington.github.io/jonwill/)
 
 It's built to be forked. Everything personal is in two files, so you can turn it
 into your own phone without touching the components.
