@@ -419,16 +419,18 @@ export const APPS: AppEntry[] = [
     screens: {
       scheme: "light",
       light: [
-        "/videos/holdall-map.mp4",
-        "/videos/holdall-relative-ratings.mp4",
-        "/videos/holdall-costs-breakdown.mp4",
-        "/videos/holdall-air-quality.mp4",
+        "/screens/holdall-explore.webp",
+        "/screens/holdall-guide.webp",
+        "/screens/holdall-coworking.webp",
+        "/screens/holdall-map.webp",
+        "/screens/holdall-photos.webp",
       ],
       captions: [
+        "The latest guides, written from the road",
+        "Ratings, costs and a verdict for every city",
+        "Where to stay, work and get coffee",
         "Every destination on one map",
-        "Compare places side by side",
-        "What a month costs",
-        "Air quality through the year",
+        "Photos from every place, full screen",
       ],
     },
     links: [
@@ -479,13 +481,13 @@ export const APPS: AppEntry[] = [
     ],
     links: [{ label: "gabridge.app", href: "https://gabridge.app" }],
     screens: {
-      scheme: "light",
-      light: ["/screens/gabridge-home.webp", "/screens/gabridge-detail.webp"],
+      scheme: "dark",
+      light: ["/screens/gabridge-home.webp", "/screens/gabridge-detail.webp", "/screens/gabridge-breakdown.webp"],
       captions: [
         "Every property on one screen, with a fair trend",
-        "One property: live users, today's curve and countries",
+        "One property: live users and today against a typical day",
+        "Countries, devices, sources and top pages",
       ],
-      dark: ["/screens/gabridge-home-dark.webp", "/screens/gabridge-detail-dark.webp"],
     },
   },
   {
