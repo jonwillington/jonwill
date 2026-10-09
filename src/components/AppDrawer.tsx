@@ -5,7 +5,9 @@ import type { AppEntry } from "../content/apps";
 import { track } from "../lib/analytics";
 import { IconArt } from "./AppIcon";
 import { CloseX } from "./CloseX";
-import { AppStoreBadge, EYEBROW, LinkButton, Tags } from "./DetailPanel";
+import { Rich } from "../lib/rich";
+import { ComingSoonButton } from "./ComingSoon";
+import { EYEBROW, LinkButton, Tags } from "./DetailPanel";
 import { entryName } from "../content/site";
 
 /**
@@ -60,18 +62,10 @@ export function AppDrawer({
           style={{ background }}
         >
           {entry && (
-            <div
-              className="overflow-y-auto px-7 pb-10 text-[15px] leading-[1.6]"
-              onScroll={(e) => {
-                const el = e.currentTarget;
-                setScrolled(el.scrollTop > 4);
-                const pct = Math.round(((el.scrollTop + el.clientHeight) / el.scrollHeight) * 100);
-                depth.current = Math.max(depth.current, Math.min(100, Math.round(pct / 25) * 25));
-              }}
-            >
-              {/* Pinned while the article scrolls underneath; it shrinks to a compact bar once scrolled. */}
+            <>
+              {/* Outside the scroller, so its shrinking can't move the scroll position and flip it back. */}
               <header
-                className={`sticky top-0 z-10 -mx-7 flex items-center justify-between gap-4 px-7 transition-[padding,box-shadow] duration-200 ${
+                className={`relative z-10 flex shrink-0 items-center justify-between gap-4 px-7 transition-[padding,box-shadow] duration-200 ${
                   scrolled ? "py-3 shadow-[0_1px_0_rgba(0,0,0,0.08),0_8px_16px_-12px_rgba(0,0,0,0.25)]" : "pb-4 pt-7"
                 }`}
                 style={{ background }}
@@ -93,47 +87,62 @@ export function AppDrawer({
                 </div>
                 <CloseX onPress={() => onOpenChange(false)} />
               </header>
-
-              {entry.highlights && (
-                <section className="mt-3 rounded-[14px] bg-foreground/[0.04] px-5 py-4" aria-label="At a glance">
-                  <p className={`mb-2 ${EYEBROW}`}>At a glance</p>
-                  <ul className="flex flex-col gap-1.5">
-                    {entry.highlights.map((h) => (
-                      <li key={h} className="flex items-start gap-2.5">
-                        <span className="mt-[9px] size-1.5 shrink-0 rounded-full bg-foreground/45" aria-hidden />
-                        <span>{h}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              )}
-
-              {/* The long read: the same sections, in the same order, for every app. */}
-              <article className="mt-8 flex max-w-[62ch] flex-col gap-8 text-[16px] leading-[1.7]">
-                {(entry.article ?? [{ title: "What is it?", body: entry.body }]).map((section) => (
-                  <section key={section.title}>
-                    <h3 className="mb-2 text-[19px] font-medium leading-snug tracking-[-0.015em]">{section.title}</h3>
-                    <div className="flex flex-col gap-3 text-foreground/85">
-                      {section.body.map((p, i) => (
-                        <p key={i}>{p}</p>
+              <div
+                className="min-h-0 flex-1 overflow-y-auto px-7 pb-10 text-[15px] leading-[1.6]"
+                onScroll={(e) => {
+                  const el = e.currentTarget;
+                  setScrolled(el.scrollTop > 4);
+                  const pct = Math.round(((el.scrollTop + el.clientHeight) / el.scrollHeight) * 100);
+                  depth.current = Math.max(depth.current, Math.min(100, Math.round(pct / 25) * 25));
+                }}
+              >
+                {entry.highlights && (
+                  <section className="mt-3 rounded-[14px] bg-foreground/[0.04] px-5 py-4" aria-label="At a glance">
+                    <p className={`mb-2 ${EYEBROW}`}>At a glance</p>
+                    <ul className="flex flex-col gap-1.5">
+                      {entry.highlights.map((h) => (
+                        <li key={h} className="flex items-start gap-2.5">
+                          <span className="mt-[9px] size-1.5 shrink-0 rounded-full bg-foreground/45" aria-hidden />
+                          <span>{h}</span>
+                        </li>
                       ))}
-                    </div>
+                    </ul>
                   </section>
-                ))}
-              </article>
+                )}
 
-              <section className="mt-8">
-                <p className={`mb-2 ${EYEBROW}`}>Built with</p>
-                <Tags tags={entry.tags} />
-              </section>
+                {/* The long read: the same sections, in the same order, for every app. */}
+                <article className="mt-8 flex max-w-[62ch] flex-col gap-8 text-[16px] leading-[1.7]">
+                  {(entry.article ?? [{ title: "What", body: entry.body }]).map((section) => (
+                    <section key={section.title}>
+                      <h3 className="mb-2 text-[19px] font-medium leading-snug tracking-[-0.015em]">{section.title}</h3>
+                      <div className="flex flex-col gap-3 text-foreground/85">
+                        {section.body.map((p, i) => (
+                          <p key={i}>
+                            <Rich text={p} />
+                          </p>
+                        ))}
+                      </div>
+                    </section>
+                  ))}
+                </article>
 
-              <div className="mt-8 flex flex-wrap items-center gap-2">
-                {entry.links.map((l, i) => (
-                  <LinkButton key={l.href} link={l} primary={i === 0} />
-                ))}
-                {entry.appStore && <AppStoreBadge href={entry.appStore} />}
+                {entry.tags.length > 0 && (
+                  <section className="mt-8">
+                    <p className={`mb-2 ${EYEBROW}`}>Built with</p>
+                    <Tags tags={entry.tags} />
+                  </section>
+                )}
+
+                <div className="mt-8 flex flex-wrap items-center gap-2">
+                  {entry.links.map((l, i) => (
+                    <LinkButton key={l.href} link={l} primary={i === 0} />
+                  ))}
+                  {entry.appStore && <LinkButton link={{ label: "App Store", href: entry.appStore }} />}
+                  {entry.comingSoon && <ComingSoonButton entry={entry} />}
+                  {entry.follow && <LinkButton link={entry.follow} />}
+                </div>
               </div>
-            </div>
+            </>
           )}
         </Drawer.Content>
       </Drawer.Portal>

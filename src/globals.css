@@ -49,8 +49,9 @@ h3,
   font-family: var(--font-heading, inherit);
 }
 
-/* Inside the phone it's iOS, so it's San Francisco. */
-[data-night] {
+/* Inside the phone it's iOS, so it's San Francisco, headings included. */
+[data-night],
+[data-night] :is(h1, h2, h3, [data-heading]) {
   font-family: var(--font-system);
 }
 

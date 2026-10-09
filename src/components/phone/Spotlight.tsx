@@ -7,6 +7,7 @@ import { GLASS, GLASS_EDGE } from "./constants";
 import { SearchGlyph } from "./Dock";
 import { SITE, entryName } from "../../content/site";
 import { track } from "../../lib/analytics";
+import { plain } from "../../lib/rich";
 
 type Result =
   | { kind: "app"; entry: AppEntry; score: number }
@@ -52,7 +53,7 @@ function search(query: string): Result[] {
       if (hasAll(`${link.label} ${entry.name}`))
         results.push({ kind: "link", label: link.label, detail: entry.name, href: link.href, entry, score: 40 });
     }
-    for (const text of [...entry.body, ...(entry.highlights ?? [])]) {
+    for (const text of [...entry.body.map(plain), ...(entry.highlights ?? [])]) {
       if (hasAll(text)) results.push({ kind: "text", entry, snippet: text, score: 20 });
     }
   }

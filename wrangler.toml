@@ -1,5 +1,10 @@
 # Cloudflare Pages project for jonwill.ing. Static site in dist/, plus
-# Pages Functions in functions/ (GET /api/live).
+# Pages Functions in functions/ (GET /api/live, POST /api/waitlist).
 name = "jonwill"
 pages_build_output_dir = "dist"
 compatibility_date = "2026-05-01"
+
+# /api/waitlist hands sign-ups to the jonwill-mailer Worker (mailer/), which emails Jon.
+[[services]]
+binding = "MAILER"
+service = "jonwill-mailer"

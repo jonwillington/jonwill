@@ -1,0 +1,21 @@
+# jonwill-mailer: sends you the "let me know" sign-ups from your site.
+# Pages Functions can't hold a send_email binding, so the site's
+# /api/waitlist function calls this Worker through a service binding.
+# No public URL: it's only reachable from the Pages project.
+#
+# Needs Cloudflare Email Routing turned on for your domain (the From domain),
+# with you@example.com as a verified destination.
+# Deploy with: npx wrangler deploy (from this folder), before the site.
+name = "jonwill-mailer"
+main = "src/index.ts"
+compatibility_date = "2026-05-01"
+workers_dev = false
+preview_urls = false
+
+send_email = [
+  { name = "INBOX", destination_address = "you@example.com" },
+]
+
+[vars]
+FROM = "example.com <waitlist@example.com>"
+TO = "you@example.com"

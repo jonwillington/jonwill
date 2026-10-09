@@ -1,6 +1,7 @@
 // The mini CMS. One entry per icon on the home screen, in grid order.
 // Edit copy, links and facts here; the phone and the detail panel read
 // straight from this list. Icons live in /public/icons.
+import { SITE } from "./site";
 
 export type AppLink = {
   label: string;
@@ -56,8 +57,15 @@ export type AppEntry = {
   body: string[];
   highlights?: string[];
   links: AppLink[];
-  /** The app's App Store page: shows Apple's "Download on the App Store" badge. */
+  /** A social account to follow, shown as a button on the page and in the drawer. */
+  follow?: AppLink;
+  /** The app's App Store page: an "App Store" button in the drawer. */
   appStore?: string;
+  /**
+   * Not out yet: an "App Store" button that opens a "coming soon" modal instead,
+   * with this line and an email field that mails Jon (POST /api/waitlist).
+   */
+  comingSoon?: string;
   /**
    * Real screenshots (804×1748, in /public/screens) shown inside the phone
    * when the app opens, in order. `scheme` is the screens' own look, which
@@ -70,91 +78,48 @@ export type AppEntry = {
     /** One short line per screen, shown under the phone while that screen is up. */
     captions?: string[];
   };
+  /**
+   * A website to show in Safari on the phone instead of app screens: a full-page
+   * capture of the mobile site (402pt wide at @2x, in /public/screens) that scrolls.
+   */
+  browser?: { url: string; page: string };
   /** Where the app is available, by market and platform. */
   markets?: Market[];
   /**
    * The long read in the "Learn more" drawer: titled sections, in the same
-   * order for every app (What is it? / Why I made it / How I built it / What's next).
+   * order for every app (What / Why / How / Next).
    */
   article?: { title: string; body: string[] }[];
-  /** A side-by-side of two related products: what differs and what's shared. */
+  /** A side-by-side of two related products: what differs. */
   compare?: {
     title: string;
     intro: string;
     columns: [{ label: string; code: Market["code"] }, { label: string; code: Market["code"] }];
     rows: { label: string; values: [string, string] }[];
-    /** Rows that are the same for both, shown once across both columns. */
-    shared: { label: string; value: string }[];
   };
   /** Top-rated places, highest overall first. */
   destinations?: { title: string; intro: string; items: Destination[] };
+  /** A "we're hiring" card beside the text: a line or two, the key facts, and a link to the roles. */
+  hiring?: { title: string; intro: string; facts: { label: string; value: string }[]; outro: string; cta: AppLink };
   /** A wider family of sites this app belongs to. */
   network?: { title: string; intro: string; sites: NetworkSite[] };
 };
 
+/** The About page: you. Its words live in content/site.ts with the rest of you. */
 export const ABOUT: AppEntry = {
   id: "about",
-  name: "Jon",
+  name: SITE.firstName,
   title: "Welcome!",
-  icon: "/me.jpg",
+  icon: SITE.photo,
   accent: "#cfcbd7",
   scheme: "light",
-  tagline: "I'm Jon. Make yourself at home.",
-  tags: ["Design leadership", "Product design", "Side projects"],
-  body: [
-    "I'm a Group Product Design Manager at Deel, living in Istanbul. Outside work I design and build my own apps, end to end. They're all on this phone: tap one to see it running.",
-  ],
-  article: [
-    {
-      title: "Who I am",
-      body: ["I'm Jon, a Group Product Design Manager at Deel, currently living in Istanbul."],
-    },
-    {
-      title: "What I do",
-      body: [
-        "At Deel I lead product design teams. Outside work I design and build my own apps from end to end: the product thinking, the design, the code and the data behind it.",
-      ],
-    },
-    {
-      title: "On this phone",
-      body: [
-        "The apps here are the ones I've been working on. Each one has a page like this one: what it is, why I made it, how it's built and where it's going.",
-      ],
-    },
-  ],
-  links: [
-    { label: "Email", href: "mailto:hey@jonwill.ing" },
-    { label: "LinkedIn", href: "https://www.linkedin.com/in/jonathanwillington/" },
-  ],
+  tagline: SITE.about.tagline,
+  tags: [],
+  body: SITE.about.body,
+  links: [{ label: "Connect on LinkedIn", href: SITE.linkedin.url }],
 };
 
 export const APPS: AppEntry[] = [
-  {
-    id: "deel",
-    name: "Deel",
-    icon: "/icons/deel.jpg",
-    accent: "#b59cf7",
-    scheme: "light",
-    tagline: "My day job.",
-    tags: ["Group Product Design Manager", "HR", "Payroll"],
-    body: ["Global HR and payroll for companies hiring anywhere. I lead product design teams there."],
-    article: [
-      {
-        title: "What is it?",
-        body: [
-          "Deel is a global HR and payroll platform. It helps companies hire, pay and manage people anywhere in the world, with contractors and employees in one place.",
-        ],
-      },
-      {
-        title: "My role",
-        body: ["I'm a Group Product Design Manager, leading design teams working across the product."],
-      },
-    ],
-    links: [
-      { label: "deel.com", href: "https://www.deel.com" },
-      { label: "App Store", href: "https://apps.apple.com/gb/app/deel-global-payroll-hr/id6478083155" },
-    ],
-  },
   {
     id: "ddbx",
     name: "ddbx.uk",
@@ -168,52 +133,69 @@ export const APPS: AppEntry[] = [
     ],
     highlights: [
       "Live push alerts for new filings",
+      "API, MCP and a Claude connector",
       "Ratings from routine to significant",
       "Performance tracking against benchmarks",
     ],
     article: [
       {
-        title: "What is it?",
+        title: "What",
         body: [
-          "ddbx follows what company directors do with their own money. When a director buys or sells shares in their company, they have to say so publicly. ddbx picks up those filings within minutes, screens out the routine ones and rates the rest from minor to significant, with a written analysis of why.",
+          "[ddbx](https://ddbx.uk) follows what company directors do with their own money. When a director buys or sells shares in their company, they have to say so publicly. ddbx picks up those filings within minutes, screens out the routine ones and rates the rest from minor to significant, with a written analysis of why.",
           "This is the UK edition, built on the RNS announcements directors and senior managers (PDMRs) have to make. It tracks how each deal performs against the FTSE afterwards, and Sweden and the Netherlands run on the same platform in preview.",
         ],
       },
       {
-        title: "Why I made it",
+        title: "Why",
         body: [
-          "Director dealings are public, but they're scattered across regulatory feeds and hard to read at a glance. I wanted one place that says which filings are worth a second look, and shows afterwards whether the insiders were right.",
+          "I built ddbx to answer a question I'd been curious about for years: is there any real value in following what directors do with their own shares?",
+          "I've been investing actively since 2015, and I've followed plenty of trades on a hunch, with mixed luck. ddbx is my attempt at something more methodical. Every filing goes through the same process, and the analysis weighs the case for and against using as many relevant sources as it needs. The aim is a balanced view, not a sensational one.",
+          "It also solves a practical problem. Keeping up with disclosures by hand is tiring, and alongside everything else in life you'll always miss the one trade that really moves.",
+          "Everything is free on the [website](https://ddbx.uk). The [iPhone](https://apps.apple.com/gb/app/ddbx-uk/id6762196330) and [Android](https://play.google.com/store/apps/details?id=uk.ddbx.app) apps are the most polished way to use it, with real-time alerts when a director buys, the analysis as soon as it's ready, and more tools for tracking how trades perform over the long run.",
         ],
       },
       {
-        title: "How I built it",
+        title: "How",
         body: [
           "A Cloudflare Worker scrapes the official disclosure feeds, stores everything in D1 and runs each filing through two model passes: a quick screen that drops the routine ones, then a fuller analysis that scores the trade against a checklist.",
-          "The same API serves the website, the UK and US iOS apps and an Android port. Each market is its own module on the data side, so a new country is a new module rather than a rewrite.",
+          "The same API serves the website, the UK and US apps on iPhone and Android. Each market is its own module on the data side, so a new country is a new module rather than a rewrite.",
         ],
       },
       {
-        title: "What's next",
+        title: "Where",
         body: [
-          "Shipping the Android app to the Play Store, taking Sweden and the Netherlands from preview to full markets, and adding more countries on the same pattern. The US has its own edition: ddbx.us.",
+          "ddbx is there whenever you need it: on the [web](https://ddbx.uk), in the [iPhone](https://apps.apple.com/gb/app/ddbx-uk/id6762196330) and [Android](https://play.google.com/store/apps/details?id=uk.ddbx.app) apps, through the [API](https://ddbx.uk/api), over [MCP](https://ddbx.uk/mcp), and as a direct [connector in Claude](https://claude.ai/directory/ddbx?q=ddbx).",
+        ],
+      },
+      {
+        title: "Next",
+        body: [
+          "Taking Sweden and the Netherlands from preview to full markets, and adding more countries on the same pattern. The US has its own edition: [ddbx.us](https://ddbx.us).",
         ],
       },
     ],
-    links: [{ label: "ddbx.uk", href: "https://ddbx.uk" }],
+    links: [
+      { label: "ddbx.uk", href: "https://ddbx.uk" },
+      { label: "Google Play", href: "https://play.google.com/store/apps/details?id=uk.ddbx.app" },
+      { label: "API", href: "https://ddbx.uk/api" },
+      { label: "MCP", href: "https://ddbx.uk/mcp" },
+      { label: "Claude connector", href: "https://claude.ai/directory/ddbx?q=ddbx" },
+    ],
+    appStore: "https://apps.apple.com/gb/app/ddbx-uk/id6762196330",
     markets: [
       {
         code: "gb",
         name: "UK",
         web: { label: "ddbx.uk", href: "https://ddbx.uk" },
         ios: { label: "App Store", href: "https://apps.apple.com/gb/app/ddbx-uk/id6762196330" },
-        android: { label: "In progress" },
+        android: { label: "Google Play", href: "https://play.google.com/store/apps/details?id=uk.ddbx.app" },
       },
       {
         code: "us",
         name: "US",
         web: { label: "ddbx.us", href: "https://ddbx.us" },
         ios: { label: "App Store", href: "https://apps.apple.com/us/app/ddbx-us/id6772091960" },
-        android: { label: "Testing" },
+        android: { label: "Google Play", href: "https://play.google.com/store/apps/details?id=us.ddbx.app" },
       },
       { code: "se", name: "Sweden", web: { label: "Preview", href: "https://ddbx.uk/se" } },
       { code: "nl", name: "Netherlands", web: { label: "Preview", href: "https://ddbx.uk/nl" } },
@@ -247,35 +229,36 @@ export const APPS: AppEntry[] = [
     ],
     article: [
       {
-        title: "What is it?",
+        title: "What",
         body: [
-          "ddbx.us is the American edition of ddbx. It reads two kinds of public filing. Company insiders (directors, officers and big shareholders) file a Form 4 with the SEC within two business days of trading their own company's stock. Members of Congress, and their spouses, report their stock trades under the STOCK Act, usually within 45 days.",
+          "[ddbx.us](https://ddbx.us) is the American edition of [ddbx](https://ddbx.uk). It reads two kinds of public filing. Company insiders (directors, officers and big shareholders) file a Form 4 with the SEC within two business days of trading their own company's stock. Members of Congress, and their spouses, report their stock trades under the STOCK Act, usually within 45 days.",
           "Insider buys go through the same checklist as the UK and get a rating from routine to significant. The Congress feed keeps to open-market buys of stocks and options, the trades you could actually follow, and leaves out sales, bonds and account reshuffles.",
         ],
       },
       {
-        title: "Why Congress",
+        title: "Why",
         body: [
           "Members of Congress vote on the laws that move whole industries, so what they buy in their own accounts is worth a look. A buy reads stronger when the member sits on a committee that oversees the company, when several members move into the same stock at once, or when the size is too big to ignore, and those are the trades ddbx flags.",
           "The data has its quirks: amounts come as wide dollar bands rather than exact figures, and a filing can trail the trade by weeks. ddbx shows what's disclosed and no more.",
         ],
       },
       {
-        title: "How I built it",
+        title: "How",
         body: [
-          "The US runs on the same platform as the UK: one Cloudflare Worker, one database, one API. Each market is its own module, so the US added a Form 4 reader and a Congress reader rather than a second product. The iOS app is the same codebase too, built as a separate US app.",
+          "The US runs on the same platform as the UK: one Cloudflare Worker, one database, one API. Each market is its own module, so the US added a Form 4 reader and a Congress reader rather than a second product. The iPhone and Android apps are the same codebases too, built as separate US apps.",
         ],
       },
       {
-        title: "What's next",
+        title: "Next",
         body: [
-          "Following members and committees, alerts when several members buy the same stock, and an Android release alongside the UK one.",
+          "Following members and committees, and alerts when several members buy the same stock.",
         ],
       },
     ],
     links: [
       { label: "ddbx.us", href: "https://ddbx.us" },
       { label: "Congress", href: "https://ddbx.us/congress" },
+      { label: "Google Play", href: "https://play.google.com/store/apps/details?id=us.ddbx.app" },
     ],
     appStore: "https://apps.apple.com/us/app/ddbx-us/id6772091960",
     compare: {
@@ -292,11 +275,6 @@ export const APPS: AppEntry[] = [
         { label: "Amounts", values: ["Exact", "Exact; Congress in dollar bands"] },
         { label: "Flagged by", values: ["Rating checklist", "Checklist; Congress on committee, cluster and size"] },
         { label: "Benchmark", values: ["FTSE All-Share, FTSE 100", "S&P 500, Nasdaq"] },
-      ],
-      shared: [
-        { label: "Platform", value: "One Worker, database and API" },
-        { label: "Ratings", value: "Routine to significant, with a written analysis" },
-        { label: "Apps", value: "One iOS codebase, two App Store apps" },
       ],
     },
     screens: {
@@ -331,26 +309,32 @@ export const APPS: AppEntry[] = [
     ],
     article: [
       {
-        title: "What is it?",
+        title: "What",
         body: [
-          "Holdall reviews more than 50 destinations for remote working trips: the best areas to stay, coworking spaces, coffee shops and what to do in your free time.",
+          "[Holdall](https://www.holdall.work) reviews more than 50 destinations for remote working trips: the best areas to stay, coworking spaces, coffee shops and what to do in your free time.",
         ],
       },
       {
-        title: "Why I made it",
+        title: "Why",
         body: [
-          "Planning a remote working trip means piecing together where to stay, where to work and what a place costs from a dozen sources. Holdall puts that research into one guide per destination.",
+          "I had always hated the idea of writing a travel blog. Plenty of people had suggested it, but I could never see myself doing it. Everything I had seen felt more like a thinly veiled vanity project than a true aid to someone planning a trip.",
+          "Most guides aren't focused on remote work either, so I saw an opportunity to dive into it and reconceptualise the travel blog through product sense.",
         ],
       },
       {
-        title: "How I built it",
+        title: "How",
         body: [
-          "A React Native app built with Expo. The guides are written in a CMS, maps come from Google and Mapbox, and each destination pulls in data such as air quality, cost of living and peak season.",
+          "The original site was built on [Webflow](https://webflow.com), with its CMS API powering a React Native app. Somewhat regrettably, I recently moved both the site and the mobile apps away from Webflow, to a fully native iOS app pulling from a database on D1.",
+          "Why the change? For years, Webflow gave me a degree of freedom as a designer which was incredibly empowering. But in 2026 it no longer made sense as a platform. Manually refactoring all of the classes and custom CSS I had inserted felt increasingly archaic compared to what could be achieved with a standalone project.",
+          "The migration was shockingly simple. I was anticipating a month-long process, and it was done in between dinner and falling asleep.",
         ],
       },
       {
-        title: "What's next",
-        body: ["More destinations, and keeping the existing guides current."],
+        title: "Next",
+        body: [
+          "It's difficult to keep 50+ guides up to date, as they're all based on my personal experiences. Many of the earlier trips are now painfully out of date, especially those from the immediate post-covid era.",
+          "I'm now viewing it as a time capsule, which I may periodically add to as a passion design project.",
+        ],
       },
     ],
     // Snapshot of holdall.work/destinations, ranked by the average of its four ratings.
@@ -448,7 +432,9 @@ export const APPS: AppEntry[] = [
     tags: ["iOS", "SwiftUI", "On-device"],
     body: [
       "Every GA4 property on one screen, with live users and a fair day-on-day trend. It runs on the device, with no backend.",
+      "It's currently pending release. Give me a shout if you'd like TestFlight access.",
     ],
+    comingSoon: "GA Bridge is pending release on the App Store. Leave your email and I'll be in touch about TestFlight access.",
     highlights: [
       "Live users from the last 30 minutes",
       "Fair day-on-day trend, hour for hour",
@@ -456,27 +442,27 @@ export const APPS: AppEntry[] = [
     ],
     article: [
       {
-        title: "What is it?",
+        title: "What",
         body: [
-          "GA Bridge puts every Google Analytics 4 property you have on one screen: live users, today's users and page views, and a trend against yesterday. Tap a property for its top pages and a seven-day chart.",
+          "A small tool that collates all of your Google Analytics 4 properties into one dashboard.",
         ],
       },
       {
-        title: "Why I made it",
+        title: "Why",
         body: [
-          "Checking several sites in Google Analytics means clicking through property after property. I wanted them all in one glance, with a trend that's fair to compare at any time of day.",
+          "One of the by-products of this year of aggressive building was an inevitable slew of GA tags. One of the most enjoyable aspects I've found is checking who is actually on your sites: what pages are popular, what's working and what's not. The official Google Analytics app fails miserably to do that at a glance if you have more than one site.",
         ],
       },
       {
-        title: "How I built it",
+        title: "How",
         body: [
           "A SwiftUI app that calls Google's Analytics Admin and Data APIs directly with a read-only sign-in. There's no server: the numbers are fetched on the phone.",
           "The trend compares the completed hours of today with the same hours yesterday, so a morning check isn't measured against a whole day.",
         ],
       },
       {
-        title: "What's next",
-        body: ["Google's verification for the read-only analytics scope, then a public release on the App Store."],
+        title: "Next",
+        body: ["It's currently pending release. Give me a shout if you'd like TestFlight access."],
       },
     ],
     links: [{ label: "gabridge.app", href: "https://gabridge.app" }],
@@ -503,31 +489,35 @@ export const APPS: AppEntry[] = [
     highlights: ["The whole city, from Kadıköy to Karaköy", "Our Picks for each area", "Filter by roaster or origin"],
     article: [
       {
-        title: "What is it?",
+        title: "What",
         body: [
-          "Istanbrew is a guide to the best speciality coffee in Istanbul. Every shop is on one map, with opening hours, directions and who roasts the beans, and each area has a top pick to start with.",
+          "[Istanbrew](https://istanbrew.com) is a guide to the best speciality coffee in Istanbul. Every shop is on one map, with opening hours, directions and who roasts the beans, plus recommendations for each neighbourhood from Bakırköy to Maltepe.",
         ],
       },
       {
-        title: "Why I made it",
+        title: "Why",
         body: [
-          "Istanbul's coffee scene is big and spread across two continents, and good shops are easy to miss. I wanted a map I'd trust myself, built from places that have been checked rather than scraped.",
+          "Google Maps only goes so far when it comes to getting the details you truly need. The issue isn't exclusive to coffee, but it's the area I feel most passionate about, and a key activity when I arrive in a new city.",
+          "Google Maps' strength comes from its breadth, but that's also its weakness. Finding exactly what you want in a city the size and scale of Istanbul can become a daunting task.",
+          "What brew methods do they have? Do they have any anaerobically processed lots from Ethiopia in stock? Is this somewhere I can work from?",
+          "By connecting shops, roasters and coffee connoisseurs, Istanbrew aims to far surpass anything else on the market.",
         ],
       },
       {
-        title: "How I built it",
+        title: "How",
         body: [
           "Everything comes from one coffee database with its own CMS and API. A native SwiftUI app and a web edition both read from it, and the web codebase builds a separate site for each city, in English and Turkish.",
         ],
       },
       {
-        title: "What's next",
+        title: "Next",
         body: [
-          "Istanbrew is the first of a network. London, Bangkok, Chiang Mai and San Francisco already have their own maps from the same database, with more cities to come.",
+          "Istanbrew is the first of a network. [London](https://filter.coffee), [Bangkok](https://bkkbrew.com), [Chiang Mai](https://cnxbrew.com) and [San Francisco](https://brewsf.com) already have their own maps from the same database, with more cities to come.",
         ],
       },
     ],
     links: [{ label: "istanbrew.com", href: "https://istanbrew.com" }],
+    follow: { label: "Follow on Instagram", href: "https://www.instagram.com/istanbrew/" },
     appStore: "https://apps.apple.com/gb/app/istanbrew/id6814183189",
     network: {
       title: "The coffee map network",

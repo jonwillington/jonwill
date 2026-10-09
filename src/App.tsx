@@ -5,6 +5,8 @@ import { Link } from "@heroui/react";
 import { ALL_ENTRIES, type AppEntry } from "./content/apps";
 import { DEVICE, Phone } from "./components/Phone";
 import { AppDrawer } from "./components/AppDrawer";
+import { ContactCard } from "./components/phone/ContactCard";
+import { Safari } from "./components/phone/Safari";
 import { DetailContent } from "./components/DetailPanel";
 import { AppSwitcher } from "./components/AppSwitcher";
 import { CloseX } from "./components/CloseX";
@@ -202,8 +204,11 @@ export function App() {
     onClose: () => close("home_indicator"),
     // Screenshots carry their own status bar; clips are cards, so the phone draws one.
     ownStatusBar: !!screens && desktop && !screens.some((src) => src.endsWith(".mp4")),
+    // The contact card is dark below its light top: dark status bar text, but a light home indicator.
     lightApp:
-      screens && desktop
+      open?.id === "about" && desktop
+        ? false
+        : screens && desktop
         ? open!.screens!.scheme === "light" && !(dark && open!.screens!.dark)
         : open?.scheme === "light",
   };
@@ -318,7 +323,11 @@ export function App() {
                 scale={scale}
                 onLockedChange={setPhoneLocked}
                 renderOpen={(entry) =>
-                  screensFor(entry, dark) ? (
+                  entry.id === "about" ? (
+                    <ContactCard onBack={() => close("contact_back")} />
+                  ) : entry.browser ? (
+                    <Safari url={entry.browser.url} page={entry.browser.page} appId={entry.id} />
+                  ) : screensFor(entry, dark) ? (
                     <AppScreens entry={entry} dark={dark} index={screen} onIndex={setScreen} />
                   ) : (
                     <Splash entry={entry} />
@@ -380,7 +389,13 @@ export function App() {
                 // Eases in and stops dead: a spring here overshot and settled back, a visible wobble.
                 // Follows the phone out of the way: a beat behind it, on the same curve.
                 transition={{ duration: 0.65, delay: 0.12, ease: PHONE_EASE }}
-                className={`w-[min(440px,40vw)] ${open.markets || open.network || open.destinations || open.compare ? "2xl:w-[min(860px,50vw)]" : ""}`}
+                className={`w-[min(440px,40vw)] ${
+                  open.markets || open.network || open.destinations || open.compare
+                    ? "2xl:w-[min(860px,50vw)]"
+                    : open.hiring
+                      ? "xl:w-[min(820px,54vw)]"
+                      : ""
+                }`}
               >
                 <DetailContent
                   entry={open}

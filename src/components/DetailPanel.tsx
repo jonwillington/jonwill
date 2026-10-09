@@ -6,6 +6,8 @@ import type { AppEntry, Destination, Market, MarketCell, NetworkSite } from "../
 import type { Live } from "../lib/live";
 import { IconArt } from "./AppIcon";
 import { CloseX } from "./CloseX";
+import { Rich } from "../lib/rich";
+import { ComingSoonButton } from "./ComingSoon";
 import { entryName } from "../content/site";
 
 // Items only fade in: the panel itself slides, and a second vertical drift on each
@@ -16,11 +18,11 @@ const item = {
 };
 
 /** The panel's call-to-action buttons: tall, easy to hit. */
-const BIG_BUTTON =
+export const BIG_BUTTON =
   "h-12 gap-2 px-6 text-[16px] font-medium transition-[background-color,transform,box-shadow] duration-200 hover:-translate-y-px active:translate-y-0 active:scale-[0.98] [&_svg]:transition-transform [&_svg]:duration-200 hover:[&_svg]:translate-x-0.5";
 /** Our own tints, with hover states: HeroUI's colour classes are replaced, so its hovers go too. */
 const PRIMARY = "bg-foreground text-background hover:bg-foreground/85 hover:shadow-[0_6px_16px_-6px_rgba(0,0,0,0.35)]";
-const SECONDARY = "bg-foreground/10 text-foreground hover:bg-foreground/[0.16]";
+export const SECONDARY = "bg-foreground/10 text-foreground hover:bg-foreground/[0.16]";
 
 /** Small uppercase label above a section, in the same mono as the chips. */
 export const EYEBROW = "font-mono text-[11px] font-medium uppercase tracking-[0.08em] text-foreground/55";
@@ -41,8 +43,13 @@ export function DetailContent({
   showClose?: boolean;
 }) {
   const hasData = !!(entry.markets || entry.network || entry.destinations || entry.compare);
-  const left = "2xl:col-start-1";
-  const right = "2xl:col-start-2 2xl:row-span-5 2xl:row-start-1";
+  // The hiring card is narrower than the data blocks, so it gets its column sooner (xl, not 2xl),
+  // and the text beside it never hides.
+  const hiring = !hasData && !!entry.hiring;
+  const left = hiring ? "xl:col-start-1" : "2xl:col-start-1";
+  const right = hiring
+    ? "xl:col-start-2 xl:row-span-5 xl:row-start-1"
+    : "2xl:col-start-2 2xl:row-span-5 2xl:row-start-1";
   return (
     <motion.div
       key={entry.id}
@@ -51,7 +58,11 @@ export function DetailContent({
       transition={{ staggerChildren: 0.05, delayChildren: 0.08 }}
       // Wide screens: summary on the left, the data block taking the right column.
       className={`flex flex-col gap-5 text-[15px] leading-[1.6] ${
-        hasData ? "2xl:grid 2xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] 2xl:content-start 2xl:gap-x-12" : ""
+        hasData
+          ? "2xl:grid 2xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] 2xl:content-start 2xl:gap-x-12"
+          : hiring
+            ? "xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)] xl:content-start xl:gap-x-10"
+            : ""
       }`}
     >
       {/* Desktop: a big title (the phone already shows the icon). Phones: icon, then the name. */}
@@ -72,9 +83,11 @@ export function DetailContent({
         {showClose && <CloseX onPress={onClose} />}
       </motion.div>
 
-      <motion.div variants={item} className={left}>
-        <Tags tags={entry.tags} />
-      </motion.div>
+      {entry.tags.length > 0 && (
+        <motion.div variants={item} className={left}>
+          <Tags tags={entry.tags} />
+        </motion.div>
+      )}
 
       {/* The rich data stays on the page; the longer story lives in the drawer. */}
       {entry.markets && (
@@ -97,34 +110,82 @@ export function DetailContent({
           <Compare {...entry.compare} />
         </motion.div>
       )}
-      {/* The one-line description: always when there's no data; beside it on wide screens. */}
-      <motion.p variants={item} className={`text-foreground/80 ${left} ${hasData ? "hidden 2xl:block" : ""}`}>
-        {entry.body[0]}
-      </motion.p>
-
-      <motion.div variants={item} className={`flex flex-wrap items-center gap-2 ${left}`}>
-        {entry.links[0] && <LinkButton link={entry.links[0]} primary />}
-        <button
-          type="button"
-          onClick={onLearnMore}
-          className={buttonVariants({ size: "lg", className: `${BIG_BUTTON} ${SECONDARY}` })}
-        >
-          Learn more
-          <svg
-            width="15"
-            height="15"
-            viewBox="0 0 12 12"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            aria-hidden
-          >
-            <path d="M4.5 3 7.5 6l-3 3" />
-          </svg>
-        </button>
+      {/* The description: always when there's no data; beside it on wide screens. */}
+      <motion.div variants={item} className={`space-y-3 text-foreground/80 ${left} ${hasData ? "hidden 2xl:block" : ""}`}>
+        {entry.body.map((p, i) => (
+          <p key={i}>
+            <Rich text={p} />
+          </p>
+        ))}
       </motion.div>
+
+      {/* Pages with a hiring card leave the link buttons off: the card has its own way in. */}
+      {!entry.hiring && (
+        <motion.div variants={item} className={`flex flex-wrap items-center gap-2 ${left}`}>
+          {entry.links[0] && <LinkButton link={entry.links[0]} primary />}
+          {entry.comingSoon && <ComingSoonButton entry={entry} />}
+          {entry.follow && <LinkButton link={entry.follow} />}
+          {/* No longer story to tell: the rest of the links take the drawer's place. */}
+          {entry.article ? (
+            <button
+              type="button"
+              onClick={onLearnMore}
+              className={buttonVariants({ size: "lg", className: `${BIG_BUTTON} ${SECONDARY}` })}
+            >
+              Learn more
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 12 12"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                aria-hidden
+              >
+                <path d="M4.5 3 7.5 6l-3 3" />
+              </svg>
+            </button>
+          ) : (
+            entry.links.slice(1).map((link) => <LinkButton key={link.href} link={link} />)
+          )}
+        </motion.div>
+      )}
+      {entry.hiring && (
+        <motion.div variants={item} className={right}>
+          <Hiring {...entry.hiring} />
+        </motion.div>
+      )}
     </motion.div>
+  );
+}
+
+/** "We're hiring": a short pitch, the facts at a glance, and the way in. */
+function Hiring({ title, intro, facts, outro, cta }: NonNullable<AppEntry["hiring"]>) {
+  return (
+    <section aria-label={title} data-track="hiring" className="rounded-[18px] bg-foreground/[0.06] p-5">
+      <p className={`mb-2 flex items-center gap-2 ${EYEBROW}`}>
+        <span className="text-foreground/75" aria-hidden>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2.5a6.5 6.5 0 0 0-6.5 6.5v3.6l-1.7 2.9A1 1 0 0 0 4.7 17h14.6a1 1 0 0 0 .9-1.5l-1.7-2.9V9A6.5 6.5 0 0 0 12 2.5ZM9.5 18.5a2.5 2.5 0 0 0 5 0z" />
+          </svg>
+        </span>
+        {title}
+      </p>
+      <p className="text-foreground/80">{intro}</p>
+      <dl className="mt-4 divide-y divide-foreground/10 border-y border-foreground/10">
+        {facts.map((f) => (
+          <div key={f.label} className="flex items-baseline justify-between gap-4 py-2.5">
+            <dt className={EYEBROW}>{f.label}</dt>
+            <dd className="text-right font-medium">{f.value}</dd>
+          </div>
+        ))}
+      </dl>
+      <p className="mt-4 text-foreground/80">{outro}</p>
+      <div className="mt-4">
+        <LinkButton link={cta} primary />
+      </div>
+    </section>
   );
 }
 
@@ -472,7 +533,7 @@ function NewTabArrow() {
 }
 
 /** Two editions side by side: a row per difference, then what they share across both columns. */
-function Compare({ title, intro, columns, rows, shared }: NonNullable<AppEntry["compare"]>) {
+function Compare({ title, intro, columns, rows }: NonNullable<AppEntry["compare"]>) {
   return (
     <section aria-label={title}>
       <p className={`mb-2 ${EYEBROW}`}>{title}</p>
@@ -508,22 +569,6 @@ function Compare({ title, intro, columns, rows, shared }: NonNullable<AppEntry["
                     {v}
                   </td>
                 ))}
-              </tr>
-            ))}
-            {/* What's the same for both: one cell across the two columns. */}
-            <tr className="border-t border-foreground/10 bg-foreground/[0.03]">
-              <th scope="row" className={`px-3 pb-1 pt-2.5 ${EYEBROW}`} colSpan={3}>
-                Shared
-              </th>
-            </tr>
-            {shared.map((r) => (
-              <tr key={r.label} className="bg-foreground/[0.03] align-top">
-                <th scope="row" className={`px-3 py-1.5 ${EYEBROW}`}>
-                  {r.label}
-                </th>
-                <td colSpan={2} className="px-3 py-1.5 last:pb-2.5">
-                  {r.value}
-                </td>
               </tr>
             ))}
           </tbody>

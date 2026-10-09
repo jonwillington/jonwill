@@ -81,6 +81,7 @@ definitions → Create custom dimension** with the parameter name below.
 | `video_complete` | A screen recording plays to the end | `app`, `video` |
 | `learn_more` / `learn_more_close` | The drawer opens / closes | `app` |
 | `article_read` | The drawer closes | `app`, `depth_pct` (0–100 in 25s), `seconds` |
+| `coming_soon_open` / `coming_soon_signup` | The "coming soon" modal opens / someone leaves their email | `app` |
 | `outbound_click` / `email_click` | Any link off the site | `link_url`, `link_domain`, `link_text`, `area` (panel, drawer, footer, phone, market_grid, network, destinations, app_store_badge, …), `app` |
 | `context_menu_trigger` | An app icon is held or right-clicked | `app`, `trigger` |
 | `context_menu_open` / `context_menu_action` | A long-press menu opens / an item is chosen | `target`, `action` |
@@ -152,6 +153,20 @@ site works without it, and the live bits just don't appear.
 
 Run it locally with `npm run dev:full` (builds, then serves with Wrangler).
 
+### 6. "Coming soon" sign-ups (optional)
+
+Give an app `comingSoon: "…"` in `content/apps.ts` and it gets an App Store
+button that opens a modal with an email field instead of linking out. Sign-ups
+go to `functions/api/waitlist.ts`, which hands them to a small Worker in
+`mailer/` that emails you. Pages Functions can't send email themselves.
+
+It uses Cloudflare Email Routing: turn it on for your domain, verify the
+address you want the mail at, set `FROM` and `TO` in `mailer/wrangler.toml`,
+and add your app names to `APPS` in the function. Deploy the Worker first
+(`cd mailer && npx wrangler deploy`), then the site. To try it locally, run
+`npx wrangler dev` in `mailer/` alongside `npm run dev:full`; the email is
+written to a local `.eml` file rather than sent.
+
 ## Keep or change
 
 **Please keep:**
@@ -218,6 +233,8 @@ src/
   components/DetailPanel.tsx, AppDrawer.tsx
   lib/squircle.tsx       iOS continuous corners, fitted to a real iPhone
 functions/api/live.ts    optional live data
+functions/api/waitlist.ts  "coming soon" sign-ups, passed to mailer/
+mailer/                  the Worker that emails sign-ups
 scripts/                 map rendering
 ```
 
