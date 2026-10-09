@@ -79,6 +79,7 @@ definitions → Create custom dimension** with the parameter name below.
 | `app_open` | An app opens | `app`, `source` (icon, widget, notification, switcher, spotlight, live_activity, deep_link, hash), `first_time` |
 | `app_close` | An app closes | `app`, `method` (close_button, escape, home_indicator, switched_app), `seconds_open` |
 | `app_screen` | The screen inside an app changes | `app`, `screen`, `method` (auto, tap, swipe, dots, video_end) |
+| `screen_open` | On a phone, a screenshot is tapped to view it full screen | `app`, `screen` |
 | `video_complete` | A screen recording plays to the end | `app`, `video` |
 | `learn_more` / `learn_more_close` | The drawer opens / closes | `app` |
 | `article_read` | The drawer closes | `app`, `depth_pct` (0–100 in 25s), `seconds` |

@@ -6,6 +6,7 @@ import { ALL_ENTRIES, type AppEntry } from "./content/apps";
 import { DEVICE, Phone } from "./components/Phone";
 import { AppDrawer } from "./components/AppDrawer";
 import { ContactCard } from "./components/phone/ContactCard";
+import { ScreenGallery } from "./components/ScreenGallery";
 import { Safari } from "./components/phone/Safari";
 import { DetailContent } from "./components/DetailPanel";
 import { AppSwitcher } from "./components/AppSwitcher";
@@ -229,6 +230,7 @@ export function App() {
               <DetailContent
                 entry={entry}
                 live={live}
+                gallery={screensFor(entry, dark) && <ScreenGallery entry={entry} dark={dark} />}
                 onClose={() => close("close_button")}
                 onLearnMore={() => {
                   track("learn_more", { app: open?.id });

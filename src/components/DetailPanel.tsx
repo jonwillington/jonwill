@@ -35,6 +35,7 @@ export function DetailContent({
   onClose,
   onLearnMore,
   showClose = true,
+  gallery,
 }: {
   entry: AppEntry;
   live?: Live | null;
@@ -42,6 +43,8 @@ export function DetailContent({
   onLearnMore: () => void;
   /** On desktop the page's top-right close does this job, so the panel hides its own. */
   showClose?: boolean;
+  /** Phones: the app's screens, under the name, since there's no phone mockup beside it. */
+  gallery?: ReactNode;
 }) {
   const hasData = !!(entry.markets || entry.network || entry.destinations || entry.compare);
   // The hiring card is narrower than the data blocks, so it gets its column sooner (xl, not 2xl),
@@ -89,6 +92,12 @@ export function DetailContent({
       {entry.tags.length > 0 && (
         <motion.div variants={item} className={left}>
           <Tags tags={entry.tags} />
+        </motion.div>
+      )}
+
+      {gallery && (
+        <motion.div variants={item} className={left}>
+          {gallery}
         </motion.div>
       )}
 
