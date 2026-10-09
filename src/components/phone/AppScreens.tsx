@@ -56,12 +56,13 @@ export function AppScreens({
 
   // Warm the cache so pushes never flash (videos stream on their own).
   useEffect(() => {
-    screens.forEach((src) => {
+    // Both themes' sets, so a theme switch fades to an image that's already loaded.
+    [...(entry.screens?.light ?? []), ...(entry.screens?.dark ?? [])].forEach((src) => {
       if (isVideo(src)) return;
       const img = new Image();
       img.src = asset(src);
     });
-  }, [screens]);
+  }, [entry]);
 
   // Wait for the zoom-open before the first auto-advance or video play, but show the screen straight away.
   useEffect(() => {
@@ -74,7 +75,8 @@ export function AppScreens({
     if (!launched || paused || screens.length < 2 || isVideo(screens[index])) return;
     const id = window.setTimeout(() => onIndex((index + 1) % screens.length, "auto"), ADVANCE_MS);
     return () => window.clearTimeout(id);
-  }, [launched, paused, index, screens.length, onIndex]);
+    // `screens` too: switching theme swaps in the other set, and the screen gets its full time again.
+  }, [launched, paused, index, screens, onIndex]);
 
   const go = (delta: number, method: string) => onIndex((index + delta + screens.length) % screens.length, method);
 
@@ -100,8 +102,9 @@ export function AppScreens({
     >
       <AnimatePresence initial={false} custom={direction.current}>
         {/* initial={false} on the presence: the first screen is simply there, nothing slides in on open. */}
+        {/* Keyed by position, not file: a theme switch swaps the file and should fade, not slide. */}
         <motion.div
-          key={screens[index]}
+          key={index}
           custom={direction.current}
           variants={push}
           initial="enter"
@@ -113,7 +116,7 @@ export function AppScreens({
         >
           {isVideo(screens[index]) ? (
             <Clip
-              src={asset(screens[index])}
+              src={screens[index]}
               playing={launched}
               onEnded={() => {
                 track("video_complete", { app: entry.id, video: screens[index].split("/").pop() });
@@ -121,11 +124,30 @@ export function AppScreens({
               }}
             />
           ) : (
-            <img src={asset(screens[index])} alt="" draggable={false} className="size-full object-cover" />
+            <Crossfade src={screens[index]} />
           )}
         </motion.div>
       </AnimatePresence>
     </motion.div>
+  );
+}
+
+/** A screenshot that, when its file changes in place (light to dark), fades across. */
+function Crossfade({ src }: { src: string }) {
+  return (
+    <AnimatePresence initial={false}>
+      <motion.img
+        key={src}
+        src={asset(src)}
+        alt=""
+        draggable={false}
+        className="absolute inset-0 size-full object-cover"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.45, ease: "easeInOut" }}
+      />
+    </AnimatePresence>
   );
 }
 
