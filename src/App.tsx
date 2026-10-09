@@ -8,7 +8,6 @@ import { AppDrawer } from "./components/AppDrawer";
 import { DetailContent } from "./components/DetailPanel";
 import { AppSwitcher } from "./components/AppSwitcher";
 import { CloseX } from "./components/CloseX";
-import { LiveStrip } from "./components/LiveStrip";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { AppScreens, screensFor } from "./components/phone/AppScreens";
 import { Splash } from "./components/phone/Splash";
@@ -257,7 +256,6 @@ export function App() {
 
         <header className="relative z-20 flex h-[72px] shrink-0 items-center justify-between px-6 text-sm font-medium">
           <span data-heading>{SITE.name}</span>
-          <LiveStrip live={live} />
           <div className="flex items-center">
             <ThemeToggle
               mode={mode}
