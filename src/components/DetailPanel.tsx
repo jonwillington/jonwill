@@ -131,9 +131,10 @@ export function DetailContent({
         ))}
       </motion.div>
 
-      {/* Pages with a hiring card leave the link buttons off: the card has its own way in. */}
+      {/* Pages with a hiring card leave the link buttons off: the card has its own way in.
+          mt-3: a little more room above the buttons than between paragraphs. */}
       {!entry.hiring && (
-        <motion.div variants={item} className={`flex flex-wrap items-center gap-2 ${left}`}>
+        <motion.div variants={item} className={`mt-3 flex flex-wrap items-center gap-2 ${left}`}>
           {entry.links[0] && <LinkButton link={entry.links[0]} primary />}
           {entry.comingSoon && <ComingSoonButton entry={entry} />}
           {entry.follow && <LinkButton link={entry.follow} />}
