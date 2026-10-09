@@ -419,17 +419,17 @@ export const APPS: AppEntry[] = [
     screens: {
       scheme: "light",
       light: [
+        "/screens/holdall-map.webp",
         "/screens/holdall-explore.webp",
         "/screens/holdall-guide.webp",
         "/screens/holdall-coworking.webp",
-        "/screens/holdall-map.webp",
         "/screens/holdall-photos.webp",
       ],
       captions: [
+        "Every destination on one map",
         "The latest guides, written from the road",
         "Ratings, costs and a verdict for every city",
         "Where to stay, work and get coffee",
-        "Every destination on one map",
         "Photos from every place, full screen",
       ],
     },
